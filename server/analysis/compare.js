@@ -28,9 +28,7 @@ export function buildReport(bundle) {
   const cohortDeaths = median(cohortMetrics.map((m) => m.deaths.length));
   if (mine.deaths.length > cohortDeaths) {
     const extra = mine.deaths.length - cohortDeaths;
-    gaps.push(gap('deaths', 'Deaths', mine.deaths.length, cohortDeaths, 'deaths', extra * 4, {
-      deathTimes: mine.deaths.map((d) => d.atMs),
-    }));
+    gaps.push(gap('deaths', 'Deaths', mine.deaths.length, cohortDeaths, 'deaths', extra * 4));
   }
 
   // 2) downtime
@@ -119,7 +117,7 @@ export function buildReport(bundle) {
   }
 
   gaps.sort((a, b) => b.severity - a.severity);
-  for (const g of gaps) g.advice = adviceFor(g, bundle);
+  for (const g of gaps) g.advice = adviceFor(g);
 
   // honesty: how much of the DPS gap do the rotational severities cover?
   // Deaths, idle time and total CPM overlap (a death causes idle causes low
@@ -161,7 +159,7 @@ export function buildReport(bundle) {
     compNotes,
     downtimeNotes,
     timeline,
-    summary: buildSummary({ headline, gaps, timeline, honesty }),
+    summary: buildSummary({ headline, gaps, honesty }),
     tables: {
       cpm: abilityRows.map((r) => ({
         name: r.name,

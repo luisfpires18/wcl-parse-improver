@@ -19,22 +19,26 @@ test('buildReport attaches a summary for real Pit data', () => {
   assert.ok(report.summary.text.includes('Runic Power'));
 });
 
-test('summary names the biggest idle/death cluster on the timeline', () => {
+test('summary and next-steps never mention a death timestamp or "rewatch/review" instruction', () => {
   const report = buildReport(bundle);
-  // real data: my worst 45s-merge cluster is 1:04-3:13 (death at 2:07 plus
-  // two nearby idle windows) — the tightest defensible grouping, not the
-  // late-fight windows which are >45s apart from each other
-  assert.match(report.summary.text, /1:04-3:13/);
+  // deaths at 2:07 and 21:45 in the real fixture — neither should be quoted
+  // back at the player as a "go look here" moment; the count comparison
+  // (mine vs cohort) is the useful part, not the clock time
+  assert.doesNotMatch(report.summary.text, /\d+:\d\d-\d+:\d\d/);
+  assert.doesNotMatch(report.summary.text, /rewatch|review those moments/i);
+  for (const a of report.summary.nextSteps.actions) {
+    assert.doesNotMatch(a, /\d+:\d\d-\d+:\d\d/);
+    assert.doesNotMatch(a, /rewatch|review those moments/i);
+  }
 });
 
-test('nextSteps leads with the timeline cluster and lists real gap advice', () => {
+test('nextSteps lists real gap advice ordered by severity, deaths included as a plain comparison', () => {
   const report = buildReport(bundle);
   const { nextSteps } = report.summary;
   assert.ok(nextSteps.recap.includes('gap'));
   assert.ok(nextSteps.actions.length > 0);
-  assert.match(nextSteps.actions[0], /1:04-3:13/);
-  // deaths gap itself is folded into the cluster line, not repeated verbatim
-  assert.ok(!nextSteps.actions.slice(1).some((a) => a.startsWith('You died')));
+  const deathsAction = nextSteps.actions.find((a) => a.startsWith('You died'));
+  if (deathsAction) assert.match(deathsAction, /cohort's \d/);
   for (const a of nextSteps.actions) assert.ok(!a.includes('undefined'));
 });
 
@@ -56,19 +60,17 @@ test('buildSummary handles the no-gaps case without crashing', () => {
   const s = buildSummary({
     headline: { dungeon: 'Test Dungeon', dpsGapPct: 0 },
     gaps: [],
-    timeline: null,
     honesty: { explainedPct: 0 },
   });
   assert.ok(s.text.includes('Test Dungeon'));
 });
 
-test('buildSummary handles a run with no timeline gracefully', () => {
+test('buildSummary reuses gap.advice verbatim in nextSteps', () => {
   const s = buildSummary({
     headline: { dungeon: 'Test Dungeon', dpsGapPct: 10 },
     gaps: [
       { category: 'cpm', title: 'Total casts per minute', mine: 40, cohort: 50, severity: 5, advice: 'Cast more.' },
     ],
-    timeline: null,
     honesty: { explainedPct: 50 },
   });
   assert.ok(s.text.includes('cast rate'));

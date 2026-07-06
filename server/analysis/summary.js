@@ -2,17 +2,13 @@
 // elsewhere in this file (gaps, timeline, honesty split). Nothing here comes
 // from trained "correct rotation" knowledge — every claim traces back to a
 // measured diff, so it survives patches the same way the rest of the tool does.
-import { formatDuration } from '../parse/zoneRankings.js';
+//
+// Deliberately does not call out specific death timestamps or "go rewatch
+// this pull" instructions — dying is already obvious to the player without a
+// timestamp attached; the useful signal is the aggregate comparison (death
+// count, idle%) against the cohort, not a pointer to the moment itself.
 
-// idle windows/deaths this close together are treated as one incident on the
-// timeline. 45s is deliberately tight: two zero-cast gaps within 45s of each
-// other are almost certainly the same wipe-recovery moment (dodge a
-// mechanic, run back, resume); looser thresholds (tried up to 90s against
-// real data) started chaining unrelated lulls minutes apart into one fake
-// "incident" and made the advice ("look at this one pull") false.
-const CLUSTER_GAP_MS = 45_000;
-
-export function buildSummary({ headline, gaps, timeline, honesty }) {
+export function buildSummary({ headline, gaps, honesty }) {
   if (!gaps.length) {
     return {
       text: `No significant rotational gaps found for ${headline.dungeon} — this run tracks the cohort closely on every metric measured here.`,
@@ -27,18 +23,6 @@ export function buildSummary({ headline, gaps, timeline, honesty }) {
   const top = gaps[0];
   sentences.push(`The ${headline.dpsGapPct}% DPS gap in ${headline.dungeon} is led by ${describeGap(top)}.`);
 
-  const cluster = timeline ? biggestCluster(timeline.mine) : null;
-  if (cluster) {
-    const totalIdleMs = timeline.mine.idleWindows.reduce((acc, w) => acc + w.durMs, 0);
-    const idleShare = totalIdleMs ? round1((100 * cluster.idleMs) / totalIdleMs) : null;
-    sentences.push(
-      `Most of the lost time is concentrated around ${formatDuration(cluster.startMs)}-${formatDuration(cluster.endMs)}` +
-        ` (${cluster.deaths} death${cluster.deaths === 1 ? '' : 's'}, ${(cluster.idleMs / 1000).toFixed(0)}s idle right there` +
-        (idleShare ? `, ${idleShare}% of the whole run's downtime` : '') +
-        `) — look at what happened on that specific pull before touching anything else.`
-    );
-  }
-
   const rest = gaps.slice(1, 4).filter((g) => g.category !== top.category);
   if (rest.length) sentences.push(`After that: ${rest.map(describeGap).join('; ')}.`);
 
@@ -52,27 +36,16 @@ export function buildSummary({ headline, gaps, timeline, honesty }) {
       `isn't reliably exposed by the API and isn't included. Everything else above is cast-count and uptime based.`
   );
 
-  return { text: sentences.join(' '), nextSteps: buildNextSteps({ headline, gaps, honesty, cluster }) };
+  return { text: sentences.join(' '), nextSteps: buildNextSteps({ headline, gaps, honesty }) };
 }
 
 /**
  * Final "what to do next attempt" checklist. Reuses the same gap.advice
- * sentences already shown above (no new claims) — this section exists to be
- * the one thing read right before queuing the key again, ordered by
- * severity, with the timeline cluster (if any) called out first since it's
- * usually the single biggest lever.
+ * sentences already shown above (no new claims), ordered by severity — the
+ * one thing to read right before queuing the key again.
  */
-function buildNextSteps({ headline, gaps, honesty, cluster }) {
-  const actions = [];
-  if (cluster) {
-    actions.push(
-      `Rewatch ${formatDuration(cluster.startMs)}-${formatDuration(cluster.endMs)} first (` +
-        `${cluster.deaths} death${cluster.deaths === 1 ? '' : 's'}, ${(cluster.idleMs / 1000).toFixed(0)}s idle) ` +
-        `— it's your single biggest lever this run.`
-    );
-  }
-  const remaining = gaps.filter((g) => g.category !== 'deaths');
-  for (const g of remaining.slice(0, cluster ? 4 : 5)) actions.push(g.advice);
+function buildNextSteps({ headline, gaps, honesty }) {
+  const actions = gaps.slice(0, 5).map((g) => g.advice);
   if (!actions.length) {
     actions.push('No further action needed — this run already tracks the cohort closely on every metric measured here.');
   }
@@ -105,37 +78,4 @@ function describeGap(g) {
     default:
       return g.title;
   }
-}
-
-/** Group idle windows + deaths that occur within CLUSTER_GAP_MS of each other; return the worst cluster. */
-function biggestCluster(mineTimeline) {
-  const events = [
-    ...mineTimeline.idleWindows.map((w) => ({ start: w.startMs, end: w.startMs + w.durMs, idleMs: w.durMs, death: false })),
-    ...mineTimeline.deaths.map((d) => ({ start: d.atMs, end: d.atMs, idleMs: 0, death: true })),
-  ].sort((a, b) => a.start - b.start);
-  if (!events.length) return null;
-
-  const clusters = [];
-  let cur = { startMs: events[0].start, endMs: events[0].end, idleMs: events[0].idleMs, deaths: events[0].death ? 1 : 0 };
-  for (let i = 1; i < events.length; i++) {
-    const e = events[i];
-    if (e.start - cur.endMs <= CLUSTER_GAP_MS) {
-      cur.endMs = Math.max(cur.endMs, e.end);
-      cur.idleMs += e.idleMs;
-      cur.deaths += e.death ? 1 : 0;
-    } else {
-      clusters.push(cur);
-      cur = { startMs: e.start, endMs: e.end, idleMs: e.idleMs, deaths: e.death ? 1 : 0 };
-    }
-  }
-  clusters.push(cur);
-
-  const significant = clusters.filter((c) => c.deaths > 0 || c.idleMs > 20000);
-  if (!significant.length) return null;
-  significant.sort((a, b) => b.idleMs + b.deaths * 20000 - (a.idleMs + a.deaths * 20000));
-  return significant[0];
-}
-
-function round1(v) {
-  return typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 10) / 10 : v;
 }

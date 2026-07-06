@@ -1,21 +1,14 @@
 // One concrete sentence per gap. Advice is derived from the data diff only —
-// no hardcoded patch-specific rotation claims.
-import { formatDuration } from '../parse/zoneRankings.js';
-
-export function adviceFor(gapItem, bundle) {
-  const lvl = bundle.targetLevel;
+// no hardcoded patch-specific rotation claims. Death advice deliberately
+// skips timestamps/"go rewatch this" — dying is already obvious to the
+// player; the useful part is the comparison to the cohort's death count.
+export function adviceFor(gapItem) {
   switch (gapItem.category) {
-    case 'deaths': {
-      const times = (gapItem.deathTimes ?? [])
-        .filter((t) => t != null)
-        .map((t) => formatDuration(t))
-        .join(', ');
+    case 'deaths':
       return (
-        `You died ${gapItem.mine}× (top players: ${gapItem.cohort}) — each death costs the run 20-30s of your uptime` +
-        (times ? `; deaths at ${times} into the fight` : '') +
-        `. Review those moments first: survivability beats rotation at +${lvl}.`
+        `You died ${gapItem.mine}× this run vs the cohort's ${gapItem.cohort} — each death costs roughly ` +
+        `20-30s of downtime (dead + running back), which also drags down your idle% and CPM below.`
       );
-    }
     case 'downtime':
       return (
         `You were idle ${gapItem.mine}% of the run vs their ${gapItem.cohort}% — close the biggest gaps ` +
