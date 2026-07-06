@@ -1,0 +1,3088 @@
+{
+  "page": 1,
+  "hasMorePages": true,
+  "count": 100,
+  "rankings": [
+    {
+      "name": "Supreem",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 295098.966620028,
+      "hardModeLevel": 22,
+      "duration": 1724400,
+      "startTime": 1782177568043,
+      "report": {
+        "code": "ptAhLQRDfyN1cPrZ",
+        "fightID": 1,
+        "startTime": 1782176941726
+      },
+      "server": {
+        "id": 340,
+        "name": "Tarren Mill",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 516.575,
+      "leaderboard": 0
+    },
+    {
+      "name": "魔霭领主",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 291839.2512599826,
+      "hardModeLevel": 22,
+      "duration": 1619571,
+      "startTime": 1781190581286,
+      "report": {
+        "code": "rf9pZt2QKLdyDNHJ",
+        "fightID": 1,
+        "startTime": 1781190413920
+      },
+      "server": {
+        "id": 901,
+        "name": "黑铁",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.7589375,
+      "leaderboard": 0
+    },
+    {
+      "name": "Procapproved",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 291117.5230900049,
+      "hardModeLevel": 22,
+      "duration": 1485623,
+      "startTime": 1781030465910,
+      "report": {
+        "code": "DFnkX8Y39TxC1VRP",
+        "fightID": 4,
+        "startTime": 1781029703768
+      },
+      "guild": {
+        "id": 6985,
+        "name": "Style",
+        "faction": 1
+      },
+      "server": {
+        "id": 123,
+        "name": "Illidan",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 521.54952083333,
+      "leaderboard": 0
+    },
+    {
+      "name": "于暮烟",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 290382.2753800154,
+      "hardModeLevel": 22,
+      "duration": 1681153,
+      "startTime": 1782911566791,
+      "report": {
+        "code": "N2GgvRDjZcM86kdm",
+        "fightID": 18,
+        "startTime": 1782882650955
+      },
+      "server": {
+        "id": 584,
+        "name": "凤凰之神",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.47597916667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Anonymous",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 290242.36904001236,
+      "hardModeLevel": 22,
+      "duration": 1520832,
+      "startTime": 1782454828713,
+      "report": {
+        "code": "a:ajYrm7HTMD3cFGV9",
+        "fightID": 1,
+        "startTime": 1782454451788
+      },
+      "hidden": true,
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 520.816,
+      "leaderboard": 0
+    },
+    {
+      "name": "Redarcane",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 289737.4138200283,
+      "hardModeLevel": 22,
+      "duration": 1620686,
+      "startTime": 1782191139934,
+      "report": {
+        "code": "KPHwcv3mptF1M7ZC",
+        "fightID": 22,
+        "startTime": 1782165610863
+      },
+      "server": {
+        "id": 206,
+        "name": "Stormrage",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.73570833333,
+      "leaderboard": 0
+    },
+    {
+      "name": "约丶修亚丶",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 288135.2194600105,
+      "hardModeLevel": 22,
+      "duration": 1558283,
+      "startTime": 1781895449103,
+      "report": {
+        "code": "nwDBKYxHX7fCJGb4",
+        "fightID": 1,
+        "startTime": 1781895353878
+      },
+      "server": {
+        "id": 584,
+        "name": "凤凰之神",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 520.03577083333,
+      "leaderboard": 0
+    },
+    {
+      "name": "听风吟",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 287878.2625399828,
+      "hardModeLevel": 22,
+      "duration": 1714110,
+      "startTime": 1781797449131,
+      "report": {
+        "code": "Z6wTYa9FLQMRqX8r",
+        "fightID": 1,
+        "startTime": 1781796781152
+      },
+      "server": {
+        "id": 778,
+        "name": "神圣之歌",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 516.789375,
+      "leaderboard": 0
+    },
+    {
+      "name": "半岛铁盒丷",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 287669.7011399865,
+      "hardModeLevel": 22,
+      "duration": 1786260,
+      "startTime": 1783242816968,
+      "report": {
+        "code": "1KdazmZ9hkWLQfwX",
+        "fightID": 2,
+        "startTime": 1783242673236
+      },
+      "server": {
+        "id": 569,
+        "name": "伊森利恩",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 515.28625,
+      "leaderboard": 0
+    },
+    {
+      "name": "Neirunic",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 287560.3213800192,
+      "hardModeLevel": 22,
+      "duration": 1737605,
+      "startTime": 1782507502166,
+      "report": {
+        "code": "6k9DJaQqmGHfK4nZ",
+        "fightID": 5,
+        "startTime": 1782496501164
+      },
+      "guild": {
+        "id": 740291,
+        "name": "Perdition",
+        "faction": 0
+      },
+      "server": {
+        "id": 340,
+        "name": "Tarren Mill",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 516.29989583333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Petshellkek",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 287520.57651001215,
+      "hardModeLevel": 22,
+      "duration": 1536574,
+      "startTime": 1783120319384,
+      "report": {
+        "code": "9nRdMbCz4xaPGgpL",
+        "fightID": 1,
+        "startTime": 1783117132271
+      },
+      "guild": {
+        "id": 368012,
+        "name": "Pretty Standard",
+        "faction": 1
+      },
+      "server": {
+        "id": 117,
+        "name": "Hakkar",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 520.48804166667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Chouhll",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 287021.3083000183,
+      "hardModeLevel": 22,
+      "duration": 1599048,
+      "startTime": 1781530676842,
+      "report": {
+        "code": "napDc9CzxGhtBA4P",
+        "fightID": 5,
+        "startTime": 1781525031132
+      },
+      "server": {
+        "id": 720,
+        "name": "死亡之翼",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.1865,
+      "leaderboard": 0
+    },
+    {
+      "name": "花椰菜狗",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 286927.9076099992,
+      "hardModeLevel": 22,
+      "duration": 1641366,
+      "startTime": 1780850132455,
+      "report": {
+        "code": "fPhMLnTm28vQxNra",
+        "fightID": 2,
+        "startTime": 1780847235529
+      },
+      "server": {
+        "id": 770,
+        "name": "白银之手",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.304875,
+      "leaderboard": 0
+    },
+    {
+      "name": "小雨饱饱",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 286841.3441500068,
+      "hardModeLevel": 22,
+      "duration": 1683140,
+      "startTime": 1778999900560,
+      "report": {
+        "code": "Qtw3f1adHXT4vBVp",
+        "fightID": 1,
+        "startTime": 1778995138511
+      },
+      "server": {
+        "id": 720,
+        "name": "死亡之翼",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.43458333333,
+      "leaderboard": 0
+    },
+    {
+      "name": "小软饱饱",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 286665.8585900068,
+      "hardModeLevel": 22,
+      "duration": 1579056,
+      "startTime": 1780126814802,
+      "report": {
+        "code": "tYmD4VfwzR9PrHqT",
+        "fightID": 12,
+        "startTime": 1780117547780
+      },
+      "server": {
+        "id": 697,
+        "name": "无尽之海",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.603,
+      "leaderboard": 0
+    },
+    {
+      "name": "Scarsofdeath",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 285880.55684000254,
+      "hardModeLevel": 22,
+      "duration": 1635615,
+      "startTime": 1782417174371,
+      "report": {
+        "code": "8pLzfWPRFjHZCkqh",
+        "fightID": 2,
+        "startTime": 1782416408373
+      },
+      "guild": {
+        "id": 818372,
+        "name": "Pernies Army",
+        "faction": 0
+      },
+      "server": {
+        "id": 283,
+        "name": "Draenor",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 1,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.4246875,
+      "leaderboard": 0
+    },
+    {
+      "name": "Xmdw",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 285809.8066099882,
+      "hardModeLevel": 22,
+      "duration": 1741785,
+      "startTime": 1779885842346,
+      "report": {
+        "code": "4taxZyMJTrRVpfKA",
+        "fightID": 24,
+        "startTime": 1779870809595
+      },
+      "server": {
+        "id": 770,
+        "name": "白银之手",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 516.2128125,
+      "leaderboard": 0
+    },
+    {
+      "name": "Yanugopac",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 285647.68524998426,
+      "hardModeLevel": 22,
+      "duration": 1574189,
+      "startTime": 1781038478403,
+      "report": {
+        "code": "bj3TrJtmCHkYG6xy",
+        "fightID": 12,
+        "startTime": 1781029395869
+      },
+      "server": {
+        "id": 329,
+        "name": "Silvermoon",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.70439583333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Howdysx",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 285506.0706099868,
+      "hardModeLevel": 22,
+      "duration": 1648417,
+      "startTime": 1782322496773,
+      "report": {
+        "code": "tWTMVaNbjFJKhX2n",
+        "fightID": 32,
+        "startTime": 1782301747237
+      },
+      "guild": {
+        "id": 818766,
+        "name": "gollum gaming",
+        "faction": 0
+      },
+      "server": {
+        "id": 255,
+        "name": "Argent Dawn",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.15797916667,
+      "leaderboard": 0
+    },
+    {
+      "name": "流氓黑骑",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 285261.85255002975,
+      "hardModeLevel": 22,
+      "duration": 1694003,
+      "startTime": 1780143787946,
+      "report": {
+        "code": "cB3CyxFb8M12HXTV",
+        "fightID": 33,
+        "startTime": 1780116826565
+      },
+      "server": {
+        "id": 676,
+        "name": "影之哀伤",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.20827083333,
+      "leaderboard": 0
+    },
+    {
+      "name": "有点像丿",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 284820.74013000727,
+      "hardModeLevel": 22,
+      "duration": 1659546,
+      "startTime": 1781502448119,
+      "report": {
+        "code": "4q3PwVz12H7J6R8n",
+        "fightID": 12,
+        "startTime": 1781496399326
+      },
+      "server": {
+        "id": 790,
+        "name": "罗宁",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.926125,
+      "leaderboard": 0
+    },
+    {
+      "name": "Lovechot",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 284796.4622799754,
+      "hardModeLevel": 22,
+      "duration": 1752604,
+      "startTime": 1781876313817,
+      "report": {
+        "code": "GKbAqkWgxMTNCZtF",
+        "fightID": 2,
+        "startTime": 1781875089757
+      },
+      "server": {
+        "id": 770,
+        "name": "白银之手",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 515.98741666667,
+      "leaderboard": 0
+    },
+    {
+      "name": "遵义巫妖王",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 283876.76744002104,
+      "hardModeLevel": 22,
+      "duration": 1777801,
+      "startTime": 1783173822679,
+      "report": {
+        "code": "yRKnZhvGcPzQD8j6",
+        "fightID": 1,
+        "startTime": 1783173822679
+      },
+      "server": {
+        "id": 666,
+        "name": "布兰卡德",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 515.46247916667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Myrtdecay",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 283301.13978999853,
+      "hardModeLevel": 22,
+      "duration": 1583009,
+      "startTime": 1781558420819,
+      "report": {
+        "code": "z1dNCG9m7VW4wpbn",
+        "fightID": 15,
+        "startTime": 1781542174299
+      },
+      "guild": {
+        "id": 706957,
+        "name": "Enclave",
+        "faction": 1
+      },
+      "server": {
+        "id": 340,
+        "name": "Tarren Mill",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.52064583333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Элслэйерх",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 283043.35124999285,
+      "hardModeLevel": 22,
+      "duration": 1635316,
+      "startTime": 1779988077509,
+      "report": {
+        "code": "hBDAGa712dvLzMbX",
+        "fightID": 1,
+        "startTime": 1779971581147
+      },
+      "guild": {
+        "id": 642785,
+        "name": "Гнев Анархии",
+        "faction": 1
+      },
+      "server": {
+        "id": 495,
+        "name": "Ревущий фьорд",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.43091666667,
+      "leaderboard": 0
+    },
+    {
+      "name": "邂逅",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 282916.68221998215,
+      "hardModeLevel": 22,
+      "duration": 1693348,
+      "startTime": 1780583978341,
+      "report": {
+        "code": "Qwb7CvHrP2jJNGYp",
+        "fightID": 24,
+        "startTime": 1780570374054
+      },
+      "server": {
+        "id": 566,
+        "name": "亡语者",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.22191666667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Animeshnik",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 282910.61817997694,
+      "hardModeLevel": 22,
+      "duration": 1636745,
+      "startTime": 1782317100521,
+      "report": {
+        "code": "nB2K8vrMPkt3h7dL",
+        "fightID": 5,
+        "startTime": 1782312212154
+      },
+      "server": {
+        "id": 329,
+        "name": "Silvermoon",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.40114583333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Jjl",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 282754.7633600235,
+      "hardModeLevel": 22,
+      "duration": 1523542,
+      "startTime": 1782073153753,
+      "report": {
+        "code": "w6MgVHCBZGryqDjR",
+        "fightID": 36,
+        "startTime": 1782049652196
+      },
+      "guild": {
+        "id": 460935,
+        "name": "Broken Mind",
+        "faction": 1
+      },
+      "server": {
+        "id": 406,
+        "name": "Blackhand",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 520.75954166667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Tharkaydk",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 282682.2879999876,
+      "hardModeLevel": 22,
+      "duration": 1498287,
+      "startTime": 1782937968905,
+      "report": {
+        "code": "N3cKRa4PGQm69Xxy",
+        "fightID": 6,
+        "startTime": 1782931649550
+      },
+      "guild": {
+        "id": 362295,
+        "name": "baited",
+        "faction": 1
+      },
+      "server": {
+        "id": 406,
+        "name": "Blackhand",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 521.2856875,
+      "leaderboard": 0
+    },
+    {
+      "name": "Manolodk",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 282219.7547299862,
+      "hardModeLevel": 22,
+      "duration": 1548273,
+      "startTime": 1783119254793,
+      "report": {
+        "code": "vBMDZbFJdaX32hVj",
+        "fightID": 18,
+        "startTime": 1783080896823
+      },
+      "guild": {
+        "id": 392681,
+        "name": "GAMERS FOR FUN",
+        "faction": 0
+      },
+      "server": {
+        "id": 509,
+        "name": "Sanguino",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 520.2443125,
+      "leaderboard": 0
+    },
+    {
+      "name": "苹果渣男",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 282189.5909100175,
+      "hardModeLevel": 22,
+      "duration": 1592412,
+      "startTime": 1782399939736,
+      "report": {
+        "code": "mH1CybVQhq7GzxK6",
+        "fightID": 8,
+        "startTime": 1782394362043
+      },
+      "server": {
+        "id": 584,
+        "name": "凤凰之神",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.32475,
+      "leaderboard": 0
+    },
+    {
+      "name": "Lacook",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 281959.6481400132,
+      "hardModeLevel": 22,
+      "duration": 1585503,
+      "startTime": 1781310553124,
+      "report": {
+        "code": "jVcyH9YPzvDXgTaZ",
+        "fightID": 2,
+        "startTime": 1781309425333
+      },
+      "guild": {
+        "id": 257651,
+        "name": "Noted",
+        "faction": 1
+      },
+      "server": {
+        "id": 123,
+        "name": "Illidan",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.4686875,
+      "leaderboard": 0
+    },
+    {
+      "name": "不关昆昆的事",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 281645.1895400286,
+      "hardModeLevel": 22,
+      "duration": 1622379,
+      "startTime": 1782732759962,
+      "report": {
+        "code": "v7DwBZdcVWTj1A9L",
+        "fightID": 2,
+        "startTime": 1782731623116
+      },
+      "server": {
+        "id": 584,
+        "name": "凤凰之神",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.7004375,
+      "leaderboard": 0
+    },
+    {
+      "name": "Deshgloomer",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 281637.55634999275,
+      "hardModeLevel": 22,
+      "duration": 1570669,
+      "startTime": 1781223423219,
+      "report": {
+        "code": "DLFJHvQAMgjWqYr2",
+        "fightID": 4,
+        "startTime": 1781217800147
+      },
+      "guild": {
+        "id": 709513,
+        "name": "YEP",
+        "faction": 1
+      },
+      "server": {
+        "id": 182,
+        "name": "Sargeras",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.77772916667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Malegusdk",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 281502.4325399995,
+      "hardModeLevel": 22,
+      "duration": 1717138,
+      "startTime": 1780498617025,
+      "report": {
+        "code": "nymc13H8KNwGDgXW",
+        "fightID": 4,
+        "startTime": 1780494585888
+      },
+      "server": {
+        "id": 350,
+        "name": "Twisting Nether",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 516.72629166667,
+      "leaderboard": 0
+    },
+    {
+      "name": "亚尔修斯丶",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 281114.27863001823,
+      "hardModeLevel": 22,
+      "duration": 1680591,
+      "startTime": 1782584032276,
+      "report": {
+        "code": "qFn9YVt4NkhdJQCP",
+        "fightID": 38,
+        "startTime": 1782551871957
+      },
+      "server": {
+        "id": 618,
+        "name": "埃德萨拉",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.4876875,
+      "leaderboard": 0
+    },
+    {
+      "name": "Cosmickaguya",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 281068.96568000317,
+      "hardModeLevel": 22,
+      "duration": 1490585,
+      "startTime": 1782790644731,
+      "report": {
+        "code": "Qj4mnPqfkdW9MCXv",
+        "fightID": 10,
+        "startTime": 1782770965309
+      },
+      "guild": {
+        "id": 767466,
+        "name": "Squirrel Squad HOF",
+        "faction": 1
+      },
+      "server": {
+        "id": 123,
+        "name": "Illidan",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 521.44614583333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Panguano",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 280977.31405997276,
+      "hardModeLevel": 22,
+      "duration": 1613773,
+      "startTime": 1782082814239,
+      "report": {
+        "code": "M9F8Ypvm2yBhWVc4",
+        "fightID": 1,
+        "startTime": 1782082776746
+      },
+      "guild": {
+        "id": 693695,
+        "name": "Sanity",
+        "faction": 1
+      },
+      "server": {
+        "id": 182,
+        "name": "Sargeras",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.87972916667,
+      "leaderboard": 0
+    },
+    {
+      "name": "吕小绿与绿驴",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 280584.03683000803,
+      "hardModeLevel": 22,
+      "duration": 1633455,
+      "startTime": 1783343332256,
+      "report": {
+        "code": "vQ3LaydfAzwVtP72",
+        "fightID": 1,
+        "startTime": 1783343234157
+      },
+      "server": {
+        "id": 790,
+        "name": "罗宁",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.4696875,
+      "leaderboard": 0
+    },
+    {
+      "name": "Pasteygrip",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 280476.9056100249,
+      "hardModeLevel": 22,
+      "duration": 1555141,
+      "startTime": 1782353881412,
+      "report": {
+        "code": "m4TjHCxqZPvB7kLG",
+        "fightID": 2,
+        "startTime": 1782352341594
+      },
+      "guild": {
+        "id": 6985,
+        "name": "Style",
+        "faction": 1
+      },
+      "server": {
+        "id": 123,
+        "name": "Illidan",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 520.10122916667,
+      "leaderboard": 0
+    },
+    {
+      "name": "冥岈",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 280342.3992000222,
+      "hardModeLevel": 22,
+      "duration": 1645807,
+      "startTime": 1781294740254,
+      "report": {
+        "code": "6PJqrjfFhLKd1RCb",
+        "fightID": 1,
+        "startTime": 1781294465348
+      },
+      "server": {
+        "id": 676,
+        "name": "影之哀伤",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.21235416667,
+      "leaderboard": 0
+    },
+    {
+      "name": "竹笙椰子鸡",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 280062.7552899718,
+      "hardModeLevel": 22,
+      "duration": 1685264,
+      "startTime": 1783102385816,
+      "report": {
+        "code": "Tpcby2mAQ9HVxXPa",
+        "fightID": 17,
+        "startTime": 1783088781373
+      },
+      "server": {
+        "id": 770,
+        "name": "白银之手",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.39033333333,
+      "leaderboard": 0
+    },
+    {
+      "name": "丶圆帝凯",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 280012.9690899849,
+      "hardModeLevel": 22,
+      "duration": 1701998,
+      "startTime": 1782552376747,
+      "report": {
+        "code": "r482qfH76FGPVYpC",
+        "fightID": 2,
+        "startTime": 1782547194302
+      },
+      "server": {
+        "id": 826,
+        "name": "血色十字军",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.04170833333,
+      "leaderboard": 0
+    },
+    {
+      "name": "沉默肆柒",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 279595.2552099824,
+      "hardModeLevel": 22,
+      "duration": 1715565,
+      "startTime": 1780480280507,
+      "report": {
+        "code": "6mF78QRWxAnrXPkw",
+        "fightID": 26,
+        "startTime": 1780450888651
+      },
+      "server": {
+        "id": 611,
+        "name": "国王之谷",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 516.7590625,
+      "leaderboard": 0
+    },
+    {
+      "name": "Xanadeath",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 279263.036469996,
+      "hardModeLevel": 22,
+      "duration": 1596180,
+      "startTime": 1779388082712,
+      "report": {
+        "code": "jXytYKkVZP7BhfNM",
+        "fightID": 2,
+        "startTime": 1779387715274
+      },
+      "guild": {
+        "id": 797966,
+        "name": "TheDen",
+        "faction": 0
+      },
+      "server": {
+        "id": 320,
+        "name": "Ragnaros",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.24625,
+      "leaderboard": 0
+    },
+    {
+      "name": "Unholybulk",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 279166.7438300252,
+      "hardModeLevel": 22,
+      "duration": 1619850,
+      "startTime": 1778858218295,
+      "report": {
+        "code": "9v2L68zNJWwQD7Aj",
+        "fightID": 6,
+        "startTime": 1778849123220
+      },
+      "guild": {
+        "id": 257944,
+        "name": "Exposed",
+        "faction": 1
+      },
+      "server": {
+        "id": 286,
+        "name": "Drak'thul",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.753125,
+      "leaderboard": 0
+    },
+    {
+      "name": "Xiaoyu",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 279079.7488999963,
+      "hardModeLevel": 22,
+      "duration": 1634200,
+      "startTime": 1782815513016,
+      "report": {
+        "code": "pPCzaJF3RNBgw1fZ",
+        "fightID": 29,
+        "startTime": 1782802496946
+      },
+      "server": {
+        "id": 569,
+        "name": "伊森利恩",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.45416666667,
+      "leaderboard": 0
+    },
+    {
+      "name": "花狩舞",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 279012.02258998156,
+      "hardModeLevel": 22,
+      "duration": 1740312,
+      "startTime": 1782663573264,
+      "report": {
+        "code": "z4g3jV6ypDH1dwFx",
+        "fightID": 1,
+        "startTime": 1782657632246
+      },
+      "server": {
+        "id": 750,
+        "name": "燃烧之刃",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 516.2435,
+      "leaderboard": 0
+    },
+    {
+      "name": "是陌客呀",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 278992.60765999556,
+      "hardModeLevel": 22,
+      "duration": 1554085,
+      "startTime": 1781937129496,
+      "report": {
+        "code": "padYV7K2HmRZDnC1",
+        "fightID": 12,
+        "startTime": 1781922928655
+      },
+      "server": {
+        "id": 750,
+        "name": "燃烧之刃",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 520.12322916667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Mjtdknight",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 278982.11764001846,
+      "hardModeLevel": 22,
+      "duration": 1629707,
+      "startTime": 1779289937637,
+      "report": {
+        "code": "Q9Xa2xBNpDqvrJc6",
+        "fightID": 2,
+        "startTime": 1779289876046
+      },
+      "server": {
+        "id": 747,
+        "name": "熊猫酒仙",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.54777083333,
+      "leaderboard": 0
+    },
+    {
+      "name": "散华礼弥丷",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 278964.42575997114,
+      "hardModeLevel": 22,
+      "duration": 1591348,
+      "startTime": 1780333853538,
+      "report": {
+        "code": "Qr6YMnZhdjzgkwtm",
+        "fightID": 10,
+        "startTime": 1780326300171
+      },
+      "server": {
+        "id": 770,
+        "name": "白银之手",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.34691666667,
+      "leaderboard": 0
+    },
+    {
+      "name": "紅色體育生",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 278902.23233002424,
+      "hardModeLevel": 22,
+      "duration": 1611320,
+      "startTime": 1779525341185,
+      "report": {
+        "code": "nNd9qp41ZbcCJMA7",
+        "fightID": 17,
+        "startTime": 1779514345869
+      },
+      "server": {
+        "id": 818,
+        "name": "萨菲隆",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.93083333333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Rangedbad",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 278785.32433998585,
+      "hardModeLevel": 22,
+      "duration": 1687013,
+      "startTime": 1782189577646,
+      "report": {
+        "code": "xPJ3NfR4G8j6YHkv",
+        "fightID": 14,
+        "startTime": 1782098185040
+      },
+      "guild": {
+        "id": 472254,
+        "name": "Twitch Prime",
+        "faction": 1
+      },
+      "server": {
+        "id": 18,
+        "name": "Area 52",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.35389583333,
+      "leaderboard": 0
+    },
+    {
+      "name": "夜幕余温嗯",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 278587.8197399974,
+      "hardModeLevel": 22,
+      "duration": 1719057,
+      "startTime": 1783050563831,
+      "report": {
+        "code": "xZX4VGKhfdyaqJ1Y",
+        "fightID": 1,
+        "startTime": 1783050486927
+      },
+      "server": {
+        "id": 750,
+        "name": "燃烧之刃",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 516.6863125,
+      "leaderboard": 0
+    },
+    {
+      "name": "Ddykk",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 278450.4332200289,
+      "hardModeLevel": 22,
+      "duration": 1594001,
+      "startTime": 1781191607187,
+      "report": {
+        "code": "2VFPpBwkab3LmzCh",
+        "fightID": 2,
+        "startTime": 1781183145912
+      },
+      "server": {
+        "id": 584,
+        "name": "凤凰之神",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.29164583333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Nekzrowo",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 278209.3721600175,
+      "hardModeLevel": 22,
+      "duration": 1603333,
+      "startTime": 1782567195098,
+      "report": {
+        "code": "JXjT6cLQ1tkhzHZV",
+        "fightID": 5,
+        "startTime": 1782561916028
+      },
+      "guild": {
+        "id": 830,
+        "name": "FatSharkYes",
+        "faction": 1
+      },
+      "server": {
+        "id": 350,
+        "name": "Twisting Nether",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.09722916667,
+      "leaderboard": 0
+    },
+    {
+      "name": "面瘫的薛迪凯",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 278129.1912599802,
+      "hardModeLevel": 22,
+      "duration": 1766757,
+      "startTime": 1783176954618,
+      "report": {
+        "code": "4AWbTKHx3Y9ZP72D",
+        "fightID": 57,
+        "startTime": 1782654375826
+      },
+      "server": {
+        "id": 569,
+        "name": "伊森利恩",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 515.6925625,
+      "leaderboard": 0
+    },
+    {
+      "name": "Miraitowaxx",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 277944.7984099984,
+      "hardModeLevel": 22,
+      "duration": 1604949,
+      "startTime": 1782487931697,
+      "report": {
+        "code": "6Z7jd2rRqAFhYWXH",
+        "fightID": 5,
+        "startTime": 1782481013715
+      },
+      "server": {
+        "id": 584,
+        "name": "凤凰之神",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 1,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.0635625,
+      "leaderboard": 0
+    },
+    {
+      "name": "绯行雪绒",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 277744.8265699744,
+      "hardModeLevel": 22,
+      "duration": 1699853,
+      "startTime": 1782484485298,
+      "report": {
+        "code": "nhTH3QgVR4Yf8bkN",
+        "fightID": 1,
+        "startTime": 1782484319203
+      },
+      "server": {
+        "id": 844,
+        "name": "迦拉克隆",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.08639583333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Mortdk",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 277702.11401998997,
+      "hardModeLevel": 22,
+      "duration": 1745608,
+      "startTime": 1782793673775,
+      "report": {
+        "code": "VvGhKp3bFYRQ7aTC",
+        "fightID": 11,
+        "startTime": 1782784775790
+      },
+      "guild": {
+        "id": 18476,
+        "name": "Decidedly Uncouth",
+        "faction": 1
+      },
+      "server": {
+        "id": 206,
+        "name": "Stormrage",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 516.13316666667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Wrnaa",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 277562.4366899729,
+      "hardModeLevel": 22,
+      "duration": 1579547,
+      "startTime": 1781909082644,
+      "report": {
+        "code": "VyPd734BNMmYLr6X",
+        "fightID": 7,
+        "startTime": 1781904743729
+      },
+      "server": {
+        "id": 406,
+        "name": "Blackhand",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.59277083333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Effendxdk",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 277513.0455300212,
+      "hardModeLevel": 22,
+      "duration": 1613541,
+      "startTime": 1781310285329,
+      "report": {
+        "code": "gA96YPnQX2caqmpB",
+        "fightID": 1,
+        "startTime": 1781310285329
+      },
+      "guild": {
+        "id": 328114,
+        "name": "Project",
+        "faction": 1
+      },
+      "server": {
+        "id": 304,
+        "name": "Kazzak",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.8845625,
+      "leaderboard": 0
+    },
+    {
+      "name": "只会这个丷",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 277502.15034997463,
+      "hardModeLevel": 22,
+      "duration": 1628827,
+      "startTime": 1782396506104,
+      "report": {
+        "code": "VaH2qPhY9bmQ1FJ8",
+        "fightID": 13,
+        "startTime": 1782391835957
+      },
+      "server": {
+        "id": 697,
+        "name": "无尽之海",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.56610416667,
+      "leaderboard": 0
+    },
+    {
+      "name": "小蜜蜂的蜜丶",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 277379.13264000416,
+      "hardModeLevel": 22,
+      "duration": 1631398,
+      "startTime": 1783346313351,
+      "report": {
+        "code": "bmQ31j2xCAwD768h",
+        "fightID": 1,
+        "startTime": 1783343577400
+      },
+      "server": {
+        "id": 713,
+        "name": "格瑞姆巴托",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.51254166667,
+      "leaderboard": 0
+    },
+    {
+      "name": "湖光死骑丷",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 277374.201579988,
+      "hardModeLevel": 22,
+      "duration": 1632759,
+      "startTime": 1780211491871,
+      "report": {
+        "code": "kTq2p1xZfdh68gPG",
+        "fightID": 4,
+        "startTime": 1780207380865
+      },
+      "server": {
+        "id": 676,
+        "name": "影之哀伤",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.4841875,
+      "leaderboard": 0
+    },
+    {
+      "name": "Zydk",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 277316.46875,
+      "hardModeLevel": 22,
+      "duration": 1689856,
+      "startTime": 1783262797347,
+      "report": {
+        "code": "QHfLDB1TajqbvMzK",
+        "fightID": 27,
+        "startTime": 1783175169643
+      },
+      "server": {
+        "id": 790,
+        "name": "罗宁",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.29466666667,
+      "leaderboard": 0
+    },
+    {
+      "name": "如故",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 277056.7720900178,
+      "hardModeLevel": 22,
+      "duration": 1609813,
+      "startTime": 1782482683548,
+      "report": {
+        "code": "7Fa3h4tzpVAKjkZH",
+        "fightID": 3,
+        "startTime": 1782475104559
+      },
+      "guild": {
+        "id": 767994,
+        "name": "DLT",
+        "faction": 0
+      },
+      "server": {
+        "id": 785,
+        "name": "红龙军团",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.96222916667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Qlaithf",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 277055.7579200268,
+      "hardModeLevel": 22,
+      "duration": 1542776,
+      "startTime": 1782744161881,
+      "report": {
+        "code": "WPG7JxdNtbjY6znA",
+        "fightID": 2,
+        "startTime": 1782744019271
+      },
+      "server": {
+        "id": 329,
+        "name": "Silvermoon",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 520.35883333333,
+      "leaderboard": 0
+    },
+    {
+      "name": "塵世美",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 277033.3784099817,
+      "hardModeLevel": 22,
+      "duration": 1664387,
+      "startTime": 1782743283932,
+      "report": {
+        "code": "aJnmQ81Vp3W9qdwz",
+        "fightID": 1,
+        "startTime": 1782738757323
+      },
+      "server": {
+        "id": 770,
+        "name": "白银之手",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.82527083333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Хеймгрип",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276987.96920001507,
+      "hardModeLevel": 22,
+      "duration": 1616759,
+      "startTime": 1782647898124,
+      "report": {
+        "code": "FZraqBw1dV8pjk6g",
+        "fightID": 3,
+        "startTime": 1782643520011
+      },
+      "guild": {
+        "id": 116531,
+        "name": "Аэтернум",
+        "faction": 1
+      },
+      "server": {
+        "id": 495,
+        "name": "Ревущий фьорд",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.81752083333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Swagscourge",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276885.9888700247,
+      "hardModeLevel": 22,
+      "duration": 1606100,
+      "startTime": 1782861675967,
+      "report": {
+        "code": "9kPF4g6T1LYMwKZ7",
+        "fightID": 6,
+        "startTime": 1782847473454
+      },
+      "guild": {
+        "id": 611120,
+        "name": "Nineteen Reasons Why",
+        "faction": 1
+      },
+      "server": {
+        "id": 222,
+        "name": "Tichondrius",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.03958333333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Clayxzdk",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276834.95618999004,
+      "hardModeLevel": 22,
+      "duration": 1602837,
+      "startTime": 1782504536619,
+      "report": {
+        "code": "fk3vVZ8nb6LghYHw",
+        "fightID": 21,
+        "startTime": 1782480000756
+      },
+      "server": {
+        "id": 406,
+        "name": "Blackhand",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 1,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.1075625,
+      "leaderboard": 0
+    },
+    {
+      "name": "新木优子",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276789.22030997276,
+      "hardModeLevel": 22,
+      "duration": 1693614,
+      "startTime": 1783099875557,
+      "report": {
+        "code": "9tZwKqx1mVnD6TkG",
+        "fightID": 2,
+        "startTime": 1783099450023
+      },
+      "server": {
+        "id": 584,
+        "name": "凤凰之神",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.216375,
+      "leaderboard": 0
+    },
+    {
+      "name": "Chiraindk",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276468.28880000114,
+      "hardModeLevel": 22,
+      "duration": 1586914,
+      "startTime": 1782104668890,
+      "report": {
+        "code": "GJyW96BtmQxPqMTF",
+        "fightID": 1,
+        "startTime": 1782103906837
+      },
+      "guild": {
+        "id": 575261,
+        "name": "Squirrel Squad",
+        "faction": 1
+      },
+      "server": {
+        "id": 123,
+        "name": "Illidan",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.43929166667,
+      "leaderboard": 0
+    },
+    {
+      "name": "萌萌拽拽球",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276418.04360997677,
+      "hardModeLevel": 22,
+      "duration": 1748418,
+      "startTime": 1783098794964,
+      "report": {
+        "code": "mY21AawpPV8TbzCx",
+        "fightID": 7,
+        "startTime": 1783092470002
+      },
+      "server": {
+        "id": 611,
+        "name": "国王之谷",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 516.074625,
+      "leaderboard": 0
+    },
+    {
+      "name": "Ravindrannor",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276358.9533299804,
+      "hardModeLevel": 22,
+      "duration": 1687377,
+      "startTime": 1782653717584,
+      "report": {
+        "code": "TQpKN2fyR9D4JrtY",
+        "fightID": 4,
+        "startTime": 1782647145572
+      },
+      "guild": {
+        "id": 245548,
+        "name": "Technique",
+        "faction": 0
+      },
+      "server": {
+        "id": 183,
+        "name": "Saurfang",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.3463125,
+      "leaderboard": 0
+    },
+    {
+      "name": "Scheißtie",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276315.9529200196,
+      "hardModeLevel": 22,
+      "duration": 1776928,
+      "startTime": 1783292258814,
+      "report": {
+        "code": "j29m4XFAyCvpGt8x",
+        "fightID": 1,
+        "startTime": 1783292258550
+      },
+      "server": {
+        "id": 283,
+        "name": "Draenor",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 515.48066666667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Arthasoul",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276286.99992001057,
+      "hardModeLevel": 22,
+      "duration": 1707782,
+      "startTime": 1782400489118,
+      "report": {
+        "code": "B4zv1ZVgrKyGkbYm",
+        "fightID": 23,
+        "startTime": 1782384873557
+      },
+      "server": {
+        "id": 770,
+        "name": "白银之手",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 516.92120833333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Scythox",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276263.31160002947,
+      "hardModeLevel": 22,
+      "duration": 1525933,
+      "startTime": 1782937212323,
+      "report": {
+        "code": "QmBfZRVt2DnpNy48",
+        "fightID": 26,
+        "startTime": 1782905053740
+      },
+      "guild": {
+        "id": 573689,
+        "name": "Pajala Sunrise",
+        "faction": 1
+      },
+      "server": {
+        "id": 336,
+        "name": "Stormscale",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 520.70972916667,
+      "leaderboard": 0
+    },
+    {
+      "name": "八雲貝妮",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276150.3309699893,
+      "hardModeLevel": 22,
+      "duration": 1631254,
+      "startTime": 1779976518517,
+      "report": {
+        "code": "YQ916wGn8JaXqbzh",
+        "fightID": 4,
+        "startTime": 1779972404035
+      },
+      "server": {
+        "id": 770,
+        "name": "白银之手",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.51554166667,
+      "leaderboard": 0
+    },
+    {
+      "name": "叹息",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276111.59387999773,
+      "hardModeLevel": 22,
+      "duration": 1633274,
+      "startTime": 1782402322091,
+      "report": {
+        "code": "NjZ9pbvrMXJhCfzw",
+        "fightID": 2,
+        "startTime": 1782401988930
+      },
+      "server": {
+        "id": 825,
+        "name": "血羽",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.47345833333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Angelssb",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276056.1473699808,
+      "hardModeLevel": 22,
+      "duration": 1653406,
+      "startTime": 1782178209566,
+      "report": {
+        "code": "ZFa79AKjGmbgNvW1",
+        "fightID": 26,
+        "startTime": 1782130561680
+      },
+      "guild": {
+        "id": 797966,
+        "name": "TheDen",
+        "faction": 0
+      },
+      "server": {
+        "id": 340,
+        "name": "Tarren Mill",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.05404166667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Eskawhtng",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 276018.5125499964,
+      "hardModeLevel": 22,
+      "duration": 1621927,
+      "startTime": 1780870094484,
+      "report": {
+        "code": "GYB3xpWaDZn6Kmw4",
+        "fightID": 2,
+        "startTime": 1780867463958
+      },
+      "guild": {
+        "id": 161167,
+        "name": "Internet Friends",
+        "faction": 1
+      },
+      "server": {
+        "id": 304,
+        "name": "Kazzak",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.70985416667,
+      "leaderboard": 0
+    },
+    {
+      "name": "一二三骑",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 275937.8640400171,
+      "hardModeLevel": 22,
+      "duration": 1761476,
+      "startTime": 1779721184325,
+      "report": {
+        "code": "c2atZPWmfk7pHg8V",
+        "fightID": 4,
+        "startTime": 1779717010316
+      },
+      "server": {
+        "id": 697,
+        "name": "无尽之海",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 515.80258333333,
+      "leaderboard": 0
+    },
+    {
+      "name": "芬梨道上",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 275928.106670022,
+      "hardModeLevel": 22,
+      "duration": 1594002,
+      "startTime": 1783005289650,
+      "report": {
+        "code": "dhLaAxr4R9QDkM8K",
+        "fightID": 11,
+        "startTime": 1782992230905
+      },
+      "server": {
+        "id": 564,
+        "name": "主宰之剑",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.291625,
+      "leaderboard": 0
+    },
+    {
+      "name": "Rammoskebab",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 275867.575699985,
+      "hardModeLevel": 22,
+      "duration": 1549815,
+      "startTime": 1782227045933,
+      "report": {
+        "code": "gGQcj7LN4avJ3WRh",
+        "fightID": 6,
+        "startTime": 1782224260383
+      },
+      "guild": {
+        "id": 692371,
+        "name": "neverlucky",
+        "faction": 1
+      },
+      "server": {
+        "id": 427,
+        "name": "Eredar",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 520.2121875,
+      "leaderboard": 0
+    },
+    {
+      "name": "Xrceus",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 275518.29193001986,
+      "hardModeLevel": 22,
+      "duration": 1568641,
+      "startTime": 1782682380895,
+      "report": {
+        "code": "hVZG8jFW1fgwrNHA",
+        "fightID": 8,
+        "startTime": 1782673593556
+      },
+      "guild": {
+        "id": 478,
+        "name": "Nurfed",
+        "faction": 0
+      },
+      "server": {
+        "id": 222,
+        "name": "Tichondrius",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.81997916667,
+      "leaderboard": 0
+    },
+    {
+      "name": "阿良仔",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 275514.3385900259,
+      "hardModeLevel": 22,
+      "duration": 1681663,
+      "startTime": 1782151647751,
+      "report": {
+        "code": "mKxFaBzVWYDXwLvc",
+        "fightID": 23,
+        "startTime": 1782139120212
+      },
+      "server": {
+        "id": 745,
+        "name": "烈焰峰",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.46535416667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Icytren",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 275396.92895001173,
+      "hardModeLevel": 22,
+      "duration": 1587701,
+      "startTime": 1782792902993,
+      "report": {
+        "code": "ZqNYwAgJKdmjXbvQ",
+        "fightID": 18,
+        "startTime": 1782779451847
+      },
+      "guild": {
+        "id": 414361,
+        "name": "Merit",
+        "faction": 1
+      },
+      "server": {
+        "id": 18,
+        "name": "Area 52",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.42289583333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Gladge",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 275386.2021600008,
+      "hardModeLevel": 22,
+      "duration": 1626934,
+      "startTime": 1781971522241,
+      "report": {
+        "code": "7Kj9FwNQRZJfqmzr",
+        "fightID": 4,
+        "startTime": 1781964774695
+      },
+      "guild": {
+        "id": 195601,
+        "name": "styx",
+        "faction": 0
+      },
+      "server": {
+        "id": 408,
+        "name": "Blackrock",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.60554166667,
+      "leaderboard": 0
+    },
+    {
+      "name": "隨你愛咋咋滴",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 275104.7317799926,
+      "hardModeLevel": 22,
+      "duration": 1740378,
+      "startTime": 1782487980577,
+      "report": {
+        "code": "H1WKBVACGQTMYw34",
+        "fightID": 1,
+        "startTime": 1782487600033
+      },
+      "server": {
+        "id": 662,
+        "name": "巫妖之王",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 516.242125,
+      "leaderboard": 0
+    },
+    {
+      "name": "泣月丶",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 275061.3240699768,
+      "hardModeLevel": 22,
+      "duration": 1618027,
+      "startTime": 1781413437779,
+      "report": {
+        "code": "CvmKhHzpYy3t2MbX",
+        "fightID": 4,
+        "startTime": 1781412191460
+      },
+      "server": {
+        "id": 666,
+        "name": "布兰卡德",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.79110416667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Kasadar",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 274535.3709899783,
+      "hardModeLevel": 22,
+      "duration": 1540754,
+      "startTime": 1781483844608,
+      "report": {
+        "code": "G3zaJpFQ6CMDbdYg",
+        "fightID": 1,
+        "startTime": 1781445721823
+      },
+      "guild": {
+        "id": 461048,
+        "name": "Intolerance",
+        "faction": 1
+      },
+      "server": {
+        "id": 283,
+        "name": "Draenor",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 1,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 520.40095833333,
+      "leaderboard": 0
+    },
+    {
+      "name": "Horseplushie",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 274496.2311400175,
+      "hardModeLevel": 22,
+      "duration": 1662366,
+      "startTime": 1782542950364,
+      "report": {
+        "code": "HvA6k1TWPYJztwM3",
+        "fightID": 21,
+        "startTime": 1782530680894
+      },
+      "server": {
+        "id": 222,
+        "name": "Tichondrius",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 517.867375,
+      "leaderboard": 0
+    },
+    {
+      "name": "Risk",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 274371.58678001165,
+      "hardModeLevel": 22,
+      "duration": 1578697,
+      "startTime": 1782248564884,
+      "report": {
+        "code": "6mK1YjRPgy9fACvh",
+        "fightID": 9,
+        "startTime": 1782245029158
+      },
+      "guild": {
+        "id": 547062,
+        "name": "Shade",
+        "faction": 1
+      },
+      "server": {
+        "id": 123,
+        "name": "Illidan",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.61047916667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Soodlik",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 274364.28171002865,
+      "hardModeLevel": 22,
+      "duration": 1497473,
+      "startTime": 1782042876694,
+      "report": {
+        "code": "7VZAGNxahcjBR9nL",
+        "fightID": 3,
+        "startTime": 1782039312752
+      },
+      "server": {
+        "id": 329,
+        "name": "Silvermoon",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 521.30264583333,
+      "leaderboard": 0
+    },
+    {
+      "name": "约丷修亚丶",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 274360.22042000294,
+      "hardModeLevel": 22,
+      "duration": 1798732,
+      "startTime": 1779120391690,
+      "report": {
+        "code": "Cd4fmWDygNFQYM8a",
+        "fightID": 3,
+        "startTime": 1779117551438
+      },
+      "server": {
+        "id": 584,
+        "name": "凤凰之神",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 515.02641666667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Asdgripgodx",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 274280.64543002844,
+      "hardModeLevel": 22,
+      "duration": 1606957,
+      "startTime": 1783268707370,
+      "report": {
+        "code": "RbD86Nzf9ZBXGyxC",
+        "fightID": 3,
+        "startTime": 1783264634087
+      },
+      "guild": {
+        "id": 152790,
+        "name": "Forbidden",
+        "faction": 1
+      },
+      "server": {
+        "id": 335,
+        "name": "Stormreaver",
+        "region": "EU"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 519.02172916667,
+      "leaderboard": 0
+    },
+    {
+      "name": "Petmastery",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 274190.3190000057,
+      "hardModeLevel": 22,
+      "duration": 1480460,
+      "startTime": 1781806940911,
+      "report": {
+        "code": "fB2LPWxaz36XYwM8",
+        "fightID": 40,
+        "startTime": 1781794909626
+      },
+      "guild": {
+        "id": 206055,
+        "name": "Vesper",
+        "faction": 1
+      },
+      "server": {
+        "id": 245,
+        "name": "Zul'jin",
+        "region": "US"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 521.65708333333,
+      "leaderboard": 0
+    },
+    {
+      "name": "竹殁寒川",
+      "class": "DeathKnight",
+      "spec": "Unholy",
+      "amount": 274115.2088699937,
+      "hardModeLevel": 22,
+      "duration": 1636297,
+      "startTime": 1781970729286,
+      "report": {
+        "code": "FX6a7NPCvHwTgnDR",
+        "fightID": 2,
+        "startTime": 1781964693657
+      },
+      "server": {
+        "id": 655,
+        "name": "安苏",
+        "region": "CN"
+      },
+      "bracketData": 22,
+      "faction": 0,
+      "affixes": [
+        9,
+        10,
+        147
+      ],
+      "medal": "bronze",
+      "score": 518.41047916667,
+      "leaderboard": 0
+    }
+  ]
+}

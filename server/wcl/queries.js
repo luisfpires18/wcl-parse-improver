@@ -1,6 +1,6 @@
 // GraphQL query strings for the Warcraft Logs v2 client API.
-// zoneRankings / characterRankings / table / events are loosely-typed JSON
-// scalars — parse them defensively (see server/parse/).
+// zoneRankings / encounterRankings / characterRankings / table / events are
+// loosely-typed JSON scalars — parse them defensively (see server/parse/).
 
 export const ZONE_RANKINGS = `
 query ZoneRankings($name: String!, $serverSlug: String!, $serverRegion: String!, $zoneID: Int!, $metric: CharacterPageRankingMetricType, $byBracket: Boolean, $role: RoleType) {
@@ -12,27 +12,47 @@ query ZoneRankings($name: String!, $serverSlug: String!, $serverRegion: String!,
   }
 }`;
 
-export const CHARACTER_RANKINGS = `
-query CharacterRankings($encounterID: Int!, $className: String!, $specName: String!, $bracket: Int!, $page: Int!) {
-  worldData {
-    encounter(id: $encounterID) {
-      name
-      characterRankings(className: $className, specName: $specName, bracket: $bracket, page: $page)
+// ranks[] = every logged run of this character on this encounter, with
+// bracketData (key level), rankPercent (parse percentile within bracket)
+// and report{code,fightID}.
+export const ENCOUNTER_RANKINGS = `
+query EncounterRankings($name: String!, $serverSlug: String!, $serverRegion: String!, $encounterID: Int!, $metric: CharacterRankingMetricType, $byBracket: Boolean, $role: RoleType) {
+  characterData {
+    character(name: $name, serverSlug: $serverSlug, serverRegion: $serverRegion) {
+      encounterRankings(encounterID: $encounterID, metric: $metric, byBracket: $byBracket, role: $role)
     }
   }
 }`;
 
-export const REPORT_ACTORS = `
-query ReportActors($code: String!) {
+// bracket is an INDEX into the zone's bracket list, not the key level itself.
+// For zone 47 (min level 2, bucket 1): bracketIndex = keyLevel - 1. Verified
+// empirically: bracket 20 -> all bracketData 21, bracket 21 -> all 22.
+export const CHARACTER_RANKINGS = `
+query CharacterRankings($encounterID: Int!, $className: String!, $specName: String!, $bracket: Int, $page: Int, $metric: CharacterRankingMetricType) {
+  worldData {
+    encounter(id: $encounterID) {
+      name
+      characterRankings(className: $className, specName: $specName, bracket: $bracket, page: $page, metric: $metric)
+    }
+  }
+}`;
+
+export const ZONE_BRACKETS = `
+query ZoneBrackets($zoneID: Int!) {
+  worldData {
+    zone(id: $zoneID) {
+      name
+      brackets { type min max bucket }
+    }
+  }
+}`;
+
+export const REPORT_FIGHTS_ACTORS = `
+query ReportFightsActors($code: String!, $fightIDs: [Int!]) {
   reportData {
     report(code: $code) {
-      masterData(translate: true) {
-        actors(type: "Player") {
-          id
-          name
-          subType
-        }
-      }
+      fights(fightIDs: $fightIDs) { id startTime endTime keystoneLevel keystoneTime kill name }
+      masterData(translate: true) { actors(type: "Player") { id name subType server } }
     }
   }
 }`;
@@ -46,11 +66,11 @@ query ReportTable($code: String!, $fightIDs: [Int!], $dataType: TableDataType!, 
   }
 }`;
 
-export const REPORT_EVENTS = `
-query ReportEvents($code: String!, $fightIDs: [Int!], $dataType: EventDataType!, $sourceID: Int!, $startTime: Float, $endTime: Float) {
+export const REPORT_CAST_EVENTS = `
+query ReportCastEvents($code: String!, $fightIDs: [Int!], $sourceID: Int!, $startTime: Float, $endTime: Float) {
   reportData {
     report(code: $code) {
-      events(fightIDs: $fightIDs, dataType: $dataType, sourceID: $sourceID, startTime: $startTime, endTime: $endTime) {
+      events(fightIDs: $fightIDs, dataType: Casts, sourceID: $sourceID, startTime: $startTime, endTime: $endTime) {
         data
         nextPageTimestamp
       }

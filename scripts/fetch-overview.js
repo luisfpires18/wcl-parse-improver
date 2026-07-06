@@ -31,7 +31,7 @@ console.log(`Character: ${character}  (zone ${zoneID})`);
 console.log(
   `Best avg: ${fmtPct(overall.bestPerformanceAverage)}  Median avg: ${fmtPct(overall.medianPerformanceAverage)}` +
     (overall.scorePoints ? `  Score points: ${overall.scorePoints.toFixed(1)}` : '') +
-    '\n(percentiles = among your own spec at the same keystone level)\n'
+    '\n(percentiles = your spec\'s parses at the shown keystone level — matches the WCL site)\n'
 );
 
 const rows = dungeons.map((d) => ({

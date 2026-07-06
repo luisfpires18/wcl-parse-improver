@@ -52,7 +52,7 @@ function renderOverview({ character, overall, dungeons }) {
     <h2>${character}</h2>
     <p>Best avg: <b>${fmtPct(overall.bestPerformanceAverage)}</b> ·
        Median avg: <b>${fmtPct(overall.medianPerformanceAverage)}</b>
-       <small>(percentiles vs your own spec at the same key level)</small></p>
+       <small>(parse percentiles at the shown key level — matches the WCL site)</small></p>
     <table>
       <thead><tr>
         <th>Dungeon</th><th>Level</th><th>Time</th><th>Runs</th><th>Points</th>

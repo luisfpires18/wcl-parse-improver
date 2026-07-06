@@ -1,0 +1,5762 @@
+{
+  "data": {
+    "entries": [
+      {
+        "name": "Army of the Damned",
+        "guid": 1242294,
+        "type": 48,
+        "total": 47177025,
+        "totalReduced": 0,
+        "abilityIcon": "ability_maldraxxus_mage.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Shadow Bolt",
+            "guid": 317791,
+            "actor": 16,
+            "type": 32,
+            "actorName": "Magus of the Dead",
+            "actorIcon": "abilities/ability_maldraxxus_mage.jpg",
+            "actorType": "Pet",
+            "total": 42040278,
+            "totalReduced": 0,
+            "abilityIcon": "spell_shadow_shadowbolt.jpg",
+            "uses": 2064,
+            "hitCount": 9836,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 3188,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Magus of the Dead",
+                "total": 42040278,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Rotting Ghoul",
+                "total": 6479520,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 5119211,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 5001976,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Leaping Geist",
+                "total": 4828270,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 4232041,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 18676825,
+                "totalReduced": 0,
+                "count": 6648,
+                "countReduced": 0,
+                "absorbOrOverheal": 214306,
+                "min": 1515,
+                "max": 6033
+              },
+              {
+                "type": "Critical Hit",
+                "total": 27620227,
+                "totalReduced": 0,
+                "count": 3188,
+                "countReduced": 0,
+                "absorbOrOverheal": 334466,
+                "min": 3277,
+                "max": 19555
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Frostbolt",
+            "guid": 317792,
+            "actor": 16,
+            "type": 16,
+            "actorName": "Magus of the Dead",
+            "actorIcon": "abilities/ability_maldraxxus_mage.jpg",
+            "actorType": "Pet",
+            "total": 5136747,
+            "totalReduced": 0,
+            "abilityIcon": "spell_frost_frostbolt02.jpg",
+            "uptime": 191250,
+            "uses": 604,
+            "hitCount": 602,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 195,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Magus of the Dead",
+                "total": 5136747,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 1278026,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 811904,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 723449,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Deathwhisper Necrolyte",
+                "total": 621751,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Dreadpulse Lich",
+                "total": 579874,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 2102738,
+                "totalReduced": 0,
+                "count": 407,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 2714,
+                "max": 10525
+              },
+              {
+                "type": "Critical Hit",
+                "total": 3043464,
+                "totalReduced": 0,
+                "count": 195,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 7803,
+                "max": 30565
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "uptime": 191250,
+        "hitCount": 10438,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 3383,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Magus of the Dead",
+            "total": 47177025,
+            "totalReduced": 0,
+            "type": "Pet"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Rotting Ghoul",
+            "total": 6488201,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 5510067,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Wrathbone Enforcer",
+            "total": 5144482,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 5098022,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Leaping Geist",
+            "total": 4837617,
+            "totalReduced": 0,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 20779563,
+            "totalReduced": 0,
+            "count": 7055,
+            "countReduced": 0,
+            "absorbOrOverheal": 214306,
+            "min": 1515,
+            "max": 10525
+          },
+          {
+            "type": "Critical Hit",
+            "total": 30663691,
+            "totalReduced": 0,
+            "count": 3383,
+            "countReduced": 0,
+            "absorbOrOverheal": 334466,
+            "min": 3277,
+            "max": 30565
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Dread Plague",
+        "guid": 1242564,
+        "actor": 4,
+        "type": 32,
+        "actorName": "Unreally",
+        "actorIcon": "DeathKnight",
+        "actorType": "DeathKnight",
+        "total": 2793799,
+        "abilityIcon": "ability_warlock_everlastingaffliction.jpg",
+        "hitCount": 180,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 66,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 2793799,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Quarry Tormentor",
+            "total": 547842,
+            "type": "NPC"
+          },
+          {
+            "name": "Wrathbone Enforcer",
+            "total": 486848,
+            "type": "NPC"
+          },
+          {
+            "name": "Plungetalon Gargoyle",
+            "total": 365624,
+            "type": "NPC"
+          },
+          {
+            "name": "Rotting Ghoul",
+            "total": 344119,
+            "type": "NPC"
+          },
+          {
+            "name": "Leaping Geist",
+            "total": 338545,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 1227367,
+            "count": 114,
+            "absorbOrOverheal": 73277,
+            "min": 7937,
+            "max": 16661
+          },
+          {
+            "type": "Critical Hit",
+            "total": 1670777,
+            "count": 66,
+            "absorbOrOverheal": 82420,
+            "min": 19990,
+            "max": 32529
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Dread Plague",
+        "guid": 1240996,
+        "type": 32,
+        "total": 23434387,
+        "abilityIcon": "inv12_ability_deathknight_empowereddreadplague.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Putrefy",
+            "guid": 1277016,
+            "actor": 4,
+            "type": 32,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 11954231,
+            "abilityIcon": "inv12_ability_deathknight_putrefy.jpg",
+            "hitCount": 320,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 105,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 11954231,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 2805266,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 1655738,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 1652816,
+                "type": "Boss"
+              },
+              {
+                "name": "Deathwhisper Necrolyte",
+                "total": 1505115,
+                "type": "NPC"
+              },
+              {
+                "name": "Ick",
+                "total": 1455661,
+                "type": "Boss"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 5315735,
+                "count": 215,
+                "absorbOrOverheal": 0,
+                "min": 9786,
+                "max": 53649
+              },
+              {
+                "type": "Critical Hit",
+                "total": 6767153,
+                "count": 105,
+                "absorbOrOverheal": 0,
+                "min": 24312,
+                "max": 134898
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Dread Plague",
+            "guid": 1240996,
+            "actor": 4,
+            "type": 32,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 7836739,
+            "abilityIcon": "inv12_ability_deathknight_empowereddreadplague.jpg",
+            "uptime": 1527754,
+            "hitCount": 0,
+            "tickCount": 915,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 0,
+            "critTickCount": 346,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 7836739,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 1821223,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 1245253,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 1242689,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 1069092,
+                "type": "Boss"
+              },
+              {
+                "name": "Deathwhisper Necrolyte",
+                "total": 731973,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Tick",
+                "total": 3250835,
+                "count": 569,
+                "absorbOrOverheal": 0,
+                "min": 3201,
+                "max": 10530
+              },
+              {
+                "type": "Critical Tick",
+                "total": 4727910,
+                "count": 346,
+                "absorbOrOverheal": 0,
+                "min": 5070,
+                "max": 23945
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Dread Plague (Erupt)",
+            "guid": 1241171,
+            "actor": 4,
+            "type": 32,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 3643417,
+            "abilityIcon": "inv12_ability_deathknight_empowereddreadplague.jpg",
+            "hitCount": 757,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 255,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 3643417,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 853123,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 584034,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 541831,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 451942,
+                "type": "Boss"
+              },
+              {
+                "name": "Deathwhisper Necrolyte",
+                "total": 385844,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 1625151,
+                "count": 502,
+                "absorbOrOverheal": 0,
+                "min": 1345,
+                "max": 8901
+              },
+              {
+                "type": "Critical Hit",
+                "total": 2079978,
+                "count": 255,
+                "absorbOrOverheal": 0,
+                "min": 3325,
+                "max": 22514
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "uptime": 1527754,
+        "hitCount": 1077,
+        "tickCount": 915,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 360,
+        "critTickCount": 346,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 23434387,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 5479612,
+            "type": "NPC"
+          },
+          {
+            "name": "Scourgelord Tyrannus",
+            "total": 3485025,
+            "type": "Boss"
+          },
+          {
+            "name": "Forgemaster Garfrost",
+            "total": 3437336,
+            "type": "Boss"
+          },
+          {
+            "name": "Ick",
+            "total": 2976695,
+            "type": "Boss"
+          },
+          {
+            "name": "Deathwhisper Necrolyte",
+            "total": 2622932,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 6940886,
+            "count": 717,
+            "absorbOrOverheal": 0,
+            "min": 1345,
+            "max": 53649
+          },
+          {
+            "type": "Critical Hit",
+            "total": 8847131,
+            "count": 360,
+            "absorbOrOverheal": 0,
+            "min": 3325,
+            "max": 134898
+          },
+          {
+            "type": "Tick",
+            "total": 3250835,
+            "count": 569,
+            "absorbOrOverheal": 0,
+            "min": 3201,
+            "max": 10530
+          },
+          {
+            "type": "Critical Tick",
+            "total": 4727910,
+            "count": 346,
+            "absorbOrOverheal": 0,
+            "min": 5070,
+            "max": 23945
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Death Strike",
+        "guid": 49998,
+        "type": 1,
+        "total": 55303,
+        "abilityIcon": "spell_deathknight_butcher2.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Death Strike",
+            "guid": 49998,
+            "actor": 4,
+            "type": 1,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 55303,
+            "abilityIcon": "spell_deathknight_butcher2.jpg",
+            "uses": 13,
+            "hitCount": 13,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 3,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 55303,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 25514,
+                "type": "Boss"
+              },
+              {
+                "name": "Dreadpulse Lich",
+                "total": 13658,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 6465,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 6248,
+                "type": "NPC"
+              },
+              {
+                "name": "Ick",
+                "total": 3418,
+                "type": "Boss"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 34323,
+                "count": 10,
+                "absorbOrOverheal": 0,
+                "min": 2466,
+                "max": 4129
+              },
+              {
+                "type": "Critical Hit",
+                "total": 20980,
+                "count": 3,
+                "absorbOrOverheal": 0,
+                "min": 6099,
+                "max": 8633
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "uses": 13,
+        "hitCount": 13,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 3,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 55303,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Forgemaster Garfrost",
+            "total": 25514,
+            "type": "Boss"
+          },
+          {
+            "name": "Dreadpulse Lich",
+            "total": 13658,
+            "type": "NPC"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 6465,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 6248,
+            "type": "NPC"
+          },
+          {
+            "name": "Ick",
+            "total": 3418,
+            "type": "Boss"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 34323,
+            "count": 10,
+            "absorbOrOverheal": 0,
+            "min": 2466,
+            "max": 4129
+          },
+          {
+            "type": "Critical Hit",
+            "total": 20980,
+            "count": 3,
+            "absorbOrOverheal": 0,
+            "min": 6099,
+            "max": 8633
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Soul Reaper",
+        "guid": 343294,
+        "type": 48,
+        "total": 3848080,
+        "abilityIcon": "ability_deathknight_soulreaper.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Soul Reaper",
+            "guid": 343294,
+            "actor": 4,
+            "type": 48,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 3848080,
+            "abilityIcon": "ability_deathknight_soulreaper.jpg",
+            "uses": 71,
+            "hitCount": 71,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 24,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 3848080,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 845193,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 584027,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 469532,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 424434,
+                "type": "Boss"
+              },
+              {
+                "name": "Deathwhisper Necrolyte",
+                "total": 318600,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 1920068,
+                "count": 47,
+                "absorbOrOverheal": 0,
+                "min": 26804,
+                "max": 69124
+              },
+              {
+                "type": "Critical Hit",
+                "total": 1945656,
+                "count": 24,
+                "absorbOrOverheal": 77568,
+                "min": 56850,
+                "max": 143373
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "uses": 71,
+        "hitCount": 71,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 24,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 3848080,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 845193,
+            "type": "NPC"
+          },
+          {
+            "name": "Scourgelord Tyrannus",
+            "total": 584027,
+            "type": "Boss"
+          },
+          {
+            "name": "Forgemaster Garfrost",
+            "total": 469532,
+            "type": "Boss"
+          },
+          {
+            "name": "Ick",
+            "total": 424434,
+            "type": "Boss"
+          },
+          {
+            "name": "Deathwhisper Necrolyte",
+            "total": 318600,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 1920068,
+            "count": 47,
+            "absorbOrOverheal": 0,
+            "min": 26804,
+            "max": 69124
+          },
+          {
+            "type": "Critical Hit",
+            "total": 1945656,
+            "count": 24,
+            "absorbOrOverheal": 77568,
+            "min": 56850,
+            "max": 143373
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Putrefy",
+        "guid": 1247378,
+        "type": 32,
+        "total": 33569175,
+        "abilityIcon": "inv12_ability_deathknight_putrefy.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Putrefy",
+            "guid": 390220,
+            "actor": 4,
+            "type": 32,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 33569175,
+            "abilityIcon": "inv12_ability_deathknight_putrefy.jpg",
+            "hitCount": 1901,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 639,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 33569175,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Leaping Geist",
+                "total": 5020052,
+                "type": "NPC"
+              },
+              {
+                "name": "Rotting Ghoul",
+                "total": 4691971,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 4378732,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 3623422,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 3062113,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 16015026,
+                "count": 1262,
+                "absorbOrOverheal": 233503,
+                "min": 164,
+                "max": 26945
+              },
+              {
+                "type": "Critical Hit",
+                "total": 21234055,
+                "count": 639,
+                "absorbOrOverheal": 322800,
+                "min": 11863,
+                "max": 70913
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "uses": 121,
+        "hitCount": 1901,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 639,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 33569175,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Leaping Geist",
+            "total": 5020052,
+            "type": "NPC"
+          },
+          {
+            "name": "Rotting Ghoul",
+            "total": 4691971,
+            "type": "NPC"
+          },
+          {
+            "name": "Wrathbone Enforcer",
+            "total": 4378732,
+            "type": "NPC"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 3623422,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 3062113,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 16015026,
+            "count": 1262,
+            "absorbOrOverheal": 233503,
+            "min": 164,
+            "max": 26945
+          },
+          {
+            "type": "Critical Hit",
+            "total": 21234055,
+            "count": 639,
+            "absorbOrOverheal": 322800,
+            "min": 11863,
+            "max": 70913
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Necrotic Coil",
+        "guid": 1242174,
+        "type": 33,
+        "total": 4895348,
+        "abilityIcon": "spell_animamaldraxxus_missile.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Necrotic Coil",
+            "guid": 1242172,
+            "actor": 4,
+            "type": 33,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 3616867,
+            "abilityIcon": "spell_animamaldraxxus_missile.jpg",
+            "hitCount": 101,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 32,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 3616867,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ick",
+                "total": 921319,
+                "type": "Boss"
+              },
+              {
+                "name": "Krick",
+                "total": 882709,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 707644,
+                "type": "Boss"
+              },
+              {
+                "name": "Glacieth",
+                "total": 462641,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 417034,
+                "type": "Boss"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 2131468,
+                "count": 69,
+                "absorbOrOverheal": 0,
+                "min": 14179,
+                "max": 64281
+              },
+              {
+                "type": "Critical Hit",
+                "total": 2168623,
+                "count": 32,
+                "absorbOrOverheal": 0,
+                "min": 31047,
+                "max": 130410
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Necrotic Coil",
+            "guid": 1242178,
+            "actor": 4,
+            "type": 32,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 1278481,
+            "abilityIcon": "spell_animamaldraxxus_missile.jpg",
+            "hitCount": 134,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 44,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 1278481,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ick",
+                "total": 271201,
+                "type": "Boss"
+              },
+              {
+                "name": "Krick",
+                "total": 260025,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 192571,
+                "type": "Boss"
+              },
+              {
+                "name": "Glacieth",
+                "total": 163300,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 158368,
+                "type": "Boss"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 876975,
+                "count": 90,
+                "absorbOrOverheal": 0,
+                "min": 4447,
+                "max": 19751
+              },
+              {
+                "type": "Critical Hit",
+                "total": 823935,
+                "count": 44,
+                "absorbOrOverheal": 0,
+                "min": 9692,
+                "max": 40341
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "uses": 61,
+        "hitCount": 235,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 76,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 4895348,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Ick",
+            "total": 1192520,
+            "type": "Boss"
+          },
+          {
+            "name": "Krick",
+            "total": 1142734,
+            "type": "Boss"
+          },
+          {
+            "name": "Forgemaster Garfrost",
+            "total": 900215,
+            "type": "Boss"
+          },
+          {
+            "name": "Glacieth",
+            "total": 625941,
+            "type": "NPC"
+          },
+          {
+            "name": "Scourgelord Tyrannus",
+            "total": 575402,
+            "type": "Boss"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 3008443,
+            "count": 159,
+            "absorbOrOverheal": 0,
+            "min": 4447,
+            "max": 64281
+          },
+          {
+            "type": "Critical Hit",
+            "total": 2992558,
+            "count": 76,
+            "absorbOrOverheal": 0,
+            "min": 9692,
+            "max": 130410
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Festering Scythe",
+        "guid": 458128,
+        "actor": 4,
+        "type": 32,
+        "actorName": "Unreally",
+        "actorIcon": "DeathKnight",
+        "actorType": "DeathKnight",
+        "total": 1877277,
+        "abilityIcon": "inv_polearm_2h_mawnecromancerboss_d_01_darkblue.jpg",
+        "uses": 53,
+        "hitCount": 237,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 86,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 1877277,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Wrathbone Enforcer",
+            "total": 282009,
+            "type": "NPC"
+          },
+          {
+            "name": "Rotting Ghoul",
+            "total": 254131,
+            "type": "NPC"
+          },
+          {
+            "name": "Leaping Geist",
+            "total": 226536,
+            "type": "NPC"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 211602,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 150579,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 989225,
+            "count": 151,
+            "absorbOrOverheal": 22292,
+            "min": 3841,
+            "max": 12418
+          },
+          {
+            "type": "Critical Hit",
+            "total": 1186720,
+            "count": 86,
+            "absorbOrOverheal": 0,
+            "min": 8141,
+            "max": 23651
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Raise Abomination",
+        "guid": 288853,
+        "type": 41,
+        "total": 18274206,
+        "totalReduced": 0,
+        "abilityIcon": "achievement_boss_patchwerk.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Disease Cloud",
+            "guid": 1244347,
+            "actor": 23,
+            "type": 40,
+            "actorName": "Abomination",
+            "actorIcon": "abilities/achievement_boss_patchwerk.jpg",
+            "actorType": "Pet",
+            "total": 15742198,
+            "totalReduced": 0,
+            "abilityIcon": "spell_shadow_plaguecloud.jpg",
+            "hitCount": 1683,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 514,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Abomination",
+                "total": 15742198,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Leaping Geist",
+                "total": 2672518,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Rotting Ghoul",
+                "total": 2437532,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 1806501,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 1777068,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 1161533,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 7205939,
+                "totalReduced": 0,
+                "count": 1169,
+                "countReduced": 0,
+                "absorbOrOverheal": 78107,
+                "min": 3222,
+                "max": 12399
+              },
+              {
+                "type": "Critical Hit",
+                "total": 9903560,
+                "totalReduced": 0,
+                "count": 514,
+                "countReduced": 0,
+                "absorbOrOverheal": 196440,
+                "min": 10232,
+                "max": 40352
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Melee",
+            "guid": 1,
+            "actor": 23,
+            "type": 1,
+            "actorName": "Abomination",
+            "actorIcon": "abilities/achievement_boss_patchwerk.jpg",
+            "actorType": "Pet",
+            "total": 2532008,
+            "totalReduced": 0,
+            "abilityIcon": "inv_axe_02.jpg",
+            "uses": 196,
+            "hitCount": 195,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 60,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Abomination",
+                "total": 2532008,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 708820,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 388164,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Deathwhisper Necrolyte",
+                "total": 341124,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Dreadpulse Lich",
+                "total": 308909,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 303263,
+                "totalReduced": 0,
+                "type": "Boss"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 1069216,
+                "totalReduced": 0,
+                "count": 135,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 4907,
+                "max": 15124
+              },
+              {
+                "type": "Critical Hit",
+                "total": 1471990,
+                "totalReduced": 0,
+                "count": 60,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 14705,
+                "max": 46058
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "hitCount": 1878,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 574,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Abomination",
+            "total": 18274206,
+            "totalReduced": 0,
+            "type": "Pet"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Leaping Geist",
+            "total": 2679499,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Rotting Ghoul",
+            "total": 2437532,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 1870353,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Wrathbone Enforcer",
+            "total": 1812001,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 1777068,
+            "totalReduced": 0,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 8275155,
+            "totalReduced": 0,
+            "count": 1304,
+            "countReduced": 0,
+            "absorbOrOverheal": 78107,
+            "min": 3222,
+            "max": 15124
+          },
+          {
+            "type": "Critical Hit",
+            "total": 11375550,
+            "totalReduced": 0,
+            "count": 574,
+            "countReduced": 0,
+            "absorbOrOverheal": 196440,
+            "min": 10232,
+            "max": 46058
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Death Coil",
+        "guid": 47632,
+        "type": 32,
+        "total": 2747843,
+        "abilityIcon": "spell_shadow_deathcoil.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Death Coil",
+            "guid": 47632,
+            "actor": 4,
+            "type": 32,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 2747843,
+            "abilityIcon": "spell_shadow_deathcoil.jpg",
+            "hitCount": 109,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 36,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 2747843,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 1123956,
+                "type": "Boss"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 823294,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 406545,
+                "type": "Boss"
+              },
+              {
+                "name": "Glacieth",
+                "total": 164109,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 100019,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 1295725,
+                "count": 73,
+                "absorbOrOverheal": 0,
+                "min": 9122,
+                "max": 32003
+              },
+              {
+                "type": "Critical Hit",
+                "total": 1453829,
+                "count": 36,
+                "absorbOrOverheal": 0,
+                "min": 23182,
+                "max": 61681
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "hitCount": 109,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 36,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 2747843,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Forgemaster Garfrost",
+            "total": 1123956,
+            "type": "Boss"
+          },
+          {
+            "name": "Scourgelord Tyrannus",
+            "total": 823294,
+            "type": "Boss"
+          },
+          {
+            "name": "Ick",
+            "total": 406545,
+            "type": "Boss"
+          },
+          {
+            "name": "Glacieth",
+            "total": 164109,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 100019,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 1295725,
+            "count": 73,
+            "absorbOrOverheal": 0,
+            "min": 9122,
+            "max": 32003
+          },
+          {
+            "type": "Critical Hit",
+            "total": 1453829,
+            "count": 36,
+            "absorbOrOverheal": 0,
+            "min": 23182,
+            "max": 61681
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Melee",
+        "guid": 1,
+        "actor": 4,
+        "type": 1,
+        "actorName": "Unreally",
+        "actorIcon": "DeathKnight",
+        "actorType": "DeathKnight",
+        "total": 3493059,
+        "abilityIcon": "inv_axe_02.jpg",
+        "uses": 591,
+        "hitCount": 591,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 184,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 3493059,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 737657,
+            "type": "NPC"
+          },
+          {
+            "name": "Forgemaster Garfrost",
+            "total": 634409,
+            "type": "Boss"
+          },
+          {
+            "name": "Scourgelord Tyrannus",
+            "total": 566664,
+            "type": "Boss"
+          },
+          {
+            "name": "Dreadpulse Lich",
+            "total": 318135,
+            "type": "NPC"
+          },
+          {
+            "name": "Deathwhisper Necrolyte",
+            "total": 311983,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 1806397,
+            "count": 407,
+            "absorbOrOverheal": 9415,
+            "min": 51,
+            "max": 6159
+          },
+          {
+            "type": "Critical Hit",
+            "total": 1723294,
+            "count": 184,
+            "absorbOrOverheal": 0,
+            "min": 97,
+            "max": 13018
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Scourge Strike",
+        "guid": 55090,
+        "type": 32,
+        "total": 15740871,
+        "abilityIcon": "spell_deathknight_scourgestrike.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Scourge Strike",
+            "guid": 55090,
+            "actor": 4,
+            "type": 32,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 15740871,
+            "abilityIcon": "spell_deathknight_scourgestrike.jpg",
+            "uses": 448,
+            "hitCount": 1096,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 395,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 15740871,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 2130658,
+                "type": "NPC"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 1474840,
+                "type": "Boss"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 1453885,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 1385113,
+                "type": "Boss"
+              },
+              {
+                "name": "Rotting Ghoul",
+                "total": 1240550,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 7725558,
+                "count": 701,
+                "absorbOrOverheal": 30199,
+                "min": 3564,
+                "max": 25227
+              },
+              {
+                "type": "Critical Hit",
+                "total": 9195877,
+                "count": 395,
+                "absorbOrOverheal": 67203,
+                "min": 277,
+                "max": 54636
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "uses": 448,
+        "hitCount": 1096,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 395,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 15740871,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 2130658,
+            "type": "NPC"
+          },
+          {
+            "name": "Forgemaster Garfrost",
+            "total": 1474840,
+            "type": "Boss"
+          },
+          {
+            "name": "Scourgelord Tyrannus",
+            "total": 1453885,
+            "type": "Boss"
+          },
+          {
+            "name": "Ick",
+            "total": 1385113,
+            "type": "Boss"
+          },
+          {
+            "name": "Rotting Ghoul",
+            "total": 1240550,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 7725558,
+            "count": 701,
+            "absorbOrOverheal": 30199,
+            "min": 3564,
+            "max": 25227
+          },
+          {
+            "type": "Critical Hit",
+            "total": 9195877,
+            "count": 395,
+            "absorbOrOverheal": 67203,
+            "min": 277,
+            "max": 54636
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Epidemic",
+        "guid": 207317,
+        "type": 32,
+        "total": 11675428,
+        "abilityIcon": "spell_nature_nullifydisease.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Epidemic",
+            "guid": 212739,
+            "actor": 4,
+            "type": 32,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 11675428,
+            "abilityIcon": "spell_nature_nullifydisease.jpg",
+            "hitCount": 4557,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 1466,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 11675428,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 2077300,
+                "type": "NPC"
+              },
+              {
+                "name": "Rotting Ghoul",
+                "total": 1859532,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 1700805,
+                "type": "NPC"
+              },
+              {
+                "name": "Leaping Geist",
+                "total": 1610704,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 1253614,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 6501112,
+                "count": 3091,
+                "absorbOrOverheal": 180140,
+                "min": 17,
+                "max": 6908
+              },
+              {
+                "type": "Critical Hit",
+                "total": 6406350,
+                "count": 1466,
+                "absorbOrOverheal": 146246,
+                "min": 33,
+                "max": 13568
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "uses": 120,
+        "hitCount": 4557,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 1466,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 11675428,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Wrathbone Enforcer",
+            "total": 2077300,
+            "type": "NPC"
+          },
+          {
+            "name": "Rotting Ghoul",
+            "total": 1859532,
+            "type": "NPC"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 1700805,
+            "type": "NPC"
+          },
+          {
+            "name": "Leaping Geist",
+            "total": 1610704,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 1253614,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 6501112,
+            "count": 3091,
+            "absorbOrOverheal": 180140,
+            "min": 17,
+            "max": 6908
+          },
+          {
+            "type": "Critical Hit",
+            "total": 6406350,
+            "count": 1466,
+            "absorbOrOverheal": 146246,
+            "min": 33,
+            "max": 13568
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Death and Decay",
+        "guid": 43265,
+        "type": 32,
+        "total": 2829881,
+        "abilityIcon": "spell_shadow_deathanddecay.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Death and Decay",
+            "guid": 52212,
+            "actor": 4,
+            "type": 32,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 2829881,
+            "abilityIcon": "spell_shadow_deathanddecay.jpg",
+            "hitCount": 4772,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 1541,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 2829881,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Rotting Ghoul",
+                "total": 445798,
+                "type": "NPC"
+              },
+              {
+                "name": "Leaping Geist",
+                "total": 417716,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 339058,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 293767,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 233461,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 1588283,
+                "count": 3231,
+                "absorbOrOverheal": 24687,
+                "min": 287,
+                "max": 848
+              },
+              {
+                "type": "Critical Hit",
+                "total": 1575274,
+                "count": 1541,
+                "absorbOrOverheal": 24129,
+                "min": 603,
+                "max": 1838
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "uses": 73,
+        "hitCount": 4772,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 1541,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 2829881,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Rotting Ghoul",
+            "total": 445798,
+            "type": "NPC"
+          },
+          {
+            "name": "Leaping Geist",
+            "total": 417716,
+            "type": "NPC"
+          },
+          {
+            "name": "Wrathbone Enforcer",
+            "total": 339058,
+            "type": "NPC"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 293767,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 233461,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 1588283,
+            "count": 3231,
+            "absorbOrOverheal": 24687,
+            "min": 287,
+            "max": 848
+          },
+          {
+            "type": "Critical Hit",
+            "total": 1575274,
+            "count": 1541,
+            "absorbOrOverheal": 24129,
+            "min": 603,
+            "max": 1838
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Lesser Ghoul",
+        "guid": 1277098,
+        "type": 33,
+        "total": 142503,
+        "totalReduced": 0,
+        "abilityIcon": "inv_ghoulnorthrend.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Melee",
+            "guid": 1,
+            "actor": 24,
+            "type": 1,
+            "actorName": "Lesser Ghoul",
+            "actorIcon": "abilities/inv_ghoulnorthrend.jpg",
+            "actorType": "Pet",
+            "total": 125994,
+            "totalReduced": 0,
+            "abilityIcon": "inv_axe_02.jpg",
+            "uses": 303,
+            "hitCount": 303,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 98,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Lesser Ghoul",
+                "total": 125994,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 25039,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 19951,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 18313,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 15941,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Dreadpulse Lich",
+                "total": 13826,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 59185,
+                "totalReduced": 0,
+                "count": 205,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 173,
+                "max": 487
+              },
+              {
+                "type": "Critical Hit",
+                "total": 67313,
+                "totalReduced": 0,
+                "count": 98,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 421,
+                "max": 1098
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Ruptured Viscera",
+            "guid": 1247379,
+            "actor": 24,
+            "type": 32,
+            "actorName": "Lesser Ghoul",
+            "actorIcon": "abilities/inv_ghoulnorthrend.jpg",
+            "actorType": "Pet",
+            "total": 16509,
+            "totalReduced": 0,
+            "abilityIcon": "artifactability_unholydeathknight_deathsembrace.jpg",
+            "hitCount": 5,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 3,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Lesser Ghoul",
+                "total": 16509,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ick",
+                "total": 11117,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Shade of Krick",
+                "total": 3326,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Krick",
+                "total": 2066,
+                "totalReduced": 0,
+                "type": "Boss"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 4548,
+                "totalReduced": 0,
+                "count": 2,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 2066,
+                "max": 2482
+              },
+              {
+                "type": "Critical Hit",
+                "total": 11961,
+                "totalReduced": 0,
+                "count": 3,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 3326,
+                "max": 4396
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "hitCount": 308,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 101,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Lesser Ghoul",
+            "total": 142503,
+            "totalReduced": 0,
+            "type": "Pet"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Ick",
+            "total": 27058,
+            "totalReduced": 0,
+            "type": "Boss"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 25039,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Forgemaster Garfrost",
+            "total": 19951,
+            "totalReduced": 0,
+            "type": "Boss"
+          },
+          {
+            "name": "Scourgelord Tyrannus",
+            "total": 18313,
+            "totalReduced": 0,
+            "type": "Boss"
+          },
+          {
+            "name": "Dreadpulse Lich",
+            "total": 13826,
+            "totalReduced": 0,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 63733,
+            "totalReduced": 0,
+            "count": 207,
+            "countReduced": 0,
+            "absorbOrOverheal": 0,
+            "min": 173,
+            "max": 2482
+          },
+          {
+            "type": "Critical Hit",
+            "total": 79274,
+            "totalReduced": 0,
+            "count": 101,
+            "countReduced": 0,
+            "absorbOrOverheal": 0,
+            "min": 421,
+            "max": 4396
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Pestilence",
+        "guid": 327093,
+        "actor": 4,
+        "type": 32,
+        "actorName": "Unreally",
+        "actorIcon": "DeathKnight",
+        "actorType": "DeathKnight",
+        "total": 19555240,
+        "abilityIcon": "spell_deathknight_explode_ghoul.jpg",
+        "uptime": 1510411,
+        "hitCount": 0,
+        "tickCount": 6217,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 0,
+        "critTickCount": 2356,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 19555240,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Leaping Geist",
+            "total": 2744636,
+            "type": "NPC"
+          },
+          {
+            "name": "Rotting Ghoul",
+            "total": 2530218,
+            "type": "NPC"
+          },
+          {
+            "name": "Wrathbone Enforcer",
+            "total": 2273515,
+            "type": "NPC"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 2076976,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 1905541,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Tick",
+            "total": 8708837,
+            "count": 3861,
+            "absorbOrOverheal": 132201,
+            "min": 26,
+            "max": 3752
+          },
+          {
+            "type": "Critical Tick",
+            "total": 12793943,
+            "count": 2356,
+            "absorbOrOverheal": 187466,
+            "min": 49,
+            "max": 9727
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Blinding Sleet",
+        "guid": 207167,
+        "actor": 4,
+        "type": 16,
+        "actorName": "Unreally",
+        "actorIcon": "DeathKnight",
+        "actorType": "DeathKnight",
+        "total": 0,
+        "abilityIcon": "spell_frost_chillingblast.jpg",
+        "uptime": 564,
+        "uses": 1,
+        "hitCount": 0,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 2,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 0,
+        "critTickCount": 0,
+        "sources": [],
+        "targets": [],
+        "hitdetails": [],
+        "multistrikedetails": [],
+        "missdetails": [
+          {
+            "type": "Immune",
+            "total": 0,
+            "count": 2
+          }
+        ],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Virulent Plague",
+        "guid": 191587,
+        "type": 32,
+        "total": 23100144,
+        "abilityIcon": "ability_creature_disease_02.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Virulent Plague",
+            "guid": 191587,
+            "actor": 4,
+            "type": 32,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 16173783,
+            "abilityIcon": "ability_creature_disease_02.jpg",
+            "uptime": 1574961,
+            "hitCount": 0,
+            "tickCount": 4856,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 0,
+            "critTickCount": 1804,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 16173783,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Leaping Geist",
+                "total": 2357319,
+                "type": "NPC"
+              },
+              {
+                "name": "Rotting Ghoul",
+                "total": 2157875,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 1987850,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 1791946,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 1334311,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Tick",
+                "total": 7388033,
+                "count": 3052,
+                "absorbOrOverheal": 111482,
+                "min": 24,
+                "max": 4805
+              },
+              {
+                "type": "Critical Tick",
+                "total": 10545402,
+                "count": 1804,
+                "absorbOrOverheal": 204801,
+                "min": 57,
+                "max": 11057
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Virulent Plague (Erupt)",
+            "guid": 1241167,
+            "actor": 4,
+            "type": 32,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 6926361,
+            "abilityIcon": "ability_creature_disease_02.jpg",
+            "hitCount": 2872,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 1042,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 6926361,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Rotting Ghoul",
+                "total": 916935,
+                "type": "NPC"
+              },
+              {
+                "name": "Leaping Geist",
+                "total": 910351,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 886826,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 738126,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 660905,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 3258802,
+                "count": 1830,
+                "absorbOrOverheal": 54851,
+                "min": 16,
+                "max": 3940
+              },
+              {
+                "type": "Critical Hit",
+                "total": 4516370,
+                "count": 1042,
+                "absorbOrOverheal": 50411,
+                "min": 19,
+                "max": 9746
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "uptime": 1574961,
+        "hitCount": 2872,
+        "tickCount": 4856,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 1042,
+        "critTickCount": 1804,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 23100144,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Leaping Geist",
+            "total": 3267670,
+            "type": "NPC"
+          },
+          {
+            "name": "Rotting Ghoul",
+            "total": 3074810,
+            "type": "NPC"
+          },
+          {
+            "name": "Wrathbone Enforcer",
+            "total": 2874676,
+            "type": "NPC"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 2530072,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 1995216,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 3258802,
+            "count": 1830,
+            "absorbOrOverheal": 54851,
+            "min": 16,
+            "max": 3940
+          },
+          {
+            "type": "Critical Hit",
+            "total": 4516370,
+            "count": 1042,
+            "absorbOrOverheal": 50411,
+            "min": 19,
+            "max": 9746
+          },
+          {
+            "type": "Tick",
+            "total": 7388033,
+            "count": 3052,
+            "absorbOrOverheal": 111482,
+            "min": 24,
+            "max": 4805
+          },
+          {
+            "type": "Critical Tick",
+            "total": 10545402,
+            "count": 1804,
+            "absorbOrOverheal": 204801,
+            "min": 57,
+            "max": 11057
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Gravegrinder",
+        "guid": 52150,
+        "type": 33,
+        "total": 28268327,
+        "totalReduced": 0,
+        "abilityIcon": "spell_shadow_animatedead.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Sweeping Claws",
+            "guid": 91778,
+            "actor": 6,
+            "type": 32,
+            "actorName": "Gravegrinder",
+            "actorIcon": "abilities/spell_shadow_animatedead.jpg",
+            "actorType": "Pet",
+            "total": 23014291,
+            "totalReduced": 0,
+            "abilityIcon": "spell_deathknight_thrash_ghoul.jpg",
+            "hitCount": 2218,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 673,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Gravegrinder",
+                "total": 23014291,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Leaping Geist",
+                "total": 3614722,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Rotting Ghoul",
+                "total": 3257969,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 2859257,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 2697689,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 2154656,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 10871888,
+                "totalReduced": 0,
+                "count": 1545,
+                "countReduced": 0,
+                "absorbOrOverheal": 186896,
+                "min": 2148,
+                "max": 26852
+              },
+              {
+                "type": "Critical Hit",
+                "total": 14204164,
+                "totalReduced": 0,
+                "count": 673,
+                "countReduced": 0,
+                "absorbOrOverheal": 183619,
+                "min": 6728,
+                "max": 58748
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Melee",
+            "guid": 1,
+            "actor": 6,
+            "type": 1,
+            "actorName": "Gravegrinder",
+            "actorIcon": "abilities/spell_shadow_animatedead.jpg",
+            "actorType": "Pet",
+            "total": 4226646,
+            "totalReduced": 0,
+            "abilityIcon": "inv_axe_02.jpg",
+            "uses": 1540,
+            "hitCount": 1540,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 494,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Gravegrinder",
+                "total": 4226646,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 974590,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 608819,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 560652,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 535265,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Deathwhisper Necrolyte",
+                "total": 491796,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 1772228,
+                "totalReduced": 0,
+                "count": 1046,
+                "countReduced": 0,
+                "absorbOrOverheal": 2280,
+                "min": 352,
+                "max": 6636
+              },
+              {
+                "type": "Critical Hit",
+                "total": 2460425,
+                "totalReduced": 0,
+                "count": 494,
+                "countReduced": 0,
+                "absorbOrOverheal": 11956,
+                "min": 1063,
+                "max": 22093
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Claw",
+            "guid": 91776,
+            "actor": 6,
+            "type": 1,
+            "actorName": "Gravegrinder",
+            "actorIcon": "abilities/spell_shadow_animatedead.jpg",
+            "actorType": "Pet",
+            "total": 1008847,
+            "totalReduced": 0,
+            "abilityIcon": "spell_deathknight_thrash_ghoul.jpg",
+            "hitCount": 387,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 124,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Gravegrinder",
+                "total": 1008847,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 196043,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 186538,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 171696,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 126491,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Glacieth",
+                "total": 102182,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 417252,
+                "totalReduced": 0,
+                "count": 263,
+                "countReduced": 0,
+                "absorbOrOverheal": 3375,
+                "min": 593,
+                "max": 4477
+              },
+              {
+                "type": "Critical Hit",
+                "total": 597614,
+                "totalReduced": 0,
+                "count": 124,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 1810,
+                "max": 14671
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Monstrous Blow",
+            "guid": 91797,
+            "actor": 6,
+            "type": 1,
+            "actorName": "Gravegrinder",
+            "actorIcon": "abilities/spell_shadow_animatedead.jpg",
+            "actorType": "Pet",
+            "total": 17297,
+            "totalReduced": 0,
+            "abilityIcon": "spell_frost_stun.jpg",
+            "uptime": 1996,
+            "hitCount": 8,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 4,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Gravegrinder",
+                "total": 17297,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 4276,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Deathwhisper Necrolyte",
+                "total": 3739,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 3486,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 3322,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Dreadpulse Lich",
+                "total": 1439,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 4917,
+                "totalReduced": 0,
+                "count": 4,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 956,
+                "max": 1487
+              },
+              {
+                "type": "Critical Hit",
+                "total": 12380,
+                "totalReduced": 0,
+                "count": 4,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 2783,
+                "max": 3486
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Gnaw",
+            "guid": 91800,
+            "actor": 6,
+            "type": 1,
+            "actorName": "Gravegrinder",
+            "actorIcon": "abilities/spell_shadow_animatedead.jpg",
+            "actorType": "Pet",
+            "total": 1246,
+            "totalReduced": 0,
+            "abilityIcon": "spell_deathknight_gnaw_ghoul.jpg",
+            "uptime": 1147,
+            "hitCount": 11,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 10,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Gravegrinder",
+                "total": 1246,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 323,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 219,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Dreadpulse Lich",
+                "total": 159,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 148,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Glacieth",
+                "total": 143,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 35,
+                "totalReduced": 0,
+                "count": 1,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 35,
+                "max": 35
+              },
+              {
+                "type": "Critical Hit",
+                "total": 1211,
+                "totalReduced": 0,
+                "count": 10,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 83,
+                "max": 174
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "uptime": 3143,
+        "uses": 1540,
+        "hitCount": 4164,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 1305,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Gravegrinder",
+            "total": 28268327,
+            "totalReduced": 0,
+            "type": "Pet"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Leaping Geist",
+            "total": 3629554,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 3320143,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Rotting Ghoul",
+            "total": 3299458,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Wrathbone Enforcer",
+            "total": 2883156,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 2801822,
+            "totalReduced": 0,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 13066320,
+            "totalReduced": 0,
+            "count": 2859,
+            "countReduced": 0,
+            "absorbOrOverheal": 192551,
+            "min": 35,
+            "max": 26852
+          },
+          {
+            "type": "Critical Hit",
+            "total": 17275794,
+            "totalReduced": 0,
+            "count": 1305,
+            "countReduced": 0,
+            "absorbOrOverheal": 195575,
+            "min": 83,
+            "max": 58748
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Omnium Folio",
+        "guid": 1302265,
+        "type": 4,
+        "total": 762568,
+        "abilityIcon": "inv_12_profession_mining_miningspecializations_overloded.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Rune of Unleashed Fire",
+            "guid": 1286970,
+            "actor": 4,
+            "type": 4,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 762568,
+            "abilityIcon": "inv_summerfest_firespirit.jpg",
+            "hitCount": 273,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 0,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 762568,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 106942,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 104008,
+                "type": "Boss"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 77026,
+                "type": "NPC"
+              },
+              {
+                "name": "Ick",
+                "total": 69410,
+                "type": "Boss"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 67241,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 802916,
+                "count": 273,
+                "absorbOrOverheal": 2969,
+                "min": 29,
+                "max": 3274
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "hitCount": 273,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 0,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 762568,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Scourgelord Tyrannus",
+            "total": 106942,
+            "type": "Boss"
+          },
+          {
+            "name": "Forgemaster Garfrost",
+            "total": 104008,
+            "type": "Boss"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 77026,
+            "type": "NPC"
+          },
+          {
+            "name": "Ick",
+            "total": 69410,
+            "type": "Boss"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 67241,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 802916,
+            "count": 273,
+            "absorbOrOverheal": 2969,
+            "min": 29,
+            "max": 3274
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Lesser Ghoul",
+        "guid": 275430,
+        "type": 33,
+        "total": 34296567,
+        "totalReduced": 0,
+        "abilityIcon": "inv_ghoulnorthrend.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Ruptured Viscera",
+            "guid": 1247379,
+            "actor": 22,
+            "type": 32,
+            "actorName": "Lesser Ghoul",
+            "actorIcon": "abilities/inv_ghoulnorthrend.jpg",
+            "actorType": "Pet",
+            "total": 14796065,
+            "totalReduced": 0,
+            "abilityIcon": "artifactability_unholydeathknight_deathsembrace.jpg",
+            "hitCount": 3133,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 1000,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Lesser Ghoul",
+                "total": 14796065,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Rotting Ghoul",
+                "total": 2280571,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 1829972,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 1750164,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Leaping Geist",
+                "total": 1706062,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 1331315,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 8169764,
+                "totalReduced": 0,
+                "count": 2133,
+                "countReduced": 0,
+                "absorbOrOverheal": 115965,
+                "min": 1646,
+                "max": 9389
+              },
+              {
+                "type": "Critical Hit",
+                "total": 7798547,
+                "totalReduced": 0,
+                "count": 1000,
+                "countReduced": 0,
+                "absorbOrOverheal": 147033,
+                "min": 3935,
+                "max": 18791
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Sweeping Claws",
+            "guid": 1278150,
+            "actor": 22,
+            "type": 32,
+            "actorName": "Lesser Ghoul",
+            "actorIcon": "abilities/inv_ghoulnorthrend.jpg",
+            "actorType": "Pet",
+            "total": 13088532,
+            "totalReduced": 0,
+            "abilityIcon": "spell_deathknight_thrash_ghoul.jpg",
+            "hitCount": 12467,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 4023,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Lesser Ghoul",
+                "total": 13088532,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Leaping Geist",
+                "total": 2059385,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Rotting Ghoul",
+                "total": 1870747,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 1774377,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 1571818,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 1122999,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 5757257,
+                "totalReduced": 0,
+                "count": 8444,
+                "countReduced": 0,
+                "absorbOrOverheal": 77448,
+                "min": 221,
+                "max": 2238
+              },
+              {
+                "type": "Critical Hit",
+                "total": 8545617,
+                "totalReduced": 0,
+                "count": 4023,
+                "countReduced": 0,
+                "absorbOrOverheal": 139281,
+                "min": 697,
+                "max": 7339
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Melee",
+            "guid": 1,
+            "actor": 22,
+            "type": 1,
+            "actorName": "Lesser Ghoul",
+            "actorIcon": "abilities/inv_ghoulnorthrend.jpg",
+            "actorType": "Pet",
+            "total": 5134618,
+            "totalReduced": 0,
+            "abilityIcon": "inv_axe_02.jpg",
+            "uses": 3460,
+            "hitCount": 5447,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 1775,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Lesser Ghoul",
+                "total": 5134618,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 1177119,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 826108,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 731249,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Dreadpulse Lich",
+                "total": 666231,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Deathwhisper Necrolyte",
+                "total": 524652,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 2095002,
+                "totalReduced": 0,
+                "count": 3672,
+                "countReduced": 0,
+                "absorbOrOverheal": 3424,
+                "min": 229,
+                "max": 1529
+              },
+              {
+                "type": "Critical Hit",
+                "total": 3047657,
+                "totalReduced": 0,
+                "count": 1775,
+                "countReduced": 0,
+                "absorbOrOverheal": 6561,
+                "min": 689,
+                "max": 4978
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Claw",
+            "guid": 199373,
+            "actor": 22,
+            "type": 1,
+            "actorName": "Lesser Ghoul",
+            "actorIcon": "abilities/inv_ghoulnorthrend.jpg",
+            "actorType": "Pet",
+            "total": 1277352,
+            "totalReduced": 0,
+            "abilityIcon": "spell_deathknight_thrash_ghoul.jpg",
+            "hitCount": 1841,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 631,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Lesser Ghoul",
+                "total": 1277352,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 307697,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 254003,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 204175,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Glacieth",
+                "total": 165487,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Ick",
+                "total": 120282,
+                "totalReduced": 0,
+                "type": "Boss"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 492607,
+                "totalReduced": 0,
+                "count": 1210,
+                "countReduced": 0,
+                "absorbOrOverheal": 1770,
+                "min": 212,
+                "max": 1200
+              },
+              {
+                "type": "Critical Hit",
+                "total": 790413,
+                "totalReduced": 0,
+                "count": 631,
+                "countReduced": 0,
+                "absorbOrOverheal": 6463,
+                "min": 634,
+                "max": 3568
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "hitCount": 22888,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 7429,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Lesser Ghoul",
+            "total": 34296567,
+            "totalReduced": 0,
+            "type": "Pet"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Rotting Ghoul",
+            "total": 4184524,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 3885436,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Leaping Geist",
+            "total": 3772932,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Wrathbone Enforcer",
+            "total": 3631417,
+            "totalReduced": 0,
+            "type": "NPC"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 3413309,
+            "totalReduced": 0,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 16514630,
+            "totalReduced": 0,
+            "count": 15459,
+            "countReduced": 0,
+            "absorbOrOverheal": 198607,
+            "min": 212,
+            "max": 9389
+          },
+          {
+            "type": "Critical Hit",
+            "total": 20182234,
+            "totalReduced": 0,
+            "count": 7429,
+            "countReduced": 0,
+            "absorbOrOverheal": 299338,
+            "min": 634,
+            "max": 18791
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Graveyard",
+        "guid": 383269,
+        "type": 32,
+        "total": 54941632,
+        "abilityIcon": "spell_necro_deathall.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Graveyard",
+            "guid": 383313,
+            "actor": 4,
+            "type": 32,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 54941632,
+            "abilityIcon": "spell_necro_deathall.jpg",
+            "hitCount": 8364,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 16,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 2603,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 54941632,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Leaping Geist",
+                "total": 11587610,
+                "type": "NPC"
+              },
+              {
+                "name": "Rotting Ghoul",
+                "total": 8549078,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 6598422,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 6343372,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 4369562,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 30449606,
+                "count": 5761,
+                "absorbOrOverheal": 348178,
+                "min": 34,
+                "max": 22785
+              },
+              {
+                "type": "Critical Hit",
+                "total": 28445464,
+                "count": 2603,
+                "absorbOrOverheal": 305756,
+                "min": 74,
+                "max": 42975
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [
+              {
+                "type": "Evade",
+                "total": 0,
+                "count": 16
+              }
+            ],
+            "multistrikemissdetails": []
+          }
+        ],
+        "uses": 119,
+        "hitCount": 8364,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 16,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 2603,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 54941632,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Leaping Geist",
+            "total": 11587610,
+            "type": "NPC"
+          },
+          {
+            "name": "Rotting Ghoul",
+            "total": 8549078,
+            "type": "NPC"
+          },
+          {
+            "name": "Wrathbone Enforcer",
+            "total": 6598422,
+            "type": "NPC"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 6343372,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 4369562,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 30449606,
+            "count": 5761,
+            "absorbOrOverheal": 348178,
+            "min": 34,
+            "max": 22785
+          },
+          {
+            "type": "Critical Hit",
+            "total": 28445464,
+            "count": 2603,
+            "absorbOrOverheal": 305756,
+            "min": 74,
+            "max": 42975
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [
+          {
+            "type": "Evade",
+            "total": 0,
+            "count": 16
+          }
+        ],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Graveyard",
+        "guid": 1263602,
+        "actor": 4,
+        "type": 32,
+        "actorName": "Unreally",
+        "actorIcon": "DeathKnight",
+        "actorType": "DeathKnight",
+        "total": 0,
+        "abilityIcon": "spell_necro_deathall.jpg",
+        "hitCount": 0,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 4,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 0,
+        "critTickCount": 0,
+        "sources": [],
+        "targets": [],
+        "hitdetails": [],
+        "multistrikedetails": [],
+        "missdetails": [
+          {
+            "type": "Evade",
+            "total": 0,
+            "count": 4
+          }
+        ],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Rider's Champion",
+        "guid": 444005,
+        "type": 49,
+        "total": 48793934,
+        "totalReduced": 19283931,
+        "abilityIcon": "achievement_zone_icecrown_01.jpg",
+        "composite": true,
+        "subentries": [
+          {
+            "name": "Epidemic",
+            "guid": 1237172,
+            "actor": 20,
+            "type": 32,
+            "actorName": "High Inquisitor Whitemane",
+            "actorIcon": "abilities/achievement_character_human_female.jpg",
+            "actorType": "Pet",
+            "total": 17741205,
+            "totalReduced": 0,
+            "abilityIcon": "spell_nature_nullifydisease.jpg",
+            "hitCount": 9553,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 3068,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "High Inquisitor Whitemane",
+                "total": 17741205,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Leaping Geist",
+                "total": 3656884,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Rotting Ghoul",
+                "total": 2575191,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 2302092,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 1885684,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 1480006,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 7754035,
+                "totalReduced": 0,
+                "count": 6485,
+                "countReduced": 0,
+                "absorbOrOverheal": 122622,
+                "min": 628,
+                "max": 5197
+              },
+              {
+                "type": "Critical Hit",
+                "total": 11411694,
+                "totalReduced": 0,
+                "count": 3068,
+                "countReduced": 0,
+                "absorbOrOverheal": 206393,
+                "min": 1956,
+                "max": 12573
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Undeath",
+            "guid": 444633,
+            "actor": 4,
+            "type": 48,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 10176481,
+            "abilityIcon": "spell_deathknight_necroticplague.jpg",
+            "uptime": 960802,
+            "hitCount": 0,
+            "tickCount": 1104,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 0,
+            "critTickCount": 370,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 10176481,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Leaping Geist",
+                "total": 1401494,
+                "type": "NPC"
+              },
+              {
+                "name": "Rotting Ghoul",
+                "total": 1240996,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 1062913,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 992043,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 876257,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Tick",
+                "total": 4773629,
+                "count": 734,
+                "absorbOrOverheal": 66192,
+                "min": 2,
+                "max": 15420
+              },
+              {
+                "type": "Critical Tick",
+                "total": 6149093,
+                "count": 370,
+                "absorbOrOverheal": 49854,
+                "min": 65,
+                "max": 43973
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Trollbane's Icy Fury",
+            "guid": 444834,
+            "actor": 4,
+            "type": 48,
+            "actorName": "Unreally",
+            "actorIcon": "DeathKnight",
+            "actorType": "DeathKnight",
+            "total": 9107450,
+            "abilityIcon": "spell_frost_chainsofice.jpg",
+            "uptime": 281262,
+            "hitCount": 815,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 274,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Unreally",
+                "total": 9107450,
+                "type": "DeathKnight",
+                "icon": "DeathKnight-Unholy"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Leaping Geist",
+                "total": 1366430,
+                "type": "NPC"
+              },
+              {
+                "name": "Rotting Ghoul",
+                "total": 1232484,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 1125285,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 747201,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 729044,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 4850064,
+                "count": 541,
+                "absorbOrOverheal": 54091,
+                "min": 102,
+                "max": 16519
+              },
+              {
+                "type": "Critical Hit",
+                "total": 5110181,
+                "count": 274,
+                "absorbOrOverheal": 46872,
+                "min": 210,
+                "max": 32599
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Death Coil",
+            "guid": 445513,
+            "actor": 20,
+            "type": 32,
+            "actorName": "High Inquisitor Whitemane",
+            "actorIcon": "abilities/achievement_character_human_female.jpg",
+            "actorType": "Pet",
+            "total": 3521038,
+            "totalReduced": 0,
+            "abilityIcon": "spell_shadow_deathcoil.jpg",
+            "uses": 165,
+            "hitCount": 375,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 122,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "High Inquisitor Whitemane",
+                "total": 3521038,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 578341,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 476946,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 463020,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 362840,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Krick",
+                "total": 317608,
+                "totalReduced": 0,
+                "type": "Boss"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 1458035,
+                "totalReduced": 0,
+                "count": 253,
+                "countReduced": 0,
+                "absorbOrOverheal": 13989,
+                "min": 3299,
+                "max": 12701
+              },
+              {
+                "type": "Critical Hit",
+                "total": 2263640,
+                "totalReduced": 0,
+                "count": 122,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 10808,
+                "max": 40555
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Melee",
+            "guid": 1,
+            "type": 1,
+            "total": 2027693,
+            "totalReduced": 0,
+            "abilityIcon": "inv_axe_02.jpg",
+            "subentries": [
+              {
+                "name": "Melee",
+                "guid": 1,
+                "actor": 18,
+                "type": 1,
+                "actorName": "Highlord Darion Mograine",
+                "actorIcon": "abilities/inv_helmet_151.jpg",
+                "actorType": "Pet",
+                "total": 597767,
+                "totalReduced": 0,
+                "abilityIcon": "inv_axe_02.jpg",
+                "uses": 651,
+                "hitCount": 644,
+                "tickCount": 0,
+                "tickMissCount": 0,
+                "missCount": 7,
+                "multistrikeHitCount": 0,
+                "multistrikeTickCount": 0,
+                "multistrikeMissCount": 0,
+                "multistrikeTickMissCount": 0,
+                "critHitCount": 205,
+                "critTickCount": 0,
+                "sources": [
+                  {
+                    "name": "Highlord Darion Mograine",
+                    "total": 597767,
+                    "totalReduced": 0,
+                    "type": "Pet"
+                  }
+                ],
+                "targets": [
+                  {
+                    "name": "Ymirjar Graveblade",
+                    "total": 163106,
+                    "totalReduced": 0,
+                    "type": "NPC"
+                  },
+                  {
+                    "name": "Forgemaster Garfrost",
+                    "total": 89235,
+                    "totalReduced": 0,
+                    "type": "Boss"
+                  },
+                  {
+                    "name": "Deathwhisper Necrolyte",
+                    "total": 85899,
+                    "totalReduced": 0,
+                    "type": "NPC"
+                  },
+                  {
+                    "name": "Scourgelord Tyrannus",
+                    "total": 83910,
+                    "totalReduced": 0,
+                    "type": "Boss"
+                  },
+                  {
+                    "name": "Dreadpulse Lich",
+                    "total": 54024,
+                    "totalReduced": 0,
+                    "type": "NPC"
+                  }
+                ],
+                "hitdetails": [
+                  {
+                    "type": "Hit",
+                    "total": 244028,
+                    "totalReduced": 0,
+                    "count": 439,
+                    "countReduced": 0,
+                    "absorbOrOverheal": 0,
+                    "min": 319,
+                    "max": 904
+                  },
+                  {
+                    "type": "Critical Hit",
+                    "total": 354643,
+                    "totalReduced": 0,
+                    "count": 205,
+                    "countReduced": 0,
+                    "absorbOrOverheal": 0,
+                    "min": 977,
+                    "max": 2983
+                  }
+                ],
+                "multistrikedetails": [],
+                "missdetails": [
+                  {
+                    "type": "Miss",
+                    "total": 0,
+                    "count": 7,
+                    "countReduced": 0
+                  }
+                ],
+                "multistrikemissdetails": []
+              },
+              {
+                "name": "Melee",
+                "guid": 1,
+                "actor": 20,
+                "type": 1,
+                "actorName": "High Inquisitor Whitemane",
+                "actorIcon": "abilities/achievement_character_human_female.jpg",
+                "actorType": "Pet",
+                "total": 539178,
+                "totalReduced": 0,
+                "abilityIcon": "inv_axe_02.jpg",
+                "uses": 592,
+                "hitCount": 592,
+                "tickCount": 0,
+                "tickMissCount": 0,
+                "missCount": 0,
+                "multistrikeHitCount": 0,
+                "multistrikeTickCount": 0,
+                "multistrikeMissCount": 0,
+                "multistrikeTickMissCount": 0,
+                "critHitCount": 188,
+                "critTickCount": 0,
+                "sources": [
+                  {
+                    "name": "High Inquisitor Whitemane",
+                    "total": 539178,
+                    "totalReduced": 0,
+                    "type": "Pet"
+                  }
+                ],
+                "targets": [
+                  {
+                    "name": "Ymirjar Graveblade",
+                    "total": 118281,
+                    "totalReduced": 0,
+                    "type": "NPC"
+                  },
+                  {
+                    "name": "Scourgelord Tyrannus",
+                    "total": 88116,
+                    "totalReduced": 0,
+                    "type": "Boss"
+                  },
+                  {
+                    "name": "Forgemaster Garfrost",
+                    "total": 74270,
+                    "totalReduced": 0,
+                    "type": "Boss"
+                  },
+                  {
+                    "name": "Deathwhisper Necrolyte",
+                    "total": 64525,
+                    "totalReduced": 0,
+                    "type": "NPC"
+                  },
+                  {
+                    "name": "Dreadpulse Lich",
+                    "total": 59168,
+                    "totalReduced": 0,
+                    "type": "NPC"
+                  }
+                ],
+                "hitdetails": [
+                  {
+                    "type": "Hit",
+                    "total": 221540,
+                    "totalReduced": 0,
+                    "count": 404,
+                    "countReduced": 0,
+                    "absorbOrOverheal": 1655,
+                    "min": 313,
+                    "max": 988
+                  },
+                  {
+                    "type": "Critical Hit",
+                    "total": 318021,
+                    "totalReduced": 0,
+                    "count": 188,
+                    "countReduced": 0,
+                    "absorbOrOverheal": 1398,
+                    "min": 1072,
+                    "max": 3076
+                  }
+                ],
+                "multistrikedetails": [],
+                "missdetails": [],
+                "multistrikemissdetails": []
+              },
+              {
+                "name": "Melee",
+                "guid": 1,
+                "actor": 17,
+                "type": 1,
+                "actorName": "King Thoras Trollbane",
+                "actorIcon": "abilities/achievement_character_human_male.jpg",
+                "actorType": "Pet",
+                "total": 477075,
+                "totalReduced": 0,
+                "abilityIcon": "inv_axe_02.jpg",
+                "uses": 511,
+                "hitCount": 511,
+                "tickCount": 0,
+                "tickMissCount": 0,
+                "missCount": 0,
+                "multistrikeHitCount": 0,
+                "multistrikeTickCount": 0,
+                "multistrikeMissCount": 0,
+                "multistrikeTickMissCount": 0,
+                "critHitCount": 168,
+                "critTickCount": 0,
+                "sources": [
+                  {
+                    "name": "King Thoras Trollbane",
+                    "total": 477075,
+                    "totalReduced": 0,
+                    "type": "Pet"
+                  }
+                ],
+                "targets": [
+                  {
+                    "name": "Ymirjar Graveblade",
+                    "total": 123329,
+                    "totalReduced": 0,
+                    "type": "NPC"
+                  },
+                  {
+                    "name": "Scourgelord Tyrannus",
+                    "total": 73319,
+                    "totalReduced": 0,
+                    "type": "Boss"
+                  },
+                  {
+                    "name": "Forgemaster Garfrost",
+                    "total": 61753,
+                    "totalReduced": 0,
+                    "type": "Boss"
+                  },
+                  {
+                    "name": "Deathwhisper Necrolyte",
+                    "total": 52079,
+                    "totalReduced": 0,
+                    "type": "NPC"
+                  },
+                  {
+                    "name": "Ick",
+                    "total": 49904,
+                    "totalReduced": 0,
+                    "type": "Boss"
+                  }
+                ],
+                "hitdetails": [
+                  {
+                    "type": "Hit",
+                    "total": 189621,
+                    "totalReduced": 0,
+                    "count": 343,
+                    "countReduced": 0,
+                    "absorbOrOverheal": 0,
+                    "min": 314,
+                    "max": 947
+                  },
+                  {
+                    "type": "Critical Hit",
+                    "total": 287454,
+                    "totalReduced": 0,
+                    "count": 168,
+                    "countReduced": 0,
+                    "absorbOrOverheal": 0,
+                    "min": 1012,
+                    "max": 2975
+                  }
+                ],
+                "multistrikedetails": [],
+                "missdetails": [],
+                "multistrikemissdetails": []
+              },
+              {
+                "name": "Melee",
+                "guid": 1,
+                "actor": 19,
+                "type": 1,
+                "actorName": "Nazgrim",
+                "actorIcon": "abilities/achievement_boss_general_nazgrim.jpg",
+                "actorType": "Pet",
+                "total": 413673,
+                "totalReduced": 0,
+                "abilityIcon": "inv_axe_02.jpg",
+                "uses": 450,
+                "hitCount": 450,
+                "tickCount": 0,
+                "tickMissCount": 0,
+                "missCount": 0,
+                "multistrikeHitCount": 0,
+                "multistrikeTickCount": 0,
+                "multistrikeMissCount": 0,
+                "multistrikeTickMissCount": 0,
+                "critHitCount": 145,
+                "critTickCount": 0,
+                "sources": [
+                  {
+                    "name": "Nazgrim",
+                    "total": 413673,
+                    "totalReduced": 0,
+                    "type": "Pet"
+                  }
+                ],
+                "targets": [
+                  {
+                    "name": "Ymirjar Graveblade",
+                    "total": 98308,
+                    "totalReduced": 0,
+                    "type": "NPC"
+                  },
+                  {
+                    "name": "Deathwhisper Necrolyte",
+                    "total": 60167,
+                    "totalReduced": 0,
+                    "type": "NPC"
+                  },
+                  {
+                    "name": "Ick",
+                    "total": 56145,
+                    "totalReduced": 0,
+                    "type": "Boss"
+                  },
+                  {
+                    "name": "Scourgelord Tyrannus",
+                    "total": 48667,
+                    "totalReduced": 0,
+                    "type": "Boss"
+                  },
+                  {
+                    "name": "Forgemaster Garfrost",
+                    "total": 47658,
+                    "totalReduced": 0,
+                    "type": "Boss"
+                  }
+                ],
+                "hitdetails": [
+                  {
+                    "type": "Hit",
+                    "total": 169741,
+                    "totalReduced": 0,
+                    "count": 305,
+                    "countReduced": 0,
+                    "absorbOrOverheal": 0,
+                    "min": 304,
+                    "max": 924
+                  },
+                  {
+                    "type": "Critical Hit",
+                    "total": 243932,
+                    "totalReduced": 0,
+                    "count": 145,
+                    "countReduced": 0,
+                    "absorbOrOverheal": 0,
+                    "min": 1099,
+                    "max": 2820
+                  }
+                ],
+                "multistrikedetails": [],
+                "missdetails": [],
+                "multistrikemissdetails": []
+              }
+            ],
+            "uses": 2204,
+            "hitCount": 2197,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 7,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 706,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Highlord Darion Mograine",
+                "total": 597767,
+                "totalReduced": 0,
+                "type": "Pet"
+              },
+              {
+                "name": "High Inquisitor Whitemane",
+                "total": 539178,
+                "totalReduced": 0,
+                "type": "Pet"
+              },
+              {
+                "name": "King Thoras Trollbane",
+                "total": 477075,
+                "totalReduced": 0,
+                "type": "Pet"
+              },
+              {
+                "name": "Nazgrim",
+                "total": 413673,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 503024,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 294012,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 272916,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Deathwhisper Necrolyte",
+                "total": 262670,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Ick",
+                "total": 207496,
+                "totalReduced": 0,
+                "type": "Boss"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 824930,
+                "totalReduced": 0,
+                "count": 1491,
+                "countReduced": 0,
+                "absorbOrOverheal": 1655,
+                "min": 304,
+                "max": 988
+              },
+              {
+                "type": "Critical Hit",
+                "total": 1204050,
+                "totalReduced": 0,
+                "count": 706,
+                "countReduced": 0,
+                "absorbOrOverheal": 1398,
+                "min": 977,
+                "max": 3076
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [
+              {
+                "type": "Miss",
+                "total": 0,
+                "count": 7,
+                "countReduced": 0
+              }
+            ],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Heart Strike",
+            "guid": 445504,
+            "actor": 18,
+            "type": 1,
+            "actorName": "Highlord Darion Mograine",
+            "actorIcon": "abilities/inv_helmet_151.jpg",
+            "actorType": "Pet",
+            "total": 1667748,
+            "totalReduced": 0,
+            "abilityIcon": "inv_weapon_shortblade_40.jpg",
+            "uses": 192,
+            "hitCount": 320,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 101,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Highlord Darion Mograine",
+                "total": 1667748,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 313017,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Deathwhisper Necrolyte",
+                "total": 154680,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 145990,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 143178,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 140582,
+                "totalReduced": 0,
+                "type": "Boss"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 730655,
+                "totalReduced": 0,
+                "count": 219,
+                "countReduced": 0,
+                "absorbOrOverheal": 11163,
+                "min": 2080,
+                "max": 5699
+              },
+              {
+                "type": "Critical Hit",
+                "total": 1001816,
+                "totalReduced": 0,
+                "count": 101,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 5983,
+                "max": 17620
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Death and Decay",
+            "guid": 1251951,
+            "actor": 18,
+            "type": 32,
+            "actorName": "Highlord Darion Mograine",
+            "actorIcon": "abilities/inv_helmet_151.jpg",
+            "actorType": "Pet",
+            "total": 1466540,
+            "totalReduced": 0,
+            "abilityIcon": "spell_shadow_deathanddecay.jpg",
+            "hitCount": 2755,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 854,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Highlord Darion Mograine",
+                "total": 1466540,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Leaping Geist",
+                "total": 243753,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Rotting Ghoul",
+                "total": 221837,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Quarry Tormentor",
+                "total": 154064,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Wrathbone Enforcer",
+                "total": 150996,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 115422,
+                "totalReduced": 0,
+                "type": "NPC"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 687787,
+                "totalReduced": 0,
+                "count": 1901,
+                "countReduced": 0,
+                "absorbOrOverheal": 8497,
+                "min": 228,
+                "max": 611
+              },
+              {
+                "type": "Critical Hit",
+                "total": 957262,
+                "totalReduced": 0,
+                "count": 854,
+                "countReduced": 0,
+                "absorbOrOverheal": 16386,
+                "min": 707,
+                "max": 1936
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Scourge Strike",
+            "guid": 445508,
+            "actor": 19,
+            "type": 1,
+            "actorName": "Nazgrim",
+            "actorIcon": "abilities/achievement_boss_general_nazgrim.jpg",
+            "actorType": "Pet",
+            "total": 1344422,
+            "totalReduced": 0,
+            "abilityIcon": "spell_deathknight_scourgestrike.jpg",
+            "uses": 137,
+            "hitCount": 137,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 53,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Nazgrim",
+                "total": 1344422,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 279914,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Deathwhisper Necrolyte",
+                "total": 208764,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 185178,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 136855,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 134423,
+                "totalReduced": 0,
+                "type": "Boss"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 459690,
+                "totalReduced": 0,
+                "count": 84,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 3751,
+                "max": 8945
+              },
+              {
+                "type": "Critical Hit",
+                "total": 884732,
+                "totalReduced": 0,
+                "count": 53,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 9629,
+                "max": 26595
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Obliterate",
+            "guid": 445507,
+            "actor": 17,
+            "type": 1,
+            "actorName": "King Thoras Trollbane",
+            "actorIcon": "abilities/achievement_character_human_male.jpg",
+            "actorType": "Pet",
+            "total": 1312679,
+            "totalReduced": 0,
+            "abilityIcon": "spell_deathknight_classicon.jpg",
+            "uses": 111,
+            "hitCount": 111,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 39,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "King Thoras Trollbane",
+                "total": 1312679,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 369571,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Ick",
+                "total": 200386,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Dreadpulse Lich",
+                "total": 179878,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 140035,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 138595,
+                "totalReduced": 0,
+                "type": "Boss"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 486705,
+                "totalReduced": 0,
+                "count": 72,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 4537,
+                "max": 10672
+              },
+              {
+                "type": "Critical Hit",
+                "total": 825974,
+                "totalReduced": 0,
+                "count": 39,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 12557,
+                "max": 37729
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          },
+          {
+            "name": "Scourge Strike",
+            "guid": 445509,
+            "actor": 19,
+            "type": 32,
+            "actorName": "Nazgrim",
+            "actorIcon": "abilities/achievement_boss_general_nazgrim.jpg",
+            "actorType": "Pet",
+            "total": 428678,
+            "totalReduced": 0,
+            "abilityIcon": "spell_deathknight_scourgestrike.jpg",
+            "hitCount": 137,
+            "tickCount": 0,
+            "tickMissCount": 0,
+            "missCount": 0,
+            "multistrikeHitCount": 0,
+            "multistrikeTickCount": 0,
+            "multistrikeMissCount": 0,
+            "multistrikeTickMissCount": 0,
+            "critHitCount": 43,
+            "critTickCount": 0,
+            "sources": [
+              {
+                "name": "Nazgrim",
+                "total": 428678,
+                "totalReduced": 0,
+                "type": "Pet"
+              }
+            ],
+            "targets": [
+              {
+                "name": "Ymirjar Graveblade",
+                "total": 87086,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Deathwhisper Necrolyte",
+                "total": 60370,
+                "totalReduced": 0,
+                "type": "NPC"
+              },
+              {
+                "name": "Scourgelord Tyrannus",
+                "total": 53122,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Forgemaster Garfrost",
+                "total": 45776,
+                "totalReduced": 0,
+                "type": "Boss"
+              },
+              {
+                "name": "Ick",
+                "total": 44821,
+                "totalReduced": 0,
+                "type": "Boss"
+              }
+            ],
+            "hitdetails": [
+              {
+                "type": "Hit",
+                "total": 178617,
+                "totalReduced": 0,
+                "count": 94,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 1341,
+                "max": 3040
+              },
+              {
+                "type": "Critical Hit",
+                "total": 250061,
+                "totalReduced": 0,
+                "count": 43,
+                "countReduced": 0,
+                "absorbOrOverheal": 0,
+                "min": 3185,
+                "max": 9255
+              }
+            ],
+            "multistrikedetails": [],
+            "missdetails": [],
+            "multistrikemissdetails": []
+          }
+        ],
+        "uptime": 992384,
+        "hitCount": 16400,
+        "tickCount": 1104,
+        "tickMissCount": 0,
+        "missCount": 7,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 5260,
+        "critTickCount": 370,
+        "sources": [
+          {
+            "name": "High Inquisitor Whitemane",
+            "total": 21801421,
+            "totalReduced": 0,
+            "type": "Pet"
+          },
+          {
+            "name": "Unreally",
+            "total": 19283931,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          },
+          {
+            "name": "Highlord Darion Mograine",
+            "total": 3732055,
+            "totalReduced": 0,
+            "type": "Pet"
+          },
+          {
+            "name": "Nazgrim",
+            "total": 2186773,
+            "totalReduced": 0,
+            "type": "Pet"
+          },
+          {
+            "name": "King Thoras Trollbane",
+            "total": 1789754,
+            "totalReduced": 0,
+            "type": "Pet"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Leaping Geist",
+            "total": 6880030,
+            "totalReduced": 2767924,
+            "type": "NPC"
+          },
+          {
+            "name": "Rotting Ghoul",
+            "total": 5414446,
+            "totalReduced": 2473480,
+            "type": "NPC"
+          },
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 5231967,
+            "totalReduced": 1721087,
+            "type": "NPC"
+          },
+          {
+            "name": "Wrathbone Enforcer",
+            "total": 4856241,
+            "totalReduced": 2188198,
+            "type": "NPC"
+          },
+          {
+            "name": "Quarry Tormentor",
+            "total": 3936959,
+            "totalReduced": 1623458,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 17430518,
+            "totalReduced": 4850064,
+            "count": 11140,
+            "countReduced": 541,
+            "absorbOrOverheal": 212017,
+            "min": 102,
+            "max": 16519
+          },
+          {
+            "type": "Critical Hit",
+            "total": 23909410,
+            "totalReduced": 5110181,
+            "count": 5260,
+            "countReduced": 274,
+            "absorbOrOverheal": 271049,
+            "min": 210,
+            "max": 40555
+          },
+          {
+            "type": "Tick",
+            "total": 4773629,
+            "count": 734,
+            "absorbOrOverheal": 66192,
+            "min": 2,
+            "max": 15420
+          },
+          {
+            "type": "Critical Tick",
+            "total": 6149093,
+            "count": 370,
+            "absorbOrOverheal": 49854,
+            "min": 65,
+            "max": 43973
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [
+          {
+            "type": "Miss",
+            "total": 0,
+            "count": 7,
+            "countReduced": 0
+          }
+        ],
+        "multistrikemissdetails": []
+      },
+      {
+        "name": "Festering Strike",
+        "guid": 85948,
+        "actor": 4,
+        "type": 1,
+        "actorName": "Unreally",
+        "actorIcon": "DeathKnight",
+        "actorType": "DeathKnight",
+        "total": 370737,
+        "abilityIcon": "spell_deathknight_festering_strike.jpg",
+        "uses": 53,
+        "hitCount": 53,
+        "tickCount": 0,
+        "tickMissCount": 0,
+        "missCount": 0,
+        "multistrikeHitCount": 0,
+        "multistrikeTickCount": 0,
+        "multistrikeMissCount": 0,
+        "multistrikeTickMissCount": 0,
+        "critHitCount": 17,
+        "critTickCount": 0,
+        "sources": [
+          {
+            "name": "Unreally",
+            "total": 370737,
+            "type": "DeathKnight",
+            "icon": "DeathKnight-Unholy"
+          }
+        ],
+        "targets": [
+          {
+            "name": "Ymirjar Graveblade",
+            "total": 87242,
+            "type": "NPC"
+          },
+          {
+            "name": "Scourgelord Tyrannus",
+            "total": 62937,
+            "type": "Boss"
+          },
+          {
+            "name": "Forgemaster Garfrost",
+            "total": 57211,
+            "type": "Boss"
+          },
+          {
+            "name": "Deathwhisper Necrolyte",
+            "total": 42251,
+            "type": "NPC"
+          },
+          {
+            "name": "Dreadpulse Lich",
+            "total": 38485,
+            "type": "NPC"
+          }
+        ],
+        "hitdetails": [
+          {
+            "type": "Hit",
+            "total": 189463,
+            "count": 36,
+            "absorbOrOverheal": 0,
+            "min": 3450,
+            "max": 7332
+          },
+          {
+            "type": "Critical Hit",
+            "total": 181274,
+            "count": 17,
+            "absorbOrOverheal": 0,
+            "min": 7329,
+            "max": 16046
+          }
+        ],
+        "multistrikedetails": [],
+        "missdetails": [],
+        "multistrikemissdetails": []
+      }
+    ],
+    "totalTime": 1742934,
+    "logVersion": 17,
+    "gameVersion": 1,
+    "exploitDetails": []
+  }
+}

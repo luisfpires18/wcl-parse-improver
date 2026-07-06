@@ -1,0 +1,340 @@
+{
+  "data": {
+    "entries": [
+      {
+        "name": "Unreally",
+        "id": 4,
+        "guid": 214175532,
+        "type": "DeathKnight",
+        "icon": "DeathKnight-Unholy",
+        "timestamp": 250433,
+        "fight": 1,
+        "damage": {
+          "total": 1289486,
+          "totalReduced": 858756,
+          "activeTime": 0,
+          "activeTimeReduced": 0,
+          "overheal": 156621,
+          "abilities": [
+            {
+              "guid": 1258826,
+              "name": "Torrent of Misery",
+              "total": 765256,
+              "totalReduced": 545250,
+              "type": 32,
+              "icon": "spell_animamaw_beam.jpg"
+            },
+            {
+              "guid": 1258434,
+              "name": "Curse of Torment",
+              "total": 243446,
+              "totalReduced": 159115,
+              "type": 32,
+              "icon": "ability_creature_cursed_03.jpg"
+            },
+            {
+              "guid": 1258451,
+              "name": "Charging Slash",
+              "total": 158089,
+              "totalReduced": 89432,
+              "type": 1,
+              "icon": "ability_warrior_charge.jpg"
+            },
+            {
+              "guid": 1258802,
+              "name": "Dread Pulse",
+              "total": 122695,
+              "totalReduced": 64959,
+              "type": 32,
+              "icon": "spell_priest_burningwill_shadow.jpg"
+            }
+          ],
+          "damageAbilities": [],
+          "sources": [
+            {
+              "name": "Dreadpulse Lich",
+              "total": 887951,
+              "totalReduced": 610209,
+              "type": "NPC"
+            },
+            {
+              "name": "Quarry Tormentor",
+              "total": 243446,
+              "totalReduced": 159115,
+              "type": "NPC"
+            },
+            {
+              "name": "Risen Soldier",
+              "total": 158089,
+              "totalReduced": 89432,
+              "type": "NPC"
+            }
+          ]
+        },
+        "healing": {
+          "total": 528856,
+          "totalReduced": 293692,
+          "activeTime": 0,
+          "activeTimeReduced": 0,
+          "abilities": [
+            {
+              "guid": 206967,
+              "name": "Will of the Necropolis",
+              "total": 126890,
+              "totalReduced": 0,
+              "type": 1,
+              "icon": "achievement_boss_kelthuzad_01.jpg"
+            },
+            {
+              "guid": 1263727,
+              "name": "Litany of Lightblind Wrath",
+              "total": 95101,
+              "totalReduced": 0,
+              "type": 2,
+              "icon": "inv_12_trinket_raid_voidspire_healer2_litanyoflightblindwrath.jpg"
+            },
+            {
+              "guid": 73685,
+              "name": "Unleash Life",
+              "total": 76675,
+              "type": 8,
+              "icon": "spell_shaman_unleashweapon_life.jpg"
+            },
+            {
+              "guid": 1265145,
+              "name": "Refreshing Drink",
+              "total": 71460,
+              "type": 8,
+              "icon": "achievement_guildperk_happyhour.jpg"
+            },
+            {
+              "guid": 143924,
+              "name": "Leech",
+              "total": 48169,
+              "type": 1,
+              "icon": "spell_shadow_lifedrain02.jpg"
+            }
+          ],
+          "damageAbilities": [
+            {
+              "guid": 1258826,
+              "name": "Torrent of Misery",
+              "total": 350744,
+              "totalReduced": 254909,
+              "type": 32,
+              "icon": "spell_animamaw_beam.jpg"
+            },
+            {
+              "guid": 1258451,
+              "name": "Charging Slash",
+              "total": 87074,
+              "totalReduced": 38783,
+              "type": 1,
+              "icon": "ability_warrior_charge.jpg"
+            },
+            {
+              "guid": 1258434,
+              "name": "Curse of Torment",
+              "total": 48095,
+              "totalReduced": 0,
+              "type": 32,
+              "icon": "ability_creature_cursed_03.jpg"
+            },
+            {
+              "guid": 1258802,
+              "name": "Dread Pulse",
+              "total": 42943,
+              "totalReduced": 0,
+              "type": 32,
+              "icon": "spell_priest_burningwill_shadow.jpg"
+            }
+          ],
+          "sources": [
+            {
+              "name": "Stupidheal",
+              "total": 229054,
+              "totalReduced": 133953,
+              "type": "Shaman"
+            },
+            {
+              "name": "Unreally",
+              "total": 188232,
+              "totalReduced": 48169,
+              "type": "DeathKnight"
+            },
+            {
+              "name": "Yeynix",
+              "total": 78183,
+              "type": "Monk"
+            },
+            {
+              "name": "Healing Stream Totem",
+              "total": 28085,
+              "type": "Pet"
+            },
+            {
+              "name": "Surging Totem",
+              "total": 5302,
+              "type": "Pet"
+            }
+          ]
+        },
+        "deathWindow": 5531,
+        "overkill": 7053,
+        "events": [
+          {
+            "timestamp": 250428,
+            "type": "damage",
+            "sourceID": 14,
+            "sourceInstance": 2,
+            "sourceIsFriendly": false,
+            "targetID": 4,
+            "targetIsFriendly": true,
+            "ability": {
+              "name": "Dread Pulse",
+              "guid": 1258802,
+              "type": 32,
+              "abilityIcon": "spell_priest_burningwill_shadow.jpg"
+            },
+            "fight": 1,
+            "hitType": 1,
+            "amount": 57906,
+            "mitigated": 14592,
+            "unmitigatedAmount": 137287,
+            "overkill": 7053,
+            "absorbed": 57736,
+            "isAoE": true
+          },
+          {
+            "timestamp": 250331,
+            "type": "damage",
+            "sourceID": 11,
+            "sourceInstance": 3,
+            "sourceIsFriendly": false,
+            "targetID": 4,
+            "targetIsFriendly": true,
+            "ability": {
+              "name": "Curse of Torment",
+              "guid": 1258434,
+              "type": 32,
+              "abilityIcon": "ability_creature_cursed_03.jpg"
+            },
+            "fight": 1,
+            "hitType": 1,
+            "amount": 64444,
+            "mitigated": 6406,
+            "unmitigatedAmount": 128129,
+            "absorbed": 57279,
+            "isAoE": false,
+            "tick": true
+          },
+          {
+            "timestamp": 249898,
+            "type": "damage",
+            "sourceID": 14,
+            "sourceInstance": 2,
+            "sourceIsFriendly": false,
+            "targetID": 4,
+            "targetIsFriendly": true,
+            "ability": {
+              "name": "Torrent of Misery",
+              "guid": 1258826,
+              "type": 32,
+              "abilityIcon": "spell_animamaw_beam.jpg"
+            },
+            "fight": 1,
+            "hitType": 1,
+            "amount": 143389,
+            "mitigated": 11441,
+            "unmitigatedAmount": 228828,
+            "absorbed": 73998,
+            "isAoE": false,
+            "tick": true
+          }
+        ],
+        "killingBlow": {
+          "name": "Dread Pulse",
+          "guid": 1258802,
+          "type": 32,
+          "abilityIcon": "spell_priest_burningwill_shadow.jpg"
+        }
+      },
+      {
+        "name": "Unreally",
+        "id": 4,
+        "guid": 214175532,
+        "type": "DeathKnight",
+        "icon": "DeathKnight-Unholy",
+        "timestamp": 1428326,
+        "fight": 1,
+        "damage": {
+          "total": 798101,
+          "totalReduced": 602440,
+          "activeTime": 0,
+          "activeTimeReduced": 0,
+          "overheal": 94925,
+          "abilities": [
+            {
+              "guid": 1278967,
+              "name": "Dark Rupture",
+              "total": 798101,
+              "totalReduced": 602440,
+              "type": 32,
+              "icon": "spell_shadow_shadowfury.jpg"
+            }
+          ],
+          "damageAbilities": [],
+          "sources": [
+            {
+              "name": "Ymirjar Graveblade",
+              "total": 798101,
+              "totalReduced": 602440,
+              "type": "NPC"
+            }
+          ]
+        },
+        "healing": {
+          "total": 0,
+          "activeTime": 0,
+          "activeTimeReduced": 0,
+          "abilities": [],
+          "damageAbilities": [],
+          "sources": []
+        },
+        "deathWindow": 0,
+        "overkill": 106302,
+        "events": [
+          {
+            "timestamp": 1428309,
+            "type": "damage",
+            "sourceID": 8,
+            "sourceInstance": 7,
+            "sourceIsFriendly": false,
+            "targetID": 4,
+            "targetIsFriendly": true,
+            "ability": {
+              "name": "Dark Rupture",
+              "guid": 1278967,
+              "type": 32,
+              "abilityIcon": "spell_shadow_shadowfury.jpg"
+            },
+            "fight": 1,
+            "hitType": 1,
+            "amount": 496138,
+            "mitigated": 94925,
+            "unmitigatedAmount": 893026,
+            "overkill": 106302,
+            "absorbed": 195661,
+            "isAoE": true
+          }
+        ],
+        "killingBlow": {
+          "name": "Dark Rupture",
+          "guid": 1278967,
+          "type": 32,
+          "abilityIcon": "spell_shadow_shadowfury.jpg"
+        }
+      }
+    ]
+  }
+}
