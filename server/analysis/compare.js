@@ -66,7 +66,8 @@ export function buildReport(bundle) {
   // so downtime/deaths don't double-count as buff-management failures.
   // Only auras I actually have are actionable; auras I never gained at all
   // are almost certainly group-comp buffs or talent differences.
-  const { actionable: uptimeRows, downtimeCaused, compOnly } = uptimeDiffs(mine, cohortMetrics);
+  const buffSources = bundle.mine.detail.buffSources ?? {};
+  const { actionable: uptimeRows, downtimeCaused, compOnly } = uptimeDiffs(mine, cohortMetrics, buffSources);
   for (const row of uptimeRows) {
     gaps.push(
       gap('uptime', `${row.name} uptime (active time)`, `${round1(row.mineActive)}%`, `${round1(row.cohortActive)}%`, null, row.activeDiff * 0.15, {
@@ -78,8 +79,16 @@ export function buildReport(bundle) {
   }
   const compNotes = compOnly.map((row) => ({
     name: row.name,
+    minePct: round1(row.mineRaw),
     cohortPct: round1(row.cohortRaw),
-    note: `Cohort runs have ${row.name} at ~${round1(row.cohortRaw)}% uptime; you never had it — likely a group buff from their comp or a talent difference, not directly actionable.`,
+    external: row.external,
+    note: row.external
+      ? `${row.name} is applied by a groupmate, not cast by you (verified from the log's own apply/remove events)` +
+        (row.mineRaw > 0
+          ? ` — you had it at ${round1(row.mineRaw)}% because your own group's support gave it to you sometimes, ` +
+            `their ${round1(row.cohortRaw)}% reflects theirs doing it more; not your play.`
+          : `; cohort runs have it at ~${round1(row.cohortRaw)}% because their support classes provide it, yours didn't this run.`)
+      : `Cohort runs have ${row.name} at ~${round1(row.cohortRaw)}% uptime; you never had it — likely a group buff from their comp or a talent difference, not directly actionable.`,
   }));
   const downtimeNotes = downtimeCaused.map((row) => ({
     name: row.name,
@@ -231,7 +240,7 @@ function abilityDiffs(mine, cohortMetrics) {
   return rows;
 }
 
-function uptimeDiffs(mine, cohortMetrics) {
+function uptimeDiffs(mine, cohortMetrics, buffSources = {}) {
   const actionable = [];
   const downtimeCaused = [];
   const compOnly = [];
@@ -253,10 +262,16 @@ function uptimeDiffs(mine, cohortMetrics) {
       rawDiff,
       activeDiff,
     };
-    // never gained the aura at all -> group buff from their comp or a talent
-    // difference; report separately, don't rank as an actionable gap
-    if (!mineAura || (mineRaw === 0 && (mineAura.uses ?? 0) === 0)) {
-      compOnly.push(row);
+    // externally-applied (verified from real apply/remove events: someone
+    // else's sourceID, never mine) — a raid/party buff, not a personal habit,
+    // regardless of how much uptime I happened to get from it
+    const src = buffSources[name];
+    const isExternal = src && src.foreign > 0 && src.self === 0;
+    // never gained the aura at all -> most likely also external (group buff
+    // or a talent difference); report separately, don't rank as an
+    // actionable gap
+    if (isExternal || !mineAura || (mineRaw === 0 && (mineAura.uses ?? 0) === 0)) {
+      compOnly.push({ ...row, external: Boolean(isExternal) });
     } else if (activeDiff < MIN_UPTIME_DIFF_PP / 2) {
       // big raw gap but fine while actively playing -> the loss is downtime/
       // deaths, which are already ranked as their own gaps

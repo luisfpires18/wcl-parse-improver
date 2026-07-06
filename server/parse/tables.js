@@ -131,6 +131,39 @@ export function parseResourceEvents(eventPages) {
   return events;
 }
 
+/**
+ * Classify each aura name as self-applied or externally-applied, from real
+ * apply/remove/refresh events (not guessed). For every event whose
+ * abilityGameID resolves to a name via `abilityNameByGameID`, count whether
+ * the event's own sourceID is the player themselves or someone else.
+ * A name with any foreign-sourced event and zero self-sourced ones is a
+ * buff the player cannot personally control (a raid/party utility buff).
+ */
+export function classifyBuffSources(eventPages, myActorId, abilityNameByGameID) {
+  // plain object, not a Map — this gets written to fixture JSON and read
+  // back in tests/CLI scripts, and a Map silently flattens to `{}` through
+  // JSON.stringify/parse
+  const byName = {};
+  for (const page of eventPages) {
+    const data = Array.isArray(page?.data) ? page.data : [];
+    for (const ev of data) {
+      if (
+        (ev?.type === 'applybuff' || ev?.type === 'applybuffstack' || ev?.type === 'removebuff') &&
+        typeof ev.sourceID === 'number' &&
+        typeof ev.abilityGameID === 'number'
+      ) {
+        const name = abilityNameByGameID.get(ev.abilityGameID);
+        if (!name) continue;
+        const entry = byName[name] ?? { self: 0, foreign: 0 };
+        if (ev.sourceID === myActorId) entry.self += 1;
+        else entry.foreign += 1;
+        byName[name] = entry;
+      }
+    }
+  }
+  return byName;
+}
+
 function dataOf(table, label) {
   const d = table?.data ?? table;
   if (!d || typeof d !== 'object') {

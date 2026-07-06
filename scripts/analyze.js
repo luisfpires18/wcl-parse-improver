@@ -53,7 +53,7 @@ if (report.downtimeNotes?.length) {
 
 if (report.compNotes?.length) {
   console.log('\n--- Group comp / talent differences (not actionable) ---');
-  for (const n of report.compNotes) console.log(`  ${n.name}: cohort ~${n.cohortPct}%, you 0%`);
+  for (const n of report.compNotes) console.log(`  ${n.note}`);
 }
 
 console.log('\n--- Honesty ---');

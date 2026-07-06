@@ -34,6 +34,7 @@ export async function buildComparison({
     code: summary.bestRun.report.code,
     fightID: summary.bestRun.report.fightID,
     playerName: name,
+    includeBuffSources: true,
   });
 
   const cohort = [];

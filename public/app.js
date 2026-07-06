@@ -300,8 +300,12 @@ function renderReport(encounterID, offset, r) {
     .join('');
 
   const compRows = (r.compNotes ?? [])
-    .map((n) => `<tr><td>${esc(n.name)}</td><td class="num">${n.cohortPct}%</td></tr>`)
+    .map(
+      (n) => `<tr><td>${esc(n.name)}${n.external ? ' <small>(verified external)</small>' : ''}</td>
+        <td class="num">${n.minePct ?? 0}%</td><td class="num">${n.cohortPct}%</td></tr>`
+    )
     .join('');
+  const compNotesText = (r.compNotes ?? []).map((n) => n.note).filter(Boolean);
 
   $('#report').innerHTML = `
     <div class="card">
@@ -345,7 +349,8 @@ function renderReport(encounterID, offset, r) {
         <table><thead><tr><th>At</th><th>Idle</th></tr></thead><tbody>${downtimeRows}</tbody></table>
       </details>
       ${compRows ? `<details><summary>Group comp / talent differences (not actionable)</summary>
-        <table><thead><tr><th>Buff</th><th>Cohort uptime</th></tr></thead><tbody>${compRows}</tbody></table>
+        <table><thead><tr><th>Buff</th><th>Mine</th><th>Cohort</th></tr></thead><tbody>${compRows}</tbody></table>
+        <ul class="comp-notes">${compNotesText.map((t) => `<li><small>${esc(t)}</small></li>`).join('')}</ul>
       </details>` : ''}
 
       <p class="honesty">DPS gap ${r.honesty.dpsGapPct}% — rotational metrics explain ~${r.honesty.explainedPct}% of it.<br />

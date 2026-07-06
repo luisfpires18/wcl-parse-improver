@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-07-06T21:52:24.097Z",
+ "generatedAt": "2026-07-06T22:58:00.314Z",
  "params": {
   "name": "Unreally",
   "serverSlug": "aggra-portugues",
@@ -23304,7 +23304,201 @@
      "waste": 10,
      "abilityGameID": 55090
     }
-   ]
+   ],
+   "buffSources": {
+    "Riptide": {
+     "self": 0,
+     "foreign": 79
+    },
+    "Ancestral Vigor": {
+     "self": 0,
+     "foreign": 83
+    },
+    "Litany of Lightblind Wrath": {
+     "self": 0,
+     "foreign": 46
+    },
+    "Death Charge": {
+     "self": 28,
+     "foreign": 0
+    },
+    "Frost Shield": {
+     "self": 520,
+     "foreign": 0
+    },
+    "Lesser Ghoul": {
+     "self": 1526,
+     "foreign": 0
+    },
+    "Festering Scythe": {
+     "self": 187,
+     "foreign": 0
+    },
+    "Earthliving Weapon": {
+     "self": 0,
+     "foreign": 129
+    },
+    "Sudden Doom": {
+     "self": 454,
+     "foreign": 0
+    },
+    "Light Company Guidon": {
+     "self": 34,
+     "foreign": 32
+    },
+    "Potion of Recklessness": {
+     "self": 10,
+     "foreign": 0
+    },
+    "Charge!": {
+     "self": 34,
+     "foreign": 0
+    },
+    "Heroism": {
+     "self": 0,
+     "foreign": 6
+    },
+    "Unholy Aura": {
+     "self": 411,
+     "foreign": 0
+    },
+    "Forbidden Ritual": {
+     "self": 411,
+     "foreign": 0
+    },
+    "Army of the Dead": {
+     "self": 34,
+     "foreign": 0
+    },
+    "Forbidden Knowledge": {
+     "self": 34,
+     "foreign": 0
+    },
+    "Apocalyptic Conquest": {
+     "self": 81,
+     "foreign": 0
+    },
+    "Pact of the Apocalypse": {
+     "self": 0,
+     "foreign": 192
+    },
+    "Refreshing Drink": {
+     "self": 0,
+     "foreign": 210
+    },
+    "Elemental Resistance": {
+     "self": 0,
+     "foreign": 227
+    },
+    "Death and Decay": {
+     "self": 761,
+     "foreign": 0
+    },
+    "Mograine's Might": {
+     "self": 144,
+     "foreign": 0
+    },
+    "Ghoulish Frenzy": {
+     "self": 65,
+     "foreign": 0
+    },
+    "Dark Transformation": {
+     "self": 65,
+     "foreign": 0
+    },
+    "Reaping": {
+     "self": 66,
+     "foreign": 0
+    },
+    "Commander of the Dead": {
+     "self": 65,
+     "foreign": 0
+    },
+    "Forbidden Sacrifice": {
+     "self": 363,
+     "foreign": 0
+    },
+    "Arcanoweave Insight": {
+     "self": 70,
+     "foreign": 78
+    },
+    "Blighted": {
+     "self": 398,
+     "foreign": 0
+    },
+    "Icy Talons": {
+     "self": 84,
+     "foreign": 0
+    },
+    "Runic Corruption": {
+     "self": 338,
+     "foreign": 0
+    },
+    "Rune Mastery": {
+     "self": 179,
+     "foreign": 0
+    },
+    "Clawing Shadows": {
+     "self": 79,
+     "foreign": 0
+    },
+    "Dark Succor": {
+     "self": 28,
+     "foreign": 0
+    },
+    "Spirit Link Totem": {
+     "self": 0,
+     "foreign": 14
+    },
+    "Alnsight": {
+     "self": 72,
+     "foreign": 0
+    },
+    "Alnscorned Essence": {
+     "self": 653,
+     "foreign": 0
+    },
+    "Anti-Magic Shell": {
+     "self": 29,
+     "foreign": 0
+    },
+    "Skyfury": {
+     "self": 0,
+     "foreign": 4
+    },
+    "Void-Touched": {
+     "self": 3,
+     "foreign": 0
+    },
+    "Raise Dead": {
+     "self": 2,
+     "foreign": 0
+    },
+    "Acherus Deathcharger": {
+     "self": 4,
+     "foreign": 0
+    },
+    "Wind Rush": {
+     "self": 0,
+     "foreign": 10
+    },
+    "Icebound Fortitude": {
+     "self": 16,
+     "foreign": 0
+    },
+    "Lichborne": {
+     "self": 10,
+     "foreign": 0
+    },
+    "Recently Used Death Strike": {
+     "self": 14,
+     "foreign": 0
+    },
+    "Anti-Magic Zone": {
+     "self": 0,
+     "foreign": 7
+    }
+   }
   }
  },
  "cohort": [
@@ -48513,7 +48707,8 @@
       "waste": 0,
       "abilityGameID": 343294
      }
-    ]
+    ],
+    "buffSources": null
    }
   },
   {
@@ -71303,7 +71498,8 @@
       "waste": 0,
       "abilityGameID": 55090
      }
-    ]
+    ],
+    "buffSources": null
    }
   },
   {
@@ -93277,7 +93473,8 @@
       "waste": 0,
       "abilityGameID": 55090
      }
-    ]
+    ],
+    "buffSources": null
    }
   },
   {
@@ -115827,7 +116024,8 @@
       "waste": 0,
       "abilityGameID": 55090
      }
-    ]
+    ],
+    "buffSources": null
    }
   },
   {
@@ -139015,7 +139213,8 @@
       "waste": 7,
       "abilityGameID": 55090
      }
-    ]
+    ],
+    "buffSources": null
    }
   }
  ]

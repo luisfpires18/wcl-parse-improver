@@ -52,7 +52,10 @@ query ReportFightsActors($code: String!, $fightIDs: [Int!]) {
   reportData {
     report(code: $code) {
       fights(fightIDs: $fightIDs) { id startTime endTime keystoneLevel keystoneTime kill name }
-      masterData(translate: true) { actors(type: "Player") { id name subType server } }
+      masterData(translate: true) {
+        actors(type: "Player") { id name subType server }
+        abilities { gameID name }
+      }
     }
   }
 }`;
@@ -91,6 +94,27 @@ query ReportResourceEvents($code: String!, $fightIDs: [Int!], $sourceID: Int!, $
   reportData {
     report(code: $code) {
       events(fightIDs: $fightIDs, dataType: Resources, sourceID: $sourceID, startTime: $startTime, endTime: $endTime) {
+        data
+        nextPageTimestamp
+      }
+    }
+  }
+}`;
+
+// Buff apply/remove/refresh events, sourceID here means "whose aura uptime
+// we're viewing" (matches table(dataType:Buffs, sourceID) semantics) — each
+// returned event ALSO carries its own sourceID, the actor who cast/applied
+// it. Verified on a real payload: for Black Attunement (an Augmentation
+// Evoker buff) every applybuff/removebuff event on me had event.sourceID
+// pointing at a groupmate, never me; for a self-buff like Dark
+// Transformation every event was self-sourced (72/72). That's the
+// discriminator used to keep external raid buffs out of "fix your rotation"
+// advice regardless of how much uptime I happened to have.
+export const REPORT_BUFF_SOURCE_EVENTS = `
+query ReportBuffSourceEvents($code: String!, $fightIDs: [Int!], $sourceID: Int!, $startTime: Float, $endTime: Float) {
+  reportData {
+    report(code: $code) {
+      events(fightIDs: $fightIDs, dataType: Buffs, sourceID: $sourceID, startTime: $startTime, endTime: $endTime) {
         data
         nextPageTimestamp
       }

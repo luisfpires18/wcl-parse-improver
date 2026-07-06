@@ -9,6 +9,7 @@ import {
   REPORT_TABLE,
   REPORT_CAST_EVENTS,
   REPORT_RESOURCE_EVENTS,
+  REPORT_BUFF_SOURCE_EVENTS,
 } from './queries.js';
 import { buildOverview } from '../parse/zoneRankings.js';
 import { parseEncounterRankings, summarizeBestLevel } from '../parse/encounterRankings.js';
@@ -20,6 +21,7 @@ import {
   parseDeathsTable,
   parseCastEvents,
   parseResourceEvents,
+  classifyBuffSources,
 } from '../parse/tables.js';
 
 async function fetchZoneRankings({ name, serverSlug, serverRegion, zoneID, metric, byBracket, role }) {
@@ -148,8 +150,14 @@ export async function fetchTopRuns({
 /**
  * Full per-player detail for one fight: fight timing, actor resolution,
  * the four tables and the cast-event stream.
+ *
+ * `includeBuffSources` additionally fetches buff apply/remove events and
+ * classifies each aura as self- or externally-applied (see
+ * classifyBuffSources). Only needed for "mine" — the classification is a
+ * property of the ability itself (can a DK ever self-cast it), not of one
+ * specific run, so fetching it once is enough.
  */
-export async function fetchRunDetail({ code, fightID, playerName }) {
+export async function fetchRunDetail({ code, fightID, playerName, includeBuffSources = false }) {
   const rd = await gql(REPORT_FIGHTS_ACTORS, { code, fightIDs: [fightID] });
   const report = rd?.reportData?.report;
   const fight = report?.fights?.[0];
@@ -175,6 +183,20 @@ export async function fetchRunDetail({ code, fightID, playerName }) {
   const castPages = await paginateEvents(REPORT_CAST_EVENTS, { code, fightID, sourceID: actor.id, fight });
   const resourcePages = await paginateEvents(REPORT_RESOURCE_EVENTS, { code, fightID, sourceID: actor.id, fight });
 
+  let buffSources = null;
+  if (includeBuffSources) {
+    const abilityNameByGameID = new Map(
+      (report?.masterData?.abilities ?? []).map((a) => [a.gameID, a.name])
+    );
+    const buffSourcePages = await paginateEvents(REPORT_BUFF_SOURCE_EVENTS, {
+      code,
+      fightID,
+      sourceID: actor.id,
+      fight,
+    });
+    buffSources = classifyBuffSources(buffSourcePages, actor.id, abilityNameByGameID);
+  }
+
   return {
     code,
     fightID,
@@ -192,6 +214,7 @@ export async function fetchRunDetail({ code, fightID, playerName }) {
     deaths: parseDeathsTable(rdTable(deathsT)),
     castEvents: parseCastEvents(castPages),
     resourceEvents: parseResourceEvents(resourcePages),
+    buffSources,
   };
 }
 
