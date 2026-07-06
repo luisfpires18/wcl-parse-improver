@@ -37,17 +37,11 @@ test('guide breakpoints cover both the baseline and Forbidden Knowledge-transfor
   assert.ok(rules.includes('Graveyard'));
 });
 
-test('buildReport attaches the guide reference without touching gap severity/ranking', () => {
-  const withGuide = buildReport(bundle);
-  assert.ok(withGuide.guide);
-  assert.equal(withGuide.guide.meta.sourceName, 'Icy Veins');
-  // guide content is static/display-only — gaps must be identical to a
-  // report built without ever importing the guide module's side effects
-  const again = buildReport(bundle);
-  assert.deepEqual(
-    withGuide.gaps.map((g) => g.severity),
-    again.gaps.map((g) => g.severity)
-  );
+test('buildReport does not attach the guide — it is served separately via /api/guide', () => {
+  // guide content is spec-wide static reference, not per-run data; it lives
+  // on its own nav page/endpoint now, not bundled into every report
+  const report = buildReport(bundle);
+  assert.equal(report.guide, undefined);
 });
 
 test('ability advice for Graveyard explains the Forbidden Knowledge mechanic inline (real Magisters gap)', () => {

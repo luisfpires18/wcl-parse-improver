@@ -30,6 +30,17 @@ body {
 }
 #app { max-width: 980px; margin: 1.5rem auto 4rem; padding: 0 1rem; }
 h1 { color: var(--accent); font-size: 1.35rem; margin: 0 0 0.8rem; }
+#nav { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
+.nav-link {
+  background: var(--panel);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.nav-link.active { color: var(--text); border-color: var(--accent); background: var(--panel2); }
 h2 { font-size: 1.15rem; margin: 0 0 0.6rem; }
 h3 { font-size: 1rem; margin: 1.2rem 0 0.4rem; }
 small { color: var(--muted); }

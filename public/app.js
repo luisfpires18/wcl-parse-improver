@@ -1,11 +1,35 @@
 const $ = (sel) => document.querySelector(sel);
 
 let currentOverview = null;
+let guideLoaded = false;
 
 $('#char-form').addEventListener('submit', (e) => {
   e.preventDefault();
   loadOverview();
 });
+
+$('#nav').addEventListener('click', (e) => {
+  const btn = e.target.closest('.nav-link');
+  if (!btn) return;
+  document.querySelectorAll('.nav-link').forEach((b) => b.classList.toggle('active', b === btn));
+  const view = btn.dataset.view;
+  $('#view-character').hidden = view !== 'character';
+  $('#view-guide').hidden = view !== 'guide';
+  if (view === 'guide' && !guideLoaded) loadGuidePage();
+});
+
+async function loadGuidePage() {
+  $('#view-guide').innerHTML = 'Loading…';
+  try {
+    const res = await fetch('/api/guide');
+    const guide = await res.json();
+    if (!res.ok) throw new Error(guide.error || `HTTP ${res.status}`);
+    $('#view-guide').innerHTML = `<div class="card">${renderGuideSection(guide)}</div>`;
+    guideLoaded = true;
+  } catch (err) {
+    $('#view-guide').innerHTML = `<span class="error">Failed to load guide: ${esc(err.message)}</span>`;
+  }
+}
 
 function charQuery() {
   return new URLSearchParams({
@@ -202,14 +226,14 @@ function timelineSvg(run, laneNames) {
 
 function renderTimelineSection(timeline) {
   if (!timeline || !timeline.laneNames.length) return '';
-  const { laneNames, mine, other } = timeline;
+  const { laneNames, mine, other, otherRoleLabel } = timeline;
   return `
     <h3>Rotation timeline</h3>
     <p class="timeline-sub"><small>Ticks = individual casts. Only cooldown-gated abilities get a lane (fillers like Scourge Strike/Death Coil are already in the CPM table below). The two runs have different durations — each has its own time axis.</small></p>
     <div class="timeline-wrap">
       <div class="timeline-sub">You &middot; duration ${fmtTime(mine.durationMs)}</div>
       ${timelineSvg(mine, laneNames)}
-      <div class="timeline-sub">${esc(other.label)} (top-1) &middot; duration ${fmtTime(other.durationMs)}</div>
+      <div class="timeline-sub">${esc(other.label)}${otherRoleLabel ? ` (${esc(otherRoleLabel)})` : ''} &middot; duration ${fmtTime(other.durationMs)}</div>
       ${timelineSvg(other, laneNames)}
     </div>`;
 }
@@ -367,9 +391,9 @@ function renderReport(encounterID, offset, r) {
     <div class="card">
       <h2>${esc(h.dungeon)} +${h.myKeyLevel} — <span class="${pctClass(h.myBestPercent)}">${h.myBestPercent}%</span> parse</h2>
       <p>
-        <b>${fmtK(h.myDps)}</b> me &nbsp;vs&nbsp; <b>${fmtK(h.cohortMedianDps)}</b> top-${h.cohortSize} median at +${h.cohortLevel}
+        <b>${fmtK(h.myDps)}</b> me &nbsp;vs&nbsp; <b>${fmtK(h.cohortMedianDps)}</b> median of ${h.cohortSize} at +${h.cohortLevel}
         &nbsp;→&nbsp; gap <b>${h.dpsGapPct}%</b>
-        <br /><small>cohort: ${h.cohortNames.map(esc).join(', ')}</small>
+        <br /><small>compared against: ${h.cohortNames.map(esc).join(', ')}</small>
       </p>
       <p>compare against: ${offsetBtns}</p>
 
@@ -377,8 +401,6 @@ function renderReport(encounterID, offset, r) {
       <ol class="gaps">${gapRows || '<li>No significant rotational gaps found.</li>'}</ol>
 
       ${renderTimelineSection(r.timeline)}
-
-      ${renderGuideSection(r.guide)}
 
       ${r.summary ? `<p class="summary">${esc(r.summary.text)}</p>` : ''}
 

@@ -33,7 +33,8 @@ test('median across cohort', () => {
 test('buildReport produces ranked gaps with advice', () => {
   const report = buildReport(bundle);
   assert.equal(report.headline.dungeon, 'Pit of Saron');
-  assert.equal(report.headline.cohortSize, 5);
+  // cohort is rank 1 + the 2 named reference players (deduped if overlapping)
+  assert.equal(report.headline.cohortSize, 3);
   assert.ok(report.headline.dpsGapPct > 0);
 
   assert.ok(report.gaps.length >= 3);
@@ -85,12 +86,13 @@ test('uptime table has raw use-counts alongside percentages', () => {
 test('deaths table gives a per-player cohort breakdown, not just the median', () => {
   const report = buildReport(bundle);
   const byPlayer = report.tables.deaths.cohortByPlayer;
-  assert.equal(byPlayer.length, 5);
+  // cohort is rank 1 + the 2 named reference players
+  assert.equal(byPlayer.length, 3);
   for (const p of byPlayer) {
     assert.ok(typeof p.name === 'string' && p.name.length > 0);
     assert.ok(typeof p.deaths === 'number');
   }
-  // real data: every top-5 run had 0 deaths (matches the median of 0)
+  // real data: every comparison run had 0 deaths (matches the median of 0)
   assert.ok(byPlayer.every((p) => p.deaths === 0));
 });
 

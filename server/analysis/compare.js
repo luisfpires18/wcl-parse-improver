@@ -8,7 +8,6 @@ import { computeRunMetrics, median, IGNORED_ABILITIES } from './metrics.js';
 import { adviceFor } from './advice.js';
 import { buildTimeline } from './timeline.js';
 import { buildSummary } from './summary.js';
-import { getGuideReference } from '../guide/unholyDkGuide.js';
 
 // Ability cast-count diffs below this share of damage are noise — skip.
 const MIN_DAMAGE_SHARE = 0.01;
@@ -141,6 +140,7 @@ export function buildReport(bundle) {
   const throughput = Math.max(sevOf('cpm'), sevOf('downtime')) + sevOf('deaths');
   const rest = (sevOf('ability') + sevOf('uptime') + sevOf('spender') + sevOf('waste')) * 0.6;
   const explained = throughput + rest;
+  const offLevelCohort = bundle.cohort.filter((c) => c.detail.fight.keystoneLevel !== bundle.targetLevel);
   const honesty = {
     dpsGapPct: dpsGapPct != null ? round1(dpsGapPct) : null,
     explainedPct: dpsGapPct ? round1(Math.min(95, (100 * explained) / dpsGapPct)) : null,
@@ -150,6 +150,11 @@ export function buildReport(bundle) {
       'things a parse comparison cannot see.' +
       (compNotes.length
         ? ` Note: the cohort also had ${compNotes.slice(0, 3).map((n) => n.name).join(', ')} from their group comp — a real slice of the gap sits there, not in your play.`
+        : '') +
+      (offLevelCohort.length
+        ? ` Note: ${offLevelCohort.map((c) => `${c.meta.name} (+${c.detail.fight.keystoneLevel})`).join(', ')} ` +
+          `logged their best run at a different key level than your +${bundle.targetLevel} — part of the DPS gap ` +
+          `there is just higher key scaling, not skill.`
         : ''),
   };
 
@@ -163,9 +168,14 @@ export function buildReport(bundle) {
     dpsGapPct: dpsGapPct != null ? round1(dpsGapPct) : null,
     myBestPercent: bundle.mine.meta.bestPercent != null ? round1(bundle.mine.meta.bestPercent) : null,
     cohortSize: bundle.cohort.length,
-    cohortNames: bundle.cohort.map((c) => c.meta.name),
+    cohortNames: bundle.cohort.map((c) => {
+      const lvl = c.detail.fight.keystoneLevel;
+      const levelNote = lvl && lvl !== bundle.targetLevel ? `, +${lvl} not +${bundle.targetLevel}` : '';
+      return c.label ? `${c.meta.name} (${c.label}${levelNote})` : c.meta.name;
+    }),
   };
   const timeline = bundle.cohort[0] ? buildTimeline(bundle.mine.detail, bundle.cohort[0].detail) : null;
+  if (timeline) timeline.otherRoleLabel = bundle.cohort[0].label ?? null;
 
   return {
     headline,
@@ -174,7 +184,6 @@ export function buildReport(bundle) {
     downtimeNotes,
     timeline,
     summary: buildSummary({ headline, gaps, honesty }),
-    guide: getGuideReference(),
     tables: {
       cpm: abilityRows.map((r) => ({
         name: r.name,

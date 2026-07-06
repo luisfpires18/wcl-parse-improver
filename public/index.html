@@ -11,6 +11,12 @@
   <main id="app">
     <header>
       <h1>WCL Parse Improver</h1>
+      <nav id="nav">
+        <button type="button" class="nav-link active" data-view="character">Character Overview</button>
+        <button type="button" class="nav-link" data-view="guide">Unholy DK Rotation</button>
+      </nav>
+    </header>
+    <section id="view-character">
       <form id="char-form">
         <input id="f-name" placeholder="Character" value="Unreally" />
         <input id="f-server" placeholder="Server slug" value="aggra-portugues" />
@@ -18,10 +24,11 @@
         <input id="f-zone" placeholder="Zone ID" value="47" size="6" />
         <button type="submit">Load</button>
       </form>
-    </header>
-    <div id="status"></div>
-    <section id="overview"></section>
-    <section id="report"></section>
+      <div id="status"></div>
+      <section id="overview"></section>
+      <section id="report"></section>
+    </section>
+    <section id="view-guide" hidden></section>
   </main>
   <script src="app.js"></script>
 </body>

@@ -10,6 +10,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const magisters = JSON.parse(
   readFileSync(path.join(ROOT, 'fixtures', 'comparison-12811-plus0.json'), 'utf8')
 );
+const pit = JSON.parse(readFileSync(path.join(ROOT, 'fixtures', 'comparison-10658-plus0.json'), 'utf8'));
 
 test('classifyBuffSources: real Magisters events prove Black Attunement is external, Dark Transformation is self', () => {
   const events = [
@@ -60,7 +61,7 @@ test('buildReport: Black Attunement lands in compNotes, correctly flagged extern
 });
 
 test('buildReport: a genuine self-managed aura with a real gap is unaffected by the external check', () => {
-  const report = buildReport(magisters);
+  const report = buildReport(pit);
   const festering = report.gaps.find((g) => g.title.includes('Festering Scythe'));
   assert.ok(festering, 'Festering Scythe uptime gap should still be actionable');
 });
