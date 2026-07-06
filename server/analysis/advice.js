@@ -2,6 +2,20 @@
 // no hardcoded patch-specific rotation claims. Death advice deliberately
 // skips timestamps/"go rewatch this" — dying is already obvious to the
 // player; the useful part is the comparison to the cohort's death count.
+//
+// ABILITY_MECHANIC_NOTE covers two abilities (Graveyard, Necrotic Coil) the
+// player flagged as looking like unexplained filler in the cast data.
+// Verified via web search (Warcraft Wiki / Method.gg / Maxroll, 2026-07-07),
+// not guessed: the Forbidden Knowledge talent transforms Epidemic/Death Coil
+// into these for 30s after Army of the Dead. Necrotic Coil genuinely cleaves
+// (up to 3 targets at full damage, unlike single-target Death Coil), so
+// these are real distinct abilities with their own breakpoints — see
+// server/guide/unholyDkGuide.js for the full detail and sources.
+const ABILITY_MECHANIC_NOTE = {
+  Graveyard: 'Epidemic transformed by Forbidden Knowledge during a 30s Army of the Dead window, used at 5+ targets',
+  'Necrotic Coil': 'Death Coil transformed by Forbidden Knowledge during a 30s Army of the Dead window, cleaves up to 3 targets',
+};
+
 export function adviceFor(gapItem) {
   switch (gapItem.category) {
     case 'deaths':
@@ -19,12 +33,14 @@ export function adviceFor(gapItem) {
         `You averaged ${gapItem.mine} casts/min vs their ${gapItem.cohort} — that is pure GCD throughput; ` +
         `fewer rotation pauses and earlier pre-positioning close most of this.`
       );
-    case 'ability':
+    case 'ability': {
+      const note = ABILITY_MECHANIC_NOTE[gapItem.name];
       return (
-        `Top players cast ${gapItem.name} at ${gapItem.cohort} vs your ${gapItem.mine}` +
+        `Top players cast ${gapItem.name}${note ? ` (${note})` : ''} at ${gapItem.cohort} vs your ${gapItem.mine}` +
         (gapItem.damageSharePct ? ` and it carries ~${gapItem.damageSharePct}% of their damage` : '') +
         `; press it closer to on-cooldown / weave it more often.`
       );
+    }
     case 'uptime':
       return (
         `Their median ${gapItem.name} uptime is ${gapItem.cohort} vs your ${gapItem.mine} ` +

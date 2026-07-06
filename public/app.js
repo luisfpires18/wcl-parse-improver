@@ -214,6 +214,62 @@ function renderTimelineSection(timeline) {
     </div>`;
 }
 
+function renderGuideSection(guide) {
+  if (!guide) return '';
+  const { meta, opener, priority, breakpoints, cooldowns, mechanicNotes } = guide;
+  const list = (items) => `<ol>${items.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>`;
+  const bpRows = breakpoints
+    .map((b) => `<tr><td>${esc(b.targets)}</td><td>${esc(b.rule)}</td><td>${esc(b.detail)}</td></tr>`)
+    .join('');
+  const notes = (mechanicNotes ?? [])
+    .map(
+      (n) =>
+        `<li><b>${n.abilities.map(esc).join(' / ')}:</b> ${esc(n.note)} <small>(source: ${esc(n.source)})</small></li>`
+    )
+    .join('');
+
+  return `
+    <div class="guide-ref">
+      <h3>Rotation guide <small>(external reference — not measured from your logs)</small></h3>
+      <p class="table-note"><small>Fetched live from ${esc(meta.sourceName)} on ${esc(meta.fetchedAt)}
+        (patch ${esc(meta.patch)}): <a href="${esc(meta.sourceUrl)}" target="_blank" rel="noopener">${esc(meta.sourceUrl)}</a>.
+        This is opinion, kept separate from the data-driven gaps above — it never affects severity/ranking, it's here to help read the timeline.</small></p>
+
+      <div class="guide-grid">
+        <div>
+          <h4>Opener &mdash; single target</h4>
+          ${list(opener.singleTarget)}
+        </div>
+        <div>
+          <h4>Opener &mdash; multi target</h4>
+          ${list(opener.multiTarget)}
+        </div>
+      </div>
+      <div class="guide-grid">
+        <div>
+          <h4>Priority &mdash; single target</h4>
+          ${list(priority.singleTarget)}
+        </div>
+        <div>
+          <h4>Priority &mdash; multi target</h4>
+          ${list(priority.multiTarget)}
+        </div>
+      </div>
+
+      <h4>Target-count breakpoints</h4>
+      <table><thead><tr><th>Targets</th><th>Use</th><th>Detail</th></tr></thead><tbody>${bpRows}</tbody></table>
+
+      <h4>Cooldowns</h4>
+      <ul>
+        <li>${esc(cooldowns.generalNote)}</li>
+        <li>${esc(cooldowns.darkTransformationNote)}</li>
+        <li>${esc(cooldowns.trinketNote)}</li>
+      </ul>
+
+      ${notes ? `<h4>Mechanic notes</h4><ul class="comp-notes">${notes}</ul>` : ''}
+    </div>`;
+}
+
 function renderNextSteps(headline, nextSteps) {
   if (!nextSteps) return '';
   const items = nextSteps.actions.map((a) => `<li>${esc(a)}</li>`).join('');
@@ -321,6 +377,8 @@ function renderReport(encounterID, offset, r) {
       <ol class="gaps">${gapRows || '<li>No significant rotational gaps found.</li>'}</ol>
 
       ${renderTimelineSection(r.timeline)}
+
+      ${renderGuideSection(r.guide)}
 
       ${r.summary ? `<p class="summary">${esc(r.summary.text)}</p>` : ''}
 

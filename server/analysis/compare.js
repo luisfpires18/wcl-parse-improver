@@ -8,6 +8,7 @@ import { computeRunMetrics, median, IGNORED_ABILITIES } from './metrics.js';
 import { adviceFor } from './advice.js';
 import { buildTimeline } from './timeline.js';
 import { buildSummary } from './summary.js';
+import { getGuideReference } from '../guide/unholyDkGuide.js';
 
 // Ability cast-count diffs below this share of damage are noise — skip.
 const MIN_DAMAGE_SHARE = 0.01;
@@ -173,6 +174,7 @@ export function buildReport(bundle) {
     downtimeNotes,
     timeline,
     summary: buildSummary({ headline, gaps, honesty }),
+    guide: getGuideReference(),
     tables: {
       cpm: abilityRows.map((r) => ({
         name: r.name,
