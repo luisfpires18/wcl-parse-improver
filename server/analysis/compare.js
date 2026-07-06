@@ -4,19 +4,14 @@
 // Severity is a rough estimate of % DPS impact so gaps can be ordered.
 // The weights are documented heuristics, not truth — the honesty section
 // reports how much of the real DPS gap they explain.
-import { computeRunMetrics, median } from './metrics.js';
+import { computeRunMetrics, median, IGNORED_ABILITIES } from './metrics.js';
 import { adviceFor } from './advice.js';
+import { buildTimeline } from './timeline.js';
 
 // Ability cast-count diffs below this share of damage are noise — skip.
 const MIN_DAMAGE_SHARE = 0.01;
 const MIN_UPTIME_DIFF_PP = 8;
 const MIN_COHORT_UPTIME = 25;
-// consumables / cosmetic rows that would pollute the ability diff
-const IGNORED_ABILITIES = new Set([
-  'Acherus Deathcharger',
-  'Raise Ally',
-  "Charge!", // gauntlet extra action button appears for everyone
-]);
 
 export function buildReport(bundle) {
   const mine = computeRunMetrics(bundle.mine.detail);
@@ -145,6 +140,7 @@ export function buildReport(bundle) {
     gaps,
     compNotes,
     downtimeNotes,
+    timeline: bundle.cohort[0] ? buildTimeline(bundle.mine.detail, bundle.cohort[0].detail) : null,
     tables: {
       cpm: abilityRows.map((r) => ({
         name: r.name,

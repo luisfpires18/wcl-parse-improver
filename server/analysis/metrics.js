@@ -4,6 +4,14 @@
 
 const DOWNTIME_GAP_MS = 5000;
 
+// consumables / cosmetic rows that would pollute ability-frequency analysis
+// (cast diffs in compare.js, cooldown-lane selection in timeline.js)
+export const IGNORED_ABILITIES = new Set([
+  'Acherus Deathcharger',
+  'Raise Ally',
+  "Charge!", // gauntlet extra action button appears for everyone
+]);
+
 export function computeRunMetrics(detail) {
   const fight = detail.fight ?? {};
   const fightDurMs =

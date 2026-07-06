@@ -126,6 +126,94 @@ async function loadReport(encounterID, offset) {
   }
 }
 
+// Rotation timeline: SVG event-plot. Lanes are picked server-side purely by
+// cast frequency (see server/analysis/timeline.js) — never by ability name —
+// so this keeps working across ability reworks.
+const LEFT_LABEL_W = 132;
+const PLOT_W = 700;
+const ROW_H = 20;
+const RIGHT_PAD = 8;
+
+function seriesColor(i) {
+  return `var(--series-${(i % 8) + 1})`;
+}
+
+function timelineSvg(run, laneNames) {
+  const rows = laneNames.length + 2; // idle, deaths, + lanes
+  const topPad = 4;
+  const axisH = 20;
+  const height = topPad + rows * ROW_H + axisH;
+  const width = LEFT_LABEL_W + PLOT_W + RIGHT_PAD;
+  const dur = Math.max(1, run.durationMs);
+  const x = (ms) => LEFT_LABEL_W + (Math.min(Math.max(ms, 0), dur) / dur) * PLOT_W;
+  const rowY = (i) => topPad + i * ROW_H;
+
+  const parts = [];
+
+  // row label helper (direct label + identity swatch, no separate legend box)
+  const label = (i, text, color) =>
+    `<g>
+      <rect x="${LEFT_LABEL_W - 122}" y="${rowY(i) + ROW_H / 2 - 4}" width="8" height="8" rx="2" fill="${color}"></rect>
+      <text x="${LEFT_LABEL_W - 110}" y="${rowY(i) + ROW_H / 2 + 3.5}" font-size="10" fill="var(--muted)">${esc(text)}</text>
+    </g>`;
+
+  // idle row
+  parts.push(label(0, 'Idle', 'var(--viz-warning)'));
+  for (const w of run.idleWindows) {
+    const x1 = x(w.startMs);
+    const x2 = x(w.startMs + w.durMs);
+    parts.push(
+      `<rect class="timeline-tick" x="${x1}" y="${rowY(0) + 3}" width="${Math.max(1.5, x2 - x1)}" height="${ROW_H - 6}" rx="3" fill="var(--viz-warning)"><title>Idle ${(w.durMs / 1000).toFixed(1)}s at ${fmtTime(w.startMs)}</title></rect>`
+    );
+  }
+
+  // deaths row
+  parts.push(label(1, 'Deaths', 'var(--viz-critical)'));
+  for (const d of run.deaths) {
+    parts.push(
+      `<circle class="timeline-tick" cx="${x(d.atMs)}" cy="${rowY(1) + ROW_H / 2}" r="5" fill="var(--viz-critical)" stroke="var(--panel)" stroke-width="2"><title>Death at ${fmtTime(d.atMs)}</title></circle>`
+    );
+  }
+
+  // cooldown lanes
+  run.lanes.forEach((lane, li) => {
+    const i = li + 2;
+    const color = seriesColor(li);
+    parts.push(label(i, lane.name, color));
+    for (const ts of lane.casts) {
+      parts.push(
+        `<line class="timeline-tick" x1="${x(ts)}" x2="${x(ts)}" y1="${rowY(i) + 3}" y2="${rowY(i) + ROW_H - 3}" stroke="${color}" stroke-width="2" stroke-linecap="round"><title>${esc(lane.name)} at ${fmtTime(ts)}</title></line>`
+      );
+    }
+  });
+
+  // x-axis
+  const axisY = topPad + rows * ROW_H + 4;
+  parts.push(`<line x1="${LEFT_LABEL_W}" x2="${LEFT_LABEL_W + PLOT_W}" y1="${axisY}" y2="${axisY}" stroke="var(--border)" stroke-width="1"></line>`);
+  for (const frac of [0, 0.25, 0.5, 0.75, 1]) {
+    const tx = LEFT_LABEL_W + frac * PLOT_W;
+    parts.push(
+      `<text x="${tx}" y="${axisY + 12}" font-size="9" fill="var(--muted)" text-anchor="${frac === 0 ? 'start' : frac === 1 ? 'end' : 'middle'}">${fmtTime(frac * dur)}</text>`
+    );
+  }
+
+  return `<svg class="timeline-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMinYMin meet">${parts.join('')}</svg>`;
+}
+
+function renderTimelineSection(timeline) {
+  if (!timeline || !timeline.laneNames.length) return '';
+  const { laneNames, mine, other } = timeline;
+  return `
+    <h3>Rotation timeline</h3>
+    <p class="timeline-sub"><small>Ticks = individual casts. Only cooldown-gated abilities get a lane (fillers like Scourge Strike/Death Coil are already in the CPM table below). The two runs have different durations — each has its own time axis.</small></p>
+    <div class="timeline-wrap">
+      <div class="timeline-sub">You &middot; duration ${fmtTime(mine.durationMs)}</div>
+      ${timelineSvg(mine, laneNames)}
+      <div class="timeline-sub">${esc(other.label)} (top-1) &middot; duration ${fmtTime(other.durationMs)}</div>
+      ${timelineSvg(other, laneNames)}
+    </div>`;
+}
+
 function renderReport(encounterID, offset, r) {
   const h = r.headline;
   const offsetBtns = [0, 1, 2]
@@ -196,6 +284,8 @@ function renderReport(encounterID, offset, r) {
 
       <h3>Biggest gaps first</h3>
       <ol class="gaps">${gapRows || '<li>No significant rotational gaps found.</li>'}</ol>
+
+      ${renderTimelineSection(r.timeline)}
 
       <details><summary>Per-ability casts (mine vs cohort median)</summary>
         <table><thead><tr><th>Ability</th><th>My casts</th><th>My CPM</th><th>Cohort CPM</th><th>Their dmg share</th></tr></thead>

@@ -8,6 +8,18 @@
   --accent: #ff8000;
   --border: #34324a;
   --error: #ff6b6b;
+
+  /* rotation timeline (dataviz reference palette, dark-validated steps) */
+  --viz-warning: #fab219;
+  --viz-critical: #d03b3b;
+  --series-1: #3987e5;
+  --series-2: #199e70;
+  --series-3: #c98500;
+  --series-4: #008300;
+  --series-5: #9085e9;
+  --series-6: #e66767;
+  --series-7: #d55181;
+  --series-8: #d95926;
 }
 * { box-sizing: border-box; }
 body {
@@ -88,3 +100,10 @@ summary { cursor: pointer; color: var(--muted); font-size: 0.9rem; padding: 0.2r
 summary:hover { color: var(--text); }
 
 .honesty { border-top: 1px solid var(--border); padding-top: 0.7rem; margin-top: 1.2rem; }
+
+.timeline-wrap { margin: 0.6rem 0 1rem; }
+.timeline-sub { color: var(--muted); font-size: 0.82rem; margin: 0.6rem 0 0.2rem; }
+.timeline-svg { width: 100%; height: auto; display: block; }
+.timeline-tick { cursor: default; }
+.timeline-tick:hover { opacity: 0.7; }
+.timeline-swatch { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 0.35rem; vertical-align: middle; }
