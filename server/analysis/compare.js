@@ -7,6 +7,7 @@
 import { computeRunMetrics, median, IGNORED_ABILITIES } from './metrics.js';
 import { adviceFor } from './advice.js';
 import { buildTimeline } from './timeline.js';
+import { buildSummary } from './summary.js';
 
 // Ability cast-count diffs below this share of damage are noise — skip.
 const MIN_DAMAGE_SHARE = 0.01;
@@ -124,23 +125,27 @@ export function buildReport(bundle) {
         : ''),
   };
 
+  const headline = {
+    dungeon: bundle.mine.detail.fight.name,
+    myKeyLevel: bundle.mine.detail.fight.keystoneLevel,
+    cohortLevel: bundle.targetLevel,
+    levelOffset: bundle.params.levelOffset,
+    myDps: myDps ? Math.round(myDps) : null,
+    cohortMedianDps: cohortMedianDps ? Math.round(cohortMedianDps) : null,
+    dpsGapPct: dpsGapPct != null ? round1(dpsGapPct) : null,
+    myBestPercent: bundle.mine.meta.bestPercent != null ? round1(bundle.mine.meta.bestPercent) : null,
+    cohortSize: bundle.cohort.length,
+    cohortNames: bundle.cohort.map((c) => c.meta.name),
+  };
+  const timeline = bundle.cohort[0] ? buildTimeline(bundle.mine.detail, bundle.cohort[0].detail) : null;
+
   return {
-    headline: {
-      dungeon: bundle.mine.detail.fight.name,
-      myKeyLevel: bundle.mine.detail.fight.keystoneLevel,
-      cohortLevel: bundle.targetLevel,
-      levelOffset: bundle.params.levelOffset,
-      myDps: myDps ? Math.round(myDps) : null,
-      cohortMedianDps: cohortMedianDps ? Math.round(cohortMedianDps) : null,
-      dpsGapPct: dpsGapPct != null ? round1(dpsGapPct) : null,
-      myBestPercent: bundle.mine.meta.bestPercent != null ? round1(bundle.mine.meta.bestPercent) : null,
-      cohortSize: bundle.cohort.length,
-      cohortNames: bundle.cohort.map((c) => c.meta.name),
-    },
+    headline,
     gaps,
     compNotes,
     downtimeNotes,
-    timeline: bundle.cohort[0] ? buildTimeline(bundle.mine.detail, bundle.cohort[0].detail) : null,
+    timeline,
+    summary: buildSummary({ headline, gaps, timeline, honesty }),
     tables: {
       cpm: abilityRows.map((r) => ({
         name: r.name,

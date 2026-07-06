@@ -27,6 +27,9 @@ for (const g of report.gaps) {
   console.log(`       ${g.advice}`);
 }
 
+console.log('\n--- Summary ---');
+console.log(report.summary.text);
+
 console.log('\n--- Downtime windows (mine, biggest first) ---');
 for (const w of report.tables.downtime.windows ?? []) {
   console.log(`  at ${formatDuration(w.startRelMs)}  idle ${(w.durMs / 1000).toFixed(1)}s`);

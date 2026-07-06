@@ -287,6 +287,8 @@ function renderReport(encounterID, offset, r) {
 
       ${renderTimelineSection(r.timeline)}
 
+      ${r.summary ? `<p class="summary">${esc(r.summary.text)}</p>` : ''}
+
       <details><summary>Per-ability casts (mine vs cohort median)</summary>
         <table><thead><tr><th>Ability</th><th>My casts</th><th>My CPM</th><th>Cohort CPM</th><th>Their dmg share</th></tr></thead>
         <tbody>${cpmRows}</tbody></table>

@@ -100,6 +100,7 @@ summary { cursor: pointer; color: var(--muted); font-size: 0.9rem; padding: 0.2r
 summary:hover { color: var(--text); }
 
 .honesty { border-top: 1px solid var(--border); padding-top: 0.7rem; margin-top: 1.2rem; }
+.summary { background: var(--panel2); border: 1px solid var(--border); border-radius: 6px; padding: 0.7rem 0.9rem; margin: 0.8rem 0; line-height: 1.5; }
 
 .timeline-wrap { margin: 0.6rem 0 1rem; }
 .timeline-sub { color: var(--muted); font-size: 0.82rem; margin: 0.6rem 0 0.2rem; }
