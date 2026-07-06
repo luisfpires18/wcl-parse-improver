@@ -3,14 +3,17 @@
 Ideas ordered by expected value per effort. Nothing here is started; the MVP
 is deliberately table-level because tables are cheap (API points) and stable.
 
-## 1. Event-level rune / runic power waste
+## 1. Event-level rune waste (RP waste already built)
 
-Fetch `events(dataType: Resources)` for my run only (cohort optional later):
-time spent rune-capped and RP overcap wasted per minute, compared to the
-cohort's spender cast rates. This is the classic "invisible" parse leak and
-the most requested next metric.
+**Done:** Runic Power overcap waste (`events(dataType: Resources)`, mine +
+cohort, WCL's own `waste` field) — see the "Runic Power wasted to
+overcapping" gap and the final next-steps checklist.
 
-Cost: ~2-4 extra event queries per report; needs pagination.
+**Still open:** individual Rune tracking. The same event stream didn't
+expose a reliable per-rune-charge signal for the player's own resource
+(only a pet's separate 100-max resource showed under a different
+`resourceChangeType`) — would need a different data source (aura-based rune
+buffs, or `combatantInfo`) and its own probing pass before trusting it.
 
 ## 2. Per-pull segmentation
 
