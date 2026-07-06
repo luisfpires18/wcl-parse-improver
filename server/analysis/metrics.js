@@ -10,6 +10,7 @@ export const IGNORED_ABILITIES = new Set([
   'Acherus Deathcharger',
   'Raise Ally',
   "Charge!", // gauntlet extra action button appears for everyone
+  'Raise Dead', // pet-alive uptime is noisy — dismissed for mechanics/skips, not a rotation habit worth flagging
 ]);
 
 export function computeRunMetrics(detail) {

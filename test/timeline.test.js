@@ -31,7 +31,7 @@ test('buildTimeline picks a shared, frequency-based lane set from real Pit data'
 
 test('buildTimeline carries real idle windows and deaths, fight-relative', () => {
   const t = buildTimeline(bundle.mine.detail, bundle.cohort[0].detail);
-  assert.equal(t.mine.deaths.length, 2);
+  assert.equal(t.mine.deaths.length, bundle.mine.detail.deaths.deaths.length);
   for (const d of t.mine.deaths) assert.ok(d.atMs >= 0 && d.atMs <= t.mine.durationMs);
   assert.ok(t.mine.idleWindows.length > 0);
   for (const w of t.mine.idleWindows) {

@@ -1,23 +1,28 @@
 // Assemble the full comparison bundle for one dungeon:
-// my best run detail + a small, specific comparison set — rank 1 in the
-// live WCL rankings, plus two named reference players (fixed, not
-// algorithm-picked) — deduped so the same person never counts twice.
+// my run at (or closest to) a requested key level, vs the live top-5 WCL
+// ranking at that level plus two fixed named reference players.
 import { fetchMyEncounterRuns, fetchTopRuns, fetchRunDetail } from './api.js';
-import { summarizeBestLevel } from '../parse/encounterRankings.js';
+import { summarizeAtLevel, pickLevel } from '../parse/encounterRankings.js';
 import { dumpDebug } from './client.js';
 
-// Fixed reference players (user-specified, not algorithm-picked). Compared
-// against on every dungeon regardless of the generic rank-1 result, so the
-// cohort is always these two (or fewer, if one happens to BE rank 1) plus
-// whichever rank-1 player is distinct from both.
+export const DEFAULT_LEVEL = 20;
+
+// Fixed reference players (user-specified, not algorithm-picked). Always
+// present in the cohort — pulled in as extras only when they're NOT
+// already one of the top 5, so the cohort is 5 (both already there), 6
+// (one already there) or 7 (neither there).
 const NAMED_PLAYERS = [
   { label: 'CN top', name: '小雨煲煲', serverSlug: '格瑞姆巴托', serverRegion: 'CN' },
   { label: 'EU top', name: 'Waalpen', serverSlug: 'ragnaros', serverRegion: 'EU' },
 ];
 
+const norm = (s) => String(s ?? '').trim().toLowerCase();
+
 /**
  * @param {object} p
- * @param {number} [p.levelOffset] 0 = same key level as my best run, 1/2 = higher brackets
+ * @param {number} [p.level] absolute keystone level to compare at (default 20).
+ *   Both "mine" and the cohort try to match this exactly, falling back to
+ *   whichever level each player actually has logged that's closest to it.
  */
 export async function buildComparison({
   name,
@@ -27,14 +32,14 @@ export async function buildComparison({
   encounterID,
   className = 'DeathKnight',
   specName = 'Unholy',
-  levelOffset = 0,
+  level = DEFAULT_LEVEL,
 }) {
   const myRuns = await fetchMyEncounterRuns({ name, serverSlug, serverRegion, encounterID });
-  const summary = summarizeBestLevel(myRuns);
+  const summary = summarizeAtLevel(myRuns, level);
   if (!summary.bestRun?.report?.code) {
-    throw new Error(`No logged best run with report found for encounter ${encounterID}`);
+    throw new Error(`No logged run near +${level} found for encounter ${encounterID}`);
   }
-  const targetLevel = summary.keyLevel + levelOffset;
+  const targetLevel = summary.keyLevel;
 
   const mineDetail = await fetchRunDetail({
     code: summary.bestRun.report.code,
@@ -44,40 +49,35 @@ export async function buildComparison({
   });
 
   const top = await fetchTopRuns({ encounterID, zoneID, keyLevel: targetLevel, className, specName });
-  const rank1 = top.entries.find((e) => e.name && e.report?.code && e.report?.fightID != null);
+  const top5 = top.entries.filter((e) => e.name && e.report?.code && e.report?.fightID != null).slice(0, 5);
 
-  const candidates = [];
-  if (rank1) candidates.push({ label: 'Rank 1', name: rank1.name, fromRankings: rank1 });
-  for (const p of NAMED_PLAYERS) candidates.push(p);
-
-  // dedupe by name — if rank 1 IS one of the named players, only fetch once
-  const deduped = [];
-  const seenNames = new Set();
-  for (const c of candidates) {
-    const key = c.name.trim().toLowerCase();
-    if (seenNames.has(key)) continue;
-    seenNames.add(key);
-    deduped.push(c);
-  }
+  const rankedNames = new Set(top5.map((e) => norm(e.name)));
+  const missingNamed = NAMED_PLAYERS.filter((p) => !rankedNames.has(norm(p.name)));
 
   const cohort = [];
-  for (const c of deduped) {
+  top5.forEach((entry, i) => {
+    cohort.push({ entry, label: namedLabelFor(entry.name) ?? `Rank ${i + 1}` });
+  });
+  for (const p of missingNamed) cohort.push({ named: p, label: p.label });
+
+  const results = [];
+  for (const c of cohort) {
     try {
-      const { meta, detail } = c.fromRankings
-        ? await fetchRankedPlayerRun(c.fromRankings)
-        : await fetchNamedPlayerRun({ ...c, encounterID, targetLevel });
-      cohort.push({ meta, detail, label: c.label });
+      const { meta, detail } = c.entry
+        ? await fetchRankedPlayerRun(c.entry)
+        : await fetchNamedPlayerRun({ ...c.named, encounterID, targetLevel });
+      results.push({ meta, detail, label: c.label });
     } catch (err) {
       dumpDebug('cohort-run-skipped', { candidate: c, error: String(err) });
     }
   }
-  if (!cohort.length) {
+  if (!results.length) {
     throw new Error(`No usable comparison runs fetched for encounter ${encounterID} at +${targetLevel}`);
   }
 
   return {
     generatedAt: new Date().toISOString(),
-    params: { name, serverSlug, serverRegion, zoneID, encounterID, className, specName, levelOffset },
+    params: { name, serverSlug, serverRegion, zoneID, encounterID, className, specName, level },
     targetLevel,
     mine: {
       meta: {
@@ -88,8 +88,13 @@ export async function buildComparison({
       },
       detail: mineDetail,
     },
-    cohort,
+    cohort: results,
   };
+}
+
+function namedLabelFor(name) {
+  const hit = NAMED_PLAYERS.find((p) => norm(p.name) === norm(name));
+  return hit ? hit.label : null;
 }
 
 async function fetchRankedPlayerRun(entry) {
@@ -97,13 +102,16 @@ async function fetchRankedPlayerRun(entry) {
   return { meta: entry, detail };
 }
 
-/** Fetch a specific named player's best available run on this encounter, matched to targetLevel where possible. */
+/** Fetch a specific named player's run closest to targetLevel on this encounter. */
 async function fetchNamedPlayerRun({ name, serverSlug, serverRegion, encounterID, targetLevel }) {
   const { runs } = await fetchMyEncounterRuns({ name, serverSlug, serverRegion, encounterID });
-  const pick = pickComparableRun(runs, targetLevel);
-  if (!pick?.report?.code) {
-    throw new Error(`No usable run for ${name} on encounter ${encounterID}`);
-  }
+  const withReport = runs.filter((r) => r.report?.code && r.report?.fightID != null);
+  if (!withReport.length) throw new Error(`No usable run for ${name} on encounter ${encounterID}`);
+  const pickedLevel = pickLevel(withReport, targetLevel);
+  const pick = withReport
+    .filter((r) => r.keyLevel === pickedLevel)
+    .sort((a, b) => (b.rankPercent ?? 0) - (a.rankPercent ?? 0))[0];
+
   const meta = {
     name,
     keyLevel: pick.keyLevel,
@@ -116,24 +124,4 @@ async function fetchNamedPlayerRun({ name, serverSlug, serverRegion, encounterID
   };
   const detail = await fetchRunDetail({ code: pick.report.code, fightID: pick.report.fightID, playerName: name });
   return { meta, detail };
-}
-
-/**
- * Prefer a run at the exact target level (best parse among those). If they
- * never logged that level, pick whichever level they DID log that's
- * closest to it — not their highest ever (a player who only pushes +23s
- * has no +21 logged at all; their closest comparable run is a +22, not
- * their hardest +24).
- */
-function pickComparableRun(runs, targetLevel) {
-  if (!runs?.length) return null;
-  const withReport = runs.filter((r) => r.report?.code && r.report?.fightID != null);
-  if (!withReport.length) return null;
-  const atLevel = withReport.filter((r) => r.keyLevel === targetLevel);
-  if (atLevel.length) return atLevel.sort((a, b) => (b.rankPercent ?? 0) - (a.rankPercent ?? 0))[0];
-  return [...withReport].sort((a, b) => {
-    const da = Math.abs((a.keyLevel ?? 0) - targetLevel);
-    const db = Math.abs((b.keyLevel ?? 0) - targetLevel);
-    return da - db || (b.keyLevel ?? 0) - (a.keyLevel ?? 0); // ties favor the harder key
-  })[0];
 }

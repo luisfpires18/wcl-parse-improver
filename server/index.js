@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'node:path';
 import { loadEnv, PROJECT_ROOT } from './env.js';
 import { fetchOverview } from './wcl/api.js';
-import { buildComparison } from './wcl/comparison.js';
+import { buildComparison, DEFAULT_LEVEL } from './wcl/comparison.js';
 import { buildReport } from './analysis/compare.js';
 import { getGuideReference } from './guide/unholyDkGuide.js';
 
@@ -36,12 +36,12 @@ app.get('/api/report', async (req, res) => {
   try {
     const encounterID = Number(req.query.encounter);
     if (!encounterID) return res.status(400).json({ error: 'encounter query param required' });
-    const levelOffset = Math.max(0, Math.min(2, Number(req.query.offset || 0)));
+    const level = Math.max(2, Math.min(30, Number(req.query.level || DEFAULT_LEVEL)));
 
     const bundle = await buildComparison({
       ...charParams(req.query),
       encounterID,
-      levelOffset,
+      level,
     });
     res.json(buildReport(bundle));
   } catch (err) {

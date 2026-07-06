@@ -155,6 +155,10 @@ export function buildReport(bundle) {
         ? ` Note: ${offLevelCohort.map((c) => `${c.meta.name} (+${c.detail.fight.keystoneLevel})`).join(', ')} ` +
           `logged their best run at a different key level than your +${bundle.targetLevel} — part of the DPS gap ` +
           `there is just higher key scaling, not skill.`
+        : '') +
+      (bundle.targetLevel !== bundle.params.level
+        ? ` Note: you don't have a +${bundle.params.level} logged for this dungeon — this compares your closest ` +
+          `available run instead, +${bundle.targetLevel}.`
         : ''),
   };
 
@@ -162,7 +166,7 @@ export function buildReport(bundle) {
     dungeon: bundle.mine.detail.fight.name,
     myKeyLevel: bundle.mine.detail.fight.keystoneLevel,
     cohortLevel: bundle.targetLevel,
-    levelOffset: bundle.params.levelOffset,
+    requestedLevel: bundle.params.level,
     myDps: myDps ? Math.round(myDps) : null,
     cohortMedianDps: cohortMedianDps ? Math.round(cohortMedianDps) : null,
     dpsGapPct: dpsGapPct != null ? round1(dpsGapPct) : null,
@@ -256,6 +260,7 @@ function uptimeDiffs(mine, cohortMetrics, buffSources = {}) {
   const downtimeCaused = [];
   const compOnly = [];
   for (const [name, cohort] of cohortAuraMedians(cohortMetrics)) {
+    if (IGNORED_ABILITIES.has(name)) continue;
     if (cohort.raw < MIN_COHORT_UPTIME) continue;
     const mineAura = mine.auras.get(name);
     const mineRaw = mineAura?.uptimePct ?? 0;
@@ -304,6 +309,7 @@ function uptimeDiffs(mine, cohortMetrics, buffSources = {}) {
 function allUptimes(mine, cohortMetrics) {
   const rows = [];
   for (const [name, cohort] of cohortAuraMedians(cohortMetrics)) {
+    if (IGNORED_ABILITIES.has(name)) continue;
     const mineAura = mine.auras.get(name);
     const mineRaw = mineAura?.uptimePct ?? 0;
     if (cohort.raw < 5 && mineRaw < 5) continue;

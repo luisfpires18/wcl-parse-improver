@@ -52,6 +52,37 @@ export function summarizeBestLevel(parsed) {
   };
 }
 
+/**
+ * Like summarizeBestLevel but pinned to a specific level — falls back to
+ * whichever logged level is numerically closest if that exact level was
+ * never played (ties favor the harder key, never the highest ever).
+ */
+export function summarizeAtLevel(parsed, targetLevel) {
+  const withReport = (parsed.runs ?? []).filter((r) => r.report?.code && r.report?.fightID != null);
+  if (!withReport.length) {
+    return { keyLevel: null, bestPercent: null, medianPercent: null, bestRun: null, runsAtLevel: 0 };
+  }
+  const keyLevel = pickLevel(withReport, targetLevel);
+  const atLevel = withReport.filter((r) => r.keyLevel === keyLevel);
+  const pcts = atLevel.map((r) => r.rankPercent).filter((v) => v !== null).sort((a, b) => a - b);
+  return {
+    keyLevel,
+    bestPercent: pcts.length ? pcts[pcts.length - 1] : null,
+    medianPercent: median(pcts),
+    bestRun: [...atLevel].sort((a, b) => (b.rankPercent ?? 0) - (a.rankPercent ?? 0))[0] ?? null,
+    runsAtLevel: atLevel.length,
+  };
+}
+
+/** Exact level if logged; else the closest logged level (ties favor the harder key). */
+export function pickLevel(runs, targetLevel) {
+  const levels = [...new Set(runs.map((r) => r.keyLevel).filter((l) => l != null))];
+  if (!levels.length) return null;
+  if (levels.includes(targetLevel)) return targetLevel;
+  levels.sort((a, b) => Math.abs(a - targetLevel) - Math.abs(b - targetLevel) || b - a);
+  return levels[0];
+}
+
 export function median(sortedNums) {
   if (!sortedNums.length) return null;
   const mid = Math.floor(sortedNums.length / 2);

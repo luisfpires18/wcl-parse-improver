@@ -1,17 +1,18 @@
 // Stage 2 verification script: build a full comparison bundle for one dungeon
 // and save it as a fixture for analysis development.
 //
-// Usage: node scripts/fetch-comparison.js [encounterID] [levelOffset]
-//   default encounter: 10658 (Pit of Saron — worst median parse)
+// Usage: node scripts/fetch-comparison.js [encounterID] [level]
+//   default encounter: 10658 (Pit of Saron — worst median parse), default level: 20
 import { writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { loadEnv, PROJECT_ROOT } from '../server/env.js';
-import { buildComparison } from '../server/wcl/comparison.js';
+import { buildComparison, DEFAULT_LEVEL } from '../server/wcl/comparison.js';
 import { formatDuration } from '../server/parse/zoneRankings.js';
 
 loadEnv();
 
-const [encounterArg = '10658', offsetArg = '0'] = process.argv.slice(2);
+const [encounterArg = '10658', levelArg = String(DEFAULT_LEVEL)] = process.argv.slice(2);
+const level = Number(levelArg);
 
 const bundle = await buildComparison({
   name: 'Unreally',
@@ -19,10 +20,16 @@ const bundle = await buildComparison({
   serverRegion: 'EU',
   zoneID: 47,
   encounterID: Number(encounterArg),
-  levelOffset: Number(offsetArg),
+  level,
 });
 
-const file = path.join(PROJECT_ROOT, 'fixtures', `comparison-${encounterArg}-plus${offsetArg}.json`);
+// keep the existing "-plus0" fixture name for the default level so every
+// test/fixture reference stays valid; other levels get their own filename
+const file = path.join(
+  PROJECT_ROOT,
+  'fixtures',
+  level === DEFAULT_LEVEL ? `comparison-${encounterArg}-plus0.json` : `comparison-${encounterArg}-lvl${level}.json`
+);
 mkdirSync(path.dirname(file), { recursive: true });
 writeFileSync(file, JSON.stringify(bundle, null, 1));
 console.log(`bundle saved to ${file}\n`);

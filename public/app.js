@@ -1,4 +1,6 @@
 const $ = (sel) => document.querySelector(sel);
+const DEFAULT_LEVEL = 20;
+const LEVEL_CHOICES = [18, 19, 20, 21, 22, 23, 24, 25];
 
 let currentOverview = null;
 let guideLoaded = false;
@@ -118,31 +120,31 @@ function renderOverview({ character, overall, dungeons }) {
     const btn = e.target.closest('[data-analyze]');
     const tr = e.target.closest('tr[data-encounter]');
     const id = btn?.dataset.analyze ?? tr?.dataset.encounter;
-    if (id) loadReport(Number(id), 0);
+    if (id) loadReport(Number(id), DEFAULT_LEVEL);
   });
   $('#worst').addEventListener('click', () => {
     const ranked = [...dungeons]
       .filter((d) => typeof d.bestPercent === 'number')
       .sort((a, b) => a.bestPercent - b.bestPercent);
-    if (ranked.length) loadReport(ranked[0].encounterID, 0);
+    if (ranked.length) loadReport(ranked[0].encounterID, DEFAULT_LEVEL);
   });
 }
 
-async function loadReport(encounterID, offset) {
+async function loadReport(encounterID, level) {
   const dungeon = currentOverview?.dungeons.find((d) => d.encounterID === encounterID);
   setStatus(
-    `Building report for <b>${esc(dungeon?.name ?? encounterID)}</b>… ` +
-      `<small>first fetch pulls ~6 reports from WCL and takes up to a minute; cached afterwards</small>`
+    `Building report for <b>${esc(dungeon?.name ?? encounterID)}</b> at +${level}… ` +
+      `<small>first fetch pulls several reports from WCL and takes up to a minute; cached afterwards</small>`
   );
   $('#report').innerHTML = '';
   try {
     const params = charQuery();
     params.set('encounter', encounterID);
-    params.set('offset', offset);
+    params.set('level', level);
     const res = await fetch(`/api/report?${params}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-    renderReport(encounterID, offset, data);
+    renderReport(encounterID, level, data);
     setStatus('');
     $('#report').scrollIntoView({ behavior: 'smooth' });
   } catch (err) {
@@ -305,14 +307,12 @@ function renderNextSteps(headline, nextSteps) {
     </div>`;
 }
 
-function renderReport(encounterID, offset, r) {
+function renderReport(encounterID, level, r) {
   const h = r.headline;
-  const offsetBtns = [0, 1, 2]
-    .map(
-      (o) =>
-        `<button class="mini ${o === offset ? 'accent' : ''}" data-offset="${o}">+${h.myKeyLevel + o}${o === 0 ? ' (my level)' : ''}</button>`
-    )
-    .join(' ');
+  const levelBtns = LEVEL_CHOICES.map(
+    (lvl) =>
+      `<button class="mini ${lvl === level ? 'accent' : ''}" data-level="${lvl}">+${lvl}${lvl === DEFAULT_LEVEL ? ' (default)' : ''}</button>`
+  ).join(' ');
 
   const gapRows = r.gaps
     .map(
@@ -389,13 +389,13 @@ function renderReport(encounterID, offset, r) {
 
   $('#report').innerHTML = `
     <div class="card">
-      <h2>${esc(h.dungeon)} +${h.myKeyLevel} — <span class="${pctClass(h.myBestPercent)}">${h.myBestPercent}%</span> parse</h2>
+      <h2>${esc(h.dungeon)} +${h.myKeyLevel}${h.myKeyLevel !== h.requestedLevel ? ` <small>(closest to requested +${h.requestedLevel})</small>` : ''} — <span class="${pctClass(h.myBestPercent)}">${h.myBestPercent}%</span> parse</h2>
       <p>
         <b>${fmtK(h.myDps)}</b> me &nbsp;vs&nbsp; <b>${fmtK(h.cohortMedianDps)}</b> median of ${h.cohortSize} at +${h.cohortLevel}
         &nbsp;→&nbsp; gap <b>${h.dpsGapPct}%</b>
         <br /><small>compared against: ${h.cohortNames.map(esc).join(', ')}</small>
       </p>
-      <p>compare against: ${offsetBtns}</p>
+      <p>compare at level: ${levelBtns}</p>
 
       <h3>Biggest gaps first</h3>
       <ol class="gaps">${gapRows || '<li>No significant rotational gaps found.</li>'}</ol>
@@ -439,8 +439,8 @@ function renderReport(encounterID, offset, r) {
       ${renderNextSteps(h, r.summary?.nextSteps)}
     </div>`;
 
-  $('#report').querySelectorAll('[data-offset]').forEach((b) =>
-    b.addEventListener('click', () => loadReport(encounterID, Number(b.dataset.offset)))
+  $('#report').querySelectorAll('[data-level]').forEach((b) =>
+    b.addEventListener('click', () => loadReport(encounterID, Number(b.dataset.level)))
   );
 }
 
