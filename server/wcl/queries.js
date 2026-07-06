@@ -3,11 +3,11 @@
 // scalars — parse them defensively (see server/parse/).
 
 export const ZONE_RANKINGS = `
-query ZoneRankings($name: String!, $serverSlug: String!, $serverRegion: String!, $zoneID: Int!) {
+query ZoneRankings($name: String!, $serverSlug: String!, $serverRegion: String!, $zoneID: Int!, $metric: CharacterPageRankingMetricType, $byBracket: Boolean, $role: RoleType) {
   characterData {
     character(name: $name, serverSlug: $serverSlug, serverRegion: $serverRegion) {
       name
-      zoneRankings(zoneID: $zoneID)
+      zoneRankings(zoneID: $zoneID, metric: $metric, byBracket: $byBracket, role: $role)
     }
   }
 }`;

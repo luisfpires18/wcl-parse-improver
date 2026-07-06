@@ -6,7 +6,7 @@
   "description": "Compare your Warcraft Logs M+ parses against top players of your spec and get concrete, data-derived advice.",
   "scripts": {
     "start": "node server/index.js",
-    "test": "node --test test/",
+    "test": "node --test",
     "overview": "node scripts/fetch-overview.js"
   },
   "dependencies": {

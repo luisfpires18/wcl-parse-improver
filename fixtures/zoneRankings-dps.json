@@ -1,0 +1,333 @@
+{
+  "bestPerformanceAverage": 82.3557375,
+  "medianPerformanceAverage": 46.028150000000004,
+  "difficulty": 10,
+  "metric": "dps",
+  "partition": 1,
+  "zone": 47,
+  "size": 5,
+  "allStars": [
+    {
+      "partition": 1,
+      "spec": "Unholy",
+      "points": 910.452,
+      "possiblePoints": 960,
+      "rank": 3700,
+      "regionRank": 1139,
+      "serverRank": 4,
+      "rankPercent": 98.07170002137343,
+      "total": 191827,
+      "rankTooltip": "Dungeon scores update immediately, while dungeon ranks update once per day."
+    },
+    {
+      "partition": 1,
+      "spec": "Frost",
+      "points": 204.351,
+      "possiblePoints": 960,
+      "rank": 8432,
+      "regionRank": 3793,
+      "serverRank": 8,
+      "rankPercent": 72.74343721712142,
+      "total": 30932,
+      "rankTooltip": "Dungeon scores update immediately, while dungeon ranks update once per day."
+    }
+  ],
+  "rankings": [
+    {
+      "encounter": {
+        "id": 112526,
+        "name": "Algeth'ar Academy"
+      },
+      "rankPercent": 95.2108,
+      "medianPercent": 48.3244,
+      "lockedIn": true,
+      "totalKills": 11,
+      "fastestKill": -398228140,
+      "allStars": {
+        "points": 113.35,
+        "possiblePoints": 120,
+        "partition": 1,
+        "rank": 8830,
+        "regionRank": 2310,
+        "serverRank": 4,
+        "rankPercent": 96.67277167277167,
+        "total": 265356
+      },
+      "spec": "Unholy",
+      "bestSpec": "Unholy",
+      "bestAmount": 400196236.39447,
+      "rankTooltip": "Dungeon scores update immediately, while dungeon ranks update once per day.",
+      "bestRank": {
+        "rank_id": 174585126,
+        "class": 1,
+        "spec": 3,
+        "per_second_amount": 400196236.39447,
+        "ilvl": 20,
+        "fight_metadata": 912669,
+        "score": 486.77701612903,
+        "leaderboard": 0,
+        "speed": -798228140,
+        "affixes": 859
+      }
+    },
+    {
+      "encounter": {
+        "id": 12811,
+        "name": "Magisters' Terrace"
+      },
+      "rankPercent": 90.1291,
+      "medianPercent": 46.6645,
+      "lockedIn": true,
+      "totalKills": 8,
+      "fastestKill": -417997715,
+      "allStars": {
+        "points": 114.39,
+        "possiblePoints": 120,
+        "partition": 1,
+        "rank": 5521,
+        "regionRank": 1490,
+        "serverRank": 2,
+        "rankPercent": 97.5829334080639,
+        "total": 228376
+      },
+      "spec": "Unholy",
+      "bestSpec": "Unholy",
+      "bestAmount": 420213717.84982,
+      "rankTooltip": "Dungeon scores update immediately, while dungeon ranks update once per day.",
+      "bestRank": {
+        "rank_id": 179596399,
+        "class": 1,
+        "spec": 3,
+        "per_second_amount": 420213717.84982,
+        "ilvl": 21,
+        "fight_metadata": 912666,
+        "score": 500.69329044118,
+        "leaderboard": 0,
+        "speed": -837997715,
+        "affixes": 859
+      }
+    },
+    {
+      "encounter": {
+        "id": 12874,
+        "name": "Maisara Caverns"
+      },
+      "rankPercent": 81.1016,
+      "medianPercent": 33.9926,
+      "lockedIn": true,
+      "totalKills": 10,
+      "fastestKill": -418031414,
+      "allStars": {
+        "points": 114.42,
+        "possiblePoints": 120,
+        "partition": 1,
+        "rank": 5296,
+        "regionRank": 1551,
+        "serverRank": 3,
+        "rankPercent": 97.61535897967087,
+        "total": 222046
+      },
+      "spec": "Unholy",
+      "bestSpec": "Unholy",
+      "bestAmount": 420214866.62088,
+      "rankTooltip": "Dungeon scores update immediately, while dungeon ranks update once per day.",
+      "bestRank": {
+        "rank_id": 180041937,
+        "class": 1,
+        "spec": 3,
+        "per_second_amount": 420214866.62088,
+        "ilvl": 21,
+        "fight_metadata": 912670,
+        "score": 500.21617424242,
+        "leaderboard": 0,
+        "speed": -838031414,
+        "affixes": 859
+      }
+    },
+    {
+      "encounter": {
+        "id": 12915,
+        "name": "Nexus-Point Xenas"
+      },
+      "rankPercent": 91.948,
+      "medianPercent": 69.0104,
+      "lockedIn": true,
+      "totalKills": 11,
+      "fastestKill": -418361965,
+      "allStars": {
+        "points": 115.35,
+        "possiblePoints": 120,
+        "partition": 1,
+        "rank": 4679,
+        "regionRank": 1296,
+        "serverRank": 2,
+        "rankPercent": 97.84772096746737,
+        "total": 217351
+      },
+      "spec": "Unholy",
+      "bestSpec": "Unholy",
+      "bestAmount": 420189456.42879,
+      "rankTooltip": "Dungeon scores update immediately, while dungeon ranks update once per day.",
+      "bestRank": {
+        "rank_id": 179032280,
+        "class": 1,
+        "spec": 3,
+        "per_second_amount": 420189456.42879,
+        "ilvl": 21,
+        "fight_metadata": 912671,
+        "score": 503.37427083333,
+        "leaderboard": 0,
+        "speed": -838361965,
+        "affixes": 859
+      }
+    },
+    {
+      "encounter": {
+        "id": 10658,
+        "name": "Pit of Saron"
+      },
+      "rankPercent": 74.1046,
+      "medianPercent": 22.4727,
+      "lockedIn": true,
+      "totalKills": 8,
+      "fastestKill": -418220417,
+      "allStars": {
+        "points": 111.16,
+        "possiblePoints": 120,
+        "partition": 1,
+        "rank": 16072,
+        "regionRank": 4889,
+        "serverRank": 15,
+        "rankPercent": 94.47462335572685,
+        "total": 290858
+      },
+      "spec": "Unholy",
+      "bestSpec": "Unholy",
+      "bestAmount": 420219539.77259,
+      "rankTooltip": "Dungeon scores update immediately, while dungeon ranks update once per day.",
+      "bestRank": {
+        "rank_id": 177142057,
+        "class": 1,
+        "spec": 3,
+        "per_second_amount": 420219539.77259,
+        "ilvl": 21,
+        "fight_metadata": 912672,
+        "score": 500.42535416667,
+        "leaderboard": 0,
+        "speed": -838220417,
+        "affixes": 859
+      }
+    },
+    {
+      "encounter": {
+        "id": 361753,
+        "name": "Seat of the Triumvirate"
+      },
+      "rankPercent": 63.0846,
+      "medianPercent": 50,
+      "lockedIn": true,
+      "totalKills": 7,
+      "fastestKill": -398166089,
+      "allStars": {
+        "points": 112.89,
+        "possiblePoints": 120,
+        "partition": 1,
+        "rank": 8446,
+        "regionRank": 2283,
+        "serverRank": 6,
+        "rankPercent": 96.21444740793868,
+        "total": 223085
+      },
+      "spec": "Unholy",
+      "bestSpec": "Unholy",
+      "bestAmount": 400182180.13905,
+      "rankTooltip": "Dungeon scores update immediately, while dungeon ranks update once per day.",
+      "bestRank": {
+        "rank_id": 175624065,
+        "class": 1,
+        "spec": 3,
+        "per_second_amount": 400182180.13905,
+        "ilvl": 20,
+        "fight_metadata": 912673,
+        "score": 488.78840073529,
+        "leaderboard": 0,
+        "speed": -798166089,
+        "affixes": 859
+      }
+    },
+    {
+      "encounter": {
+        "id": 61209,
+        "name": "Skyreach"
+      },
+      "rankPercent": 92.934,
+      "medianPercent": 59.2712,
+      "lockedIn": true,
+      "totalKills": 11,
+      "fastestKill": -398377414,
+      "allStars": {
+        "points": 113.46,
+        "possiblePoints": 120,
+        "partition": 1,
+        "rank": 7887,
+        "regionRank": 2113,
+        "serverRank": 4,
+        "rankPercent": 96.78060689193437,
+        "total": 244953
+      },
+      "spec": "Unholy",
+      "bestSpec": "Unholy",
+      "bestAmount": 400167887.90895,
+      "rankTooltip": "Dungeon scores update immediately, while dungeon ranks update once per day.",
+      "bestRank": {
+        "rank_id": 182881315,
+        "class": 1,
+        "spec": 3,
+        "per_second_amount": 400167887.90895,
+        "ilvl": 20,
+        "fight_metadata": 912674,
+        "score": 485.86037946429,
+        "leaderboard": 0,
+        "speed": -798358545,
+        "affixes": 859
+      }
+    },
+    {
+      "encounter": {
+        "id": 12805,
+        "name": "Windrunner Spire"
+      },
+      "rankPercent": 70.3332,
+      "medianPercent": 38.4894,
+      "lockedIn": true,
+      "totalKills": 9,
+      "fastestKill": -418089369,
+      "allStars": {
+        "points": 115.42,
+        "possiblePoints": 120,
+        "partition": 1,
+        "rank": 4815,
+        "regionRank": 1348,
+        "serverRank": 2,
+        "rankPercent": 97.91403067856834,
+        "total": 230780
+      },
+      "spec": "Unholy",
+      "bestSpec": "Unholy",
+      "bestAmount": 420190821.94709,
+      "rankTooltip": "Dungeon scores update immediately, while dungeon ranks update once per day.",
+      "bestRank": {
+        "rank_id": 176855481,
+        "class": 1,
+        "spec": 3,
+        "per_second_amount": 420190821.94709,
+        "ilvl": 21,
+        "fight_metadata": 912665,
+        "score": 501.31380681818,
+        "leaderboard": 0,
+        "speed": -838089369,
+        "affixes": 859
+      }
+    }
+  ]
+}
