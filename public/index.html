@@ -4,20 +4,24 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WCL Parse Improver</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9876;</text></svg>" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main id="app">
-    <h1>WCL Parse Improver</h1>
-    <form id="char-form">
-      <input id="f-name" placeholder="Character" value="Unreally" />
-      <input id="f-server" placeholder="Server slug" value="aggra-portugues" />
-      <input id="f-region" placeholder="Region" value="EU" size="4" />
-      <input id="f-zone" placeholder="Zone ID" value="47" size="6" />
-      <button type="submit">Load</button>
-    </form>
+    <header>
+      <h1>WCL Parse Improver</h1>
+      <form id="char-form">
+        <input id="f-name" placeholder="Character" value="Unreally" />
+        <input id="f-server" placeholder="Server slug" value="aggra-portugues" />
+        <input id="f-region" placeholder="Region" value="EU" size="4" />
+        <input id="f-zone" placeholder="Zone ID" value="47" size="6" />
+        <button type="submit">Load</button>
+      </form>
+    </header>
     <div id="status"></div>
-    <div id="overview"></div>
+    <section id="overview"></section>
+    <section id="report"></section>
   </main>
   <script src="app.js"></script>
 </body>

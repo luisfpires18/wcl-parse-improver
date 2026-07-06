@@ -140,7 +140,11 @@ export function buildReport(bundle) {
         damageSharePct: round1(100 * r.share),
       })),
       uptimes: allUptimes(mine, cohortMetrics),
-      downtime: { ...mine.downtime, cohortIdlePct: cohortIdle != null ? round1(cohortIdle) : null },
+      downtime: {
+        ...mine.downtime,
+        idlePct: round1(mine.downtime.idlePct),
+        cohortIdlePct: cohortIdle != null ? round1(cohortIdle) : null,
+      },
       deaths: {
         mine: mine.deaths,
         cohortMedian: cohortDeaths,
