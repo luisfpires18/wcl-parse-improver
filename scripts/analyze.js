@@ -35,6 +35,17 @@ for (const w of report.tables.downtime.windows ?? []) {
   console.log(`  at ${formatDuration(w.startRelMs)}  idle ${(w.durMs / 1000).toFixed(1)}s`);
 }
 
+console.log(`\n--- Deaths by player (mine: ${report.tables.deaths.mine.length}) ---`);
+for (const c of report.tables.deaths.cohortByPlayer) console.log(`  ${c.name}: ${c.deaths}`);
+
+console.log('\n--- RP spender mix & waste (mine vs cohort median) ---');
+const sp = report.tables.spender;
+console.log(`  Death Coil casts: ${sp.mine.deathCoil} vs ${sp.cohortDeathCoilCasts}`);
+console.log(`  Epidemic casts:   ${sp.mine.epidemic} vs ${sp.cohortEpidemicCasts}`);
+const rw = report.tables.rpWaste;
+console.log(`  RP generated:     ${Math.round(rw.mine.netGain)} vs ${rw.cohortNetGain}`);
+console.log(`  RP wasted:        ${Math.round(rw.mine.waste)} vs ${rw.cohortWasteAmount}`);
+
 if (report.downtimeNotes?.length) {
   console.log('\n--- Uptime losses caused by downtime/deaths (not buff management) ---');
   for (const n of report.downtimeNotes) console.log(`  ${n.note}`);

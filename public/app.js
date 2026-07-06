@@ -253,7 +253,7 @@ function renderReport(encounterID, offset, r) {
     .slice(0, 25)
     .map(
       (a) => `<tr><td>${esc(a.name)}</td><td class="num">${a.myCasts}</td><td class="num">${a.myCpm}</td>
-        <td class="num">${a.cohortCpm}</td><td class="num">${a.damageSharePct}%</td></tr>`
+        <td class="num">${a.cohortCasts}</td><td class="num">${a.cohortCpm}</td><td class="num">${a.damageSharePct}%</td></tr>`
     )
     .join('');
 
@@ -262,11 +262,31 @@ function renderReport(encounterID, offset, r) {
     .map(
       (u) => `<tr><td>${esc(u.name)}</td><td class="num">${u.minePct}%</td>
         <td class="num">${u.mineActivePct}%</td>
+        <td class="num">${u.myUses}</td>
         <td class="num">${u.cohortPct}%</td>
         <td class="num">${u.cohortActivePct}%</td>
+        <td class="num">${u.cohortUses}</td>
         <td class="num">${u.diffPp}</td></tr>`
     )
     .join('');
+
+  const deathRows = (r.tables.deaths.cohortByPlayer ?? [])
+    .map((c) => `<tr><td>${esc(c.name)}</td><td class="num">${c.deaths}</td></tr>`)
+    .join('');
+
+  const s = r.tables.spender;
+  const spenderRows = `
+    <tr><td>Death Coil casts</td><td class="num">${s.mine.deathCoil}</td><td class="num">${s.cohortDeathCoilCasts ?? '—'}</td></tr>
+    <tr><td>Epidemic casts</td><td class="num">${s.mine.epidemic}</td><td class="num">${s.cohortEpidemicCasts ?? '—'}</td></tr>
+    <tr><td>Epidemic share</td><td class="num">${s.mine.epidemicShare != null ? Math.round(100 * s.mine.epidemicShare) + '%' : '—'}</td>
+        <td class="num">${s.cohortEpidemicShare != null ? Math.round(100 * s.cohortEpidemicShare) + '%' : '—'}</td></tr>`;
+
+  const w = r.tables.rpWaste;
+  const wasteRows = `
+    <tr><td>RP generated</td><td class="num">${Math.round(w.mine.netGain)}</td><td class="num">${w.cohortNetGain ?? '—'}</td></tr>
+    <tr><td>RP wasted (overcapped)</td><td class="num">${Math.round(w.mine.waste)}</td><td class="num">${w.cohortWasteAmount ?? '—'}</td></tr>
+    <tr><td>Waste %</td><td class="num">${w.mine.wastePct != null ? w.mine.wastePct.toFixed(1) + '%' : '—'}</td>
+        <td class="num">${w.cohortWastePct != null ? w.cohortWastePct + '%' : '—'}</td></tr>`;
 
   const downtimeNoteRows = (r.downtimeNotes ?? [])
     .map(
@@ -301,12 +321,21 @@ function renderReport(encounterID, offset, r) {
       ${r.summary ? `<p class="summary">${esc(r.summary.text)}</p>` : ''}
 
       <details><summary>Per-ability casts (mine vs cohort median)</summary>
-        <table><thead><tr><th>Ability</th><th>My casts</th><th>My CPM</th><th>Cohort CPM</th><th>Their dmg share</th></tr></thead>
+        <table><thead><tr><th>Ability</th><th>My casts</th><th>My CPM</th><th>Cohort casts</th><th>Cohort CPM</th><th>Their dmg share</th></tr></thead>
         <tbody>${cpmRows}</tbody></table>
+        <p class="table-note"><small>CPM = casts per minute. Runs differ in length, so raw counts alone aren't comparable across players — CPM normalizes for that; casts is the actual count for reference.</small></p>
       </details>
-      <details><summary>Buff/debuff uptimes (raw + active-time)</summary>
-        <table><thead><tr><th>Aura</th><th>Mine raw</th><th>Mine active</th><th>Cohort raw</th><th>Cohort active</th><th>Diff (pp)</th></tr></thead>
+      <details><summary>Buff/debuff uptimes (raw + active-time, mine vs cohort median)</summary>
+        <table><thead><tr><th>Aura</th><th>Mine raw</th><th>Mine active</th><th>My uses</th><th>Cohort raw</th><th>Cohort active</th><th>Cohort uses</th><th>Diff (pp)</th></tr></thead>
         <tbody>${uptimeRows}</tbody></table>
+      </details>
+      <details><summary>Deaths by cohort player (mine: ${r.tables.deaths.mine.length})</summary>
+        <table><thead><tr><th>Player</th><th>Deaths</th></tr></thead>
+        <tbody><tr><td>You</td><td class="num">${r.tables.deaths.mine.length}</td></tr>${deathRows}</tbody></table>
+      </details>
+      <details><summary>RP spender mix &amp; waste (mine vs cohort median)</summary>
+        <table><thead><tr><th>Metric</th><th>Mine</th><th>Cohort median</th></tr></thead>
+        <tbody>${spenderRows}${wasteRows}</tbody></table>
       </details>
       ${downtimeNoteRows ? `<details><summary>Uptime losses caused by downtime/deaths (already counted above)</summary>
         <table><thead><tr><th>Aura</th><th>Mine raw → active</th><th>Cohort raw → active</th></tr></thead>

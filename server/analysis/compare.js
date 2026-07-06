@@ -92,6 +92,8 @@ export function buildReport(bundle) {
 
   // 6) spender mix (informational severity)
   const cohortEpidemicShare = median(cohortMetrics.map((m) => m.spender.epidemicShare));
+  const cohortDeathCoilCasts = median(cohortMetrics.map((m) => m.spender.deathCoil));
+  const cohortEpidemicCasts = median(cohortMetrics.map((m) => m.spender.epidemic));
   if (mine.spender.epidemicShare != null && cohortEpidemicShare != null) {
     const diff = Math.abs(mine.spender.epidemicShare - cohortEpidemicShare);
     if (diff > 0.1) {
@@ -107,6 +109,8 @@ export function buildReport(bundle) {
   // share; the cohort's own waste (rarely zero even for top players) is the
   // baseline, not zero.
   const cohortWastePct = median(cohortMetrics.map((m) => m.rpWaste.wastePct).filter((v) => v != null));
+  const cohortNetGain = median(cohortMetrics.map((m) => m.rpWaste.netGain));
+  const cohortWasteAmount = median(cohortMetrics.map((m) => m.rpWaste.waste));
   if (mine.rpWaste.wastePct != null && cohortWastePct != null && mine.rpWaste.wastePct > cohortWastePct + 3) {
     const diff = mine.rpWaste.wastePct - cohortWastePct;
     gaps.push(
@@ -165,6 +169,7 @@ export function buildReport(bundle) {
         name: r.name,
         myCasts: r.myCasts,
         myCpm: round1(r.myCpm),
+        cohortCasts: round1(r.cohortCasts),
         cohortCpm: round1(r.cohortCpm),
         damageSharePct: round1(100 * r.share),
       })),
@@ -177,14 +182,21 @@ export function buildReport(bundle) {
       deaths: {
         mine: mine.deaths,
         cohortMedian: cohortDeaths,
+        // per-player breakdown, not just the median — "0 deaths" hides
+        // whether that's every single top run or a lucky one
+        cohortByPlayer: bundle.cohort.map((c, i) => ({ name: c.meta.name, deaths: cohortMetrics[i].deaths.length })),
       },
       spender: {
         mine: mine.spender,
         cohortEpidemicShare,
+        cohortDeathCoilCasts: cohortDeathCoilCasts != null ? round1(cohortDeathCoilCasts) : null,
+        cohortEpidemicCasts: cohortEpidemicCasts != null ? round1(cohortEpidemicCasts) : null,
       },
       rpWaste: {
         mine: mine.rpWaste,
         cohortWastePct: cohortWastePct != null ? round1(cohortWastePct) : null,
+        cohortNetGain: cohortNetGain != null ? round1(cohortNetGain) : null,
+        cohortWasteAmount: cohortWasteAmount != null ? round1(cohortWasteAmount) : null,
       },
     },
     honesty,
@@ -199,6 +211,7 @@ function abilityDiffs(mine, cohortMetrics) {
     if (IGNORED_ABILITIES.has(name)) continue;
     const myCpm = mine.abilities.get(name)?.cpm ?? 0;
     const cohortCpm = median(cohortMetrics.map((m) => m.abilities.get(name)?.cpm ?? 0)) ?? 0;
+    const cohortCasts = median(cohortMetrics.map((m) => m.abilities.get(name)?.casts ?? 0)) ?? 0;
     const share = median(cohortMetrics.map((m) => m.damageShare.get(name) ?? 0)) ?? 0;
     if (share < MIN_DAMAGE_SHARE && cohortCpm < 0.5 && myCpm < 0.5) continue;
     const relDiff = cohortCpm ? (cohortCpm - myCpm) / cohortCpm : myCpm ? -1 : 0;
@@ -208,6 +221,7 @@ function abilityDiffs(mine, cohortMetrics) {
       name,
       myCasts: mine.abilities.get(name)?.casts ?? 0,
       myCpm,
+      cohortCasts,
       cohortCpm,
       share,
       severity,
@@ -271,8 +285,10 @@ function allUptimes(mine, cohortMetrics) {
       name,
       minePct: round1(mineRaw),
       mineActivePct: round1(mineAura?.activeUptimePct ?? mineRaw),
+      myUses: mineAura?.uses ?? 0,
       cohortPct: round1(cohort.raw),
       cohortActivePct: round1(cohort.active ?? cohort.raw),
+      cohortUses: round1(cohort.uses),
       diffPp: round1(cohort.raw - mineRaw),
     });
   }
@@ -293,6 +309,7 @@ function cohortAuraMedians(cohortMetrics) {
           return a ? (a.activeUptimePct ?? a.uptimePct) : 0;
         })
       ),
+      uses: median(cohortMetrics.map((m) => m.auras.get(name)?.uses ?? 0)) ?? 0,
     });
   }
   return out;
