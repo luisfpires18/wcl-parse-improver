@@ -1,0 +1,32 @@
+:root {
+  color-scheme: dark;
+  --bg: #14141c;
+  --panel: #1d1d29;
+  --text: #e8e6f0;
+  --muted: #9a97ad;
+  --accent: #ff8000;
+  --border: #34324a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+#app { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+h1 { color: var(--accent); font-size: 1.4rem; }
+form { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+input, button {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+}
+button { cursor: pointer; border-color: var(--accent); }
+table { border-collapse: collapse; width: 100%; background: var(--panel); }
+th, td { padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--border); text-align: left; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.pct { color: var(--accent); }
+#status { color: var(--muted); margin: 0.5rem 0; }

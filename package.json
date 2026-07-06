@@ -1,0 +1,15 @@
+{
+  "name": "wcl-parse-improver",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Compare your Warcraft Logs M+ parses against top players of your spec and get concrete, data-derived advice.",
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node --test test/",
+    "overview": "node scripts/fetch-overview.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
