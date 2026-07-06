@@ -56,6 +56,7 @@ export function buildReport(bundle) {
     if (row.severity > 0) {
       gaps.push(
         gap('ability', `${row.name} usage`, `${round1(row.myCpm)} CPM`, `${round1(row.cohortCpm)} CPM`, null, row.severity, {
+          name: row.name,
           damageSharePct: round1(100 * row.share),
           myCasts: row.myCasts,
         })
@@ -71,6 +72,7 @@ export function buildReport(bundle) {
   for (const row of uptimeRows) {
     gaps.push(
       gap('uptime', `${row.name} uptime (active time)`, `${round1(row.mineActive)}%`, `${round1(row.cohortActive)}%`, null, row.activeDiff * 0.15, {
+        name: row.name,
         rawMine: round1(row.mineRaw),
         rawCohort: round1(row.cohortRaw),
       })
@@ -102,6 +104,20 @@ export function buildReport(bundle) {
     }
   }
 
+  // 7) Runic Power waste (overcapping) — WCL's own computed waste field,
+  // not derived/guessed. Only flagged if I actually wasted a meaningful
+  // share; the cohort's own waste (rarely zero even for top players) is the
+  // baseline, not zero.
+  const cohortWastePct = median(cohortMetrics.map((m) => m.rpWaste.wastePct).filter((v) => v != null));
+  if (mine.rpWaste.wastePct != null && cohortWastePct != null && mine.rpWaste.wastePct > cohortWastePct + 3) {
+    const diff = mine.rpWaste.wastePct - cohortWastePct;
+    gaps.push(
+      gap('waste', 'Runic Power wasted to overcapping', `${round1(mine.rpWaste.wastePct)}%`, `${round1(cohortWastePct)}%`, null, diff * 0.5, {
+        wastedAmount: round1(mine.rpWaste.waste),
+      })
+    );
+  }
+
   gaps.sort((a, b) => b.severity - a.severity);
   for (const g of gaps) g.advice = adviceFor(g, bundle);
 
@@ -111,7 +127,7 @@ export function buildReport(bundle) {
   // discounted, and never claim more than 95%.
   const sevOf = (cat) => gaps.filter((g) => g.category === cat).reduce((a, g) => a + g.severity, 0);
   const throughput = Math.max(sevOf('cpm'), sevOf('downtime')) + sevOf('deaths');
-  const rest = (sevOf('ability') + sevOf('uptime') + sevOf('spender')) * 0.6;
+  const rest = (sevOf('ability') + sevOf('uptime') + sevOf('spender') + sevOf('waste')) * 0.6;
   const explained = throughput + rest;
   const honesty = {
     dpsGapPct: dpsGapPct != null ? round1(dpsGapPct) : null,
@@ -167,6 +183,10 @@ export function buildReport(bundle) {
       spender: {
         mine: mine.spender,
         cohortEpidemicShare,
+      },
+      rpWaste: {
+        mine: mine.rpWaste,
+        cohortWastePct: cohortWastePct != null ? round1(cohortWastePct) : null,
       },
     },
     honesty,

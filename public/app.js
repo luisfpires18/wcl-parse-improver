@@ -214,6 +214,17 @@ function renderTimelineSection(timeline) {
     </div>`;
 }
 
+function renderNextSteps(headline, nextSteps) {
+  if (!nextSteps) return '';
+  const items = nextSteps.actions.map((a) => `<li>${esc(a)}</li>`).join('');
+  return `
+    <div class="next-steps">
+      <h3>What to do next time at +${headline.myKeyLevel}</h3>
+      <p class="next-steps-recap">${esc(nextSteps.recap)}</p>
+      <ol>${items}</ol>
+    </div>`;
+}
+
 function renderReport(encounterID, offset, r) {
   const h = r.headline;
   const offsetBtns = [0, 1, 2]
@@ -310,6 +321,8 @@ function renderReport(encounterID, offset, r) {
 
       <p class="honesty">DPS gap ${r.honesty.dpsGapPct}% — rotational metrics explain ~${r.honesty.explainedPct}% of it.<br />
       <small>${esc(r.honesty.note)}</small></p>
+
+      ${renderNextSteps(h, r.summary?.nextSteps)}
     </div>`;
 
   $('#report').querySelectorAll('[data-offset]').forEach((b) =>

@@ -97,6 +97,40 @@ export function parseCastEvents(eventPages) {
   return casts;
 }
 
+// Runic Power's resourceChangeType id, verified against a real payload (see
+// server/wcl/queries.js REPORT_RESOURCE_EVENTS for how this was confirmed).
+const RUNIC_POWER_TYPE = 6;
+
+/**
+ * Resource (Runic Power) generation events -> gain + waste per event.
+ * Filters to the player's own resource only (sourceID === targetID) so a
+ * pet's separate resource pool (seen under a different resourceChangeType)
+ * never leaks in.
+ */
+export function parseResourceEvents(eventPages) {
+  const events = [];
+  for (const page of eventPages) {
+    const data = Array.isArray(page?.data) ? page.data : [];
+    for (const ev of data) {
+      if (
+        ev?.type === 'resourcechange' &&
+        ev.resourceChangeType === RUNIC_POWER_TYPE &&
+        ev.sourceID === ev.targetID &&
+        typeof ev.timestamp === 'number'
+      ) {
+        events.push({
+          timestamp: ev.timestamp,
+          gain: numOr0(ev.resourceChange),
+          waste: numOr0(ev.waste),
+          abilityGameID: ev.abilityGameID ?? null,
+        });
+      }
+    }
+  }
+  events.sort((a, b) => a.timestamp - b.timestamp);
+  return events;
+}
+
 function dataOf(table, label) {
   const d = table?.data ?? table;
   if (!d || typeof d !== 'object') {

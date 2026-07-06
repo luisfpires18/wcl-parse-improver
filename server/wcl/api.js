@@ -8,6 +8,7 @@ import {
   REPORT_FIGHTS_ACTORS,
   REPORT_TABLE,
   REPORT_CAST_EVENTS,
+  REPORT_RESOURCE_EVENTS,
 } from './queries.js';
 import { buildOverview } from '../parse/zoneRankings.js';
 import { parseEncounterRankings, summarizeBestLevel } from '../parse/encounterRankings.js';
@@ -18,6 +19,7 @@ import {
   parseDamageTable,
   parseDeathsTable,
   parseCastEvents,
+  parseResourceEvents,
 } from '../parse/tables.js';
 
 async function fetchZoneRankings({ name, serverSlug, serverRegion, zoneID, metric, byBracket, role }) {
@@ -170,23 +172,8 @@ export async function fetchRunDetail({ code, fightID, playerName }) {
     await gql(REPORT_TABLE, { ...tableVars, dataType: 'Deaths' }),
   ];
 
-  // cast events, paginated via nextPageTimestamp
-  const pages = [];
-  let startTime = fight.startTime;
-  for (let i = 0; i < 20; i++) {
-    const ev = await gql(REPORT_CAST_EVENTS, {
-      code,
-      fightIDs: [fightID],
-      sourceID: actor.id,
-      startTime,
-      endTime: fight.endTime,
-    });
-    const pageData = ev?.reportData?.report?.events;
-    if (!pageData) break;
-    pages.push(pageData);
-    if (!pageData.nextPageTimestamp) break;
-    startTime = pageData.nextPageTimestamp;
-  }
+  const castPages = await paginateEvents(REPORT_CAST_EVENTS, { code, fightID, sourceID: actor.id, fight });
+  const resourcePages = await paginateEvents(REPORT_RESOURCE_EVENTS, { code, fightID, sourceID: actor.id, fight });
 
   return {
     code,
@@ -203,12 +190,28 @@ export async function fetchRunDetail({ code, fightID, playerName }) {
     buffs: parseBuffsTable(rdTable(buffsT)),
     damage: parseDamageTable(rdTable(damageT)),
     deaths: parseDeathsTable(rdTable(deathsT)),
-    castEvents: parseCastEvents(pages),
+    castEvents: parseCastEvents(castPages),
+    resourceEvents: parseResourceEvents(resourcePages),
   };
 }
 
 function rdTable(resp) {
   return resp?.reportData?.report?.table;
+}
+
+/** Page through an events(...) query via nextPageTimestamp. */
+async function paginateEvents(query, { code, fightID, sourceID, fight }) {
+  const pages = [];
+  let startTime = fight.startTime;
+  for (let i = 0; i < 20; i++) {
+    const resp = await gql(query, { code, fightIDs: [fightID], sourceID, startTime, endTime: fight.endTime });
+    const pageData = resp?.reportData?.report?.events;
+    if (!pageData) break;
+    pages.push(pageData);
+    if (!pageData.nextPageTimestamp) break;
+    startTime = pageData.nextPageTimestamp;
+  }
+  return pages;
 }
 
 /** Match an actor by name; tolerate diacritics/server decorations. */

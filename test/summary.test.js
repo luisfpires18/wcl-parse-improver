@@ -19,12 +19,37 @@ test('buildReport attaches a summary for real Pit data', () => {
   assert.ok(report.summary.text.includes('Runic Power'));
 });
 
-test('summary names the biggest cluster of idle/deaths on the timeline', () => {
+test('summary names the biggest idle/death cluster on the timeline', () => {
   const report = buildReport(bundle);
-  // my two known deaths are far apart (2:07, 21:45) — the cluster around
-  // 21:45 also contains two large idle windows (20:02, 24:48), so the
-  // summary should call out a window in that neighborhood
-  assert.match(report.summary.text, /\d+:\d+-\d+:\d+/);
+  // real data: my worst 45s-merge cluster is 1:04-3:13 (death at 2:07 plus
+  // two nearby idle windows) — the tightest defensible grouping, not the
+  // late-fight windows which are >45s apart from each other
+  assert.match(report.summary.text, /1:04-3:13/);
+});
+
+test('nextSteps leads with the timeline cluster and lists real gap advice', () => {
+  const report = buildReport(bundle);
+  const { nextSteps } = report.summary;
+  assert.ok(nextSteps.recap.includes('gap'));
+  assert.ok(nextSteps.actions.length > 0);
+  assert.match(nextSteps.actions[0], /1:04-3:13/);
+  // deaths gap itself is folded into the cluster line, not repeated verbatim
+  assert.ok(!nextSteps.actions.slice(1).some((a) => a.startsWith('You died')));
+  for (const a of nextSteps.actions) assert.ok(!a.includes('undefined'));
+});
+
+test('advice for uptime/ability gaps is self-contained (names the buff/ability, not just "this")', () => {
+  const report = buildReport(bundle);
+  for (const g of report.gaps) {
+    if (g.category === 'uptime') {
+      const auraName = g.title.replace(' uptime (active time)', '');
+      assert.ok(g.advice.includes(auraName), `advice for ${g.title} should name ${auraName}`);
+    }
+    if (g.category === 'ability') {
+      const abilityName = g.title.replace(' usage', '');
+      assert.ok(g.advice.includes(abilityName), `advice for ${g.title} should name ${abilityName}`);
+    }
+  }
 });
 
 test('buildSummary handles the no-gaps case without crashing', () => {
@@ -40,10 +65,13 @@ test('buildSummary handles the no-gaps case without crashing', () => {
 test('buildSummary handles a run with no timeline gracefully', () => {
   const s = buildSummary({
     headline: { dungeon: 'Test Dungeon', dpsGapPct: 10 },
-    gaps: [{ category: 'cpm', title: 'Total casts per minute', mine: 40, cohort: 50, severity: 5 }],
+    gaps: [
+      { category: 'cpm', title: 'Total casts per minute', mine: 40, cohort: 50, severity: 5, advice: 'Cast more.' },
+    ],
     timeline: null,
     honesty: { explainedPct: 50 },
   });
   assert.ok(s.text.includes('cast rate'));
   assert.ok(!s.text.includes('undefined'));
+  assert.deepEqual(s.nextSteps.actions, ['Cast more.']);
 });

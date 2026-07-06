@@ -77,3 +77,23 @@ query ReportCastEvents($code: String!, $fightIDs: [Int!], $sourceID: Int!, $star
     }
   }
 }`;
+
+// Resource generation events. Each entry is a GAIN with WCL's own computed
+// `waste` field (how much of that gain exceeded the resource cap) — verified
+// against a real Pit of Saron payload: resourceChangeType 6 = the player's
+// own Runic Power (maxResourceAmount 1000 = 100.0 RP scaled x10, sourceID
+// always === targetID). No negative (spend) events appear in this stream —
+// only generation, which is exactly what's needed for a waste metric.
+// Other resourceChangeType values seen (e.g. 3, targetID = a pet) are a
+// different actor's resource and are filtered out downstream, not ours.
+export const REPORT_RESOURCE_EVENTS = `
+query ReportResourceEvents($code: String!, $fightIDs: [Int!], $sourceID: Int!, $startTime: Float, $endTime: Float) {
+  reportData {
+    report(code: $code) {
+      events(fightIDs: $fightIDs, dataType: Resources, sourceID: $sourceID, startTime: $startTime, endTime: $endTime) {
+        data
+        nextPageTimestamp
+      }
+    }
+  }
+}`;

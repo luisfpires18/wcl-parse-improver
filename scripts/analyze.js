@@ -50,3 +50,7 @@ console.log(
   `DPS gap: ${report.honesty.dpsGapPct}% | rotational metrics above estimate ~${report.honesty.explainedPct}% of it explained.`
 );
 console.log(report.honesty.note);
+
+console.log(`\n--- What to do next time at +${h.myKeyLevel} ---`);
+console.log(report.summary.nextSteps.recap);
+report.summary.nextSteps.actions.forEach((a, i) => console.log(`  ${i + 1}. ${a}`));

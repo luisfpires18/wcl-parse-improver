@@ -75,6 +75,32 @@ export function computeRunMetrics(detail) {
       epidemic,
       epidemicShare: deathCoil + epidemic ? epidemic / (deathCoil + epidemic) : null,
     },
+    rpWaste: computeRpWaste(detail.resourceEvents ?? []),
+  };
+}
+
+// WCL scales Runic Power x10 in resourcechange events (maxResourceAmount
+// 1000 = the real 100 RP cap) — verified against a real payload.
+const RP_SCALE = 10;
+
+/**
+ * `resourceChange` is the net amount actually added (already clipped to the
+ * cap); `waste` is the extra that would have been added if not capped. So
+ * "% of potential generation lost" = waste / (net + waste).
+ */
+function computeRpWaste(resourceEvents) {
+  let netGain = 0;
+  let waste = 0;
+  for (const e of resourceEvents) {
+    netGain += e.gain;
+    waste += e.waste;
+  }
+  const potential = netGain + waste;
+  return {
+    netGain: netGain / RP_SCALE,
+    waste: waste / RP_SCALE,
+    wastePct: potential ? (100 * waste) / potential : null,
+    events: resourceEvents.length,
   };
 }
 

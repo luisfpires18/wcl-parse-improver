@@ -16,6 +16,10 @@ export function buildSummary({ headline, gaps, timeline, honesty }) {
   if (!gaps.length) {
     return {
       text: `No significant rotational gaps found for ${headline.dungeon} — this run tracks the cohort closely on every metric measured here.`,
+      nextSteps: {
+        recap: 'No measurable gaps found in this run.',
+        actions: ['Queue with confidence — nothing measured here stands out against the cohort. Re-run this analysis on your next attempt to keep checking.'],
+      },
     };
   }
 
@@ -44,11 +48,42 @@ export function buildSummary({ headline, gaps, timeline, honesty }) {
   );
 
   sentences.push(
-    `This does not analyze rune/Runic Power waste (capped resources, spender timing) — that needs event-level ` +
-      `resource data this tool doesn't pull yet (see v2 roadmap). The gaps above are cast-count and uptime based only.`
+    `Runic Power overcapping is measured directly from WCL's own resource events; individual Rune tracking ` +
+      `isn't reliably exposed by the API and isn't included. Everything else above is cast-count and uptime based.`
   );
 
-  return { text: sentences.join(' ') };
+  return { text: sentences.join(' '), nextSteps: buildNextSteps({ headline, gaps, honesty, cluster }) };
+}
+
+/**
+ * Final "what to do next attempt" checklist. Reuses the same gap.advice
+ * sentences already shown above (no new claims) — this section exists to be
+ * the one thing read right before queuing the key again, ordered by
+ * severity, with the timeline cluster (if any) called out first since it's
+ * usually the single biggest lever.
+ */
+function buildNextSteps({ headline, gaps, honesty, cluster }) {
+  const actions = [];
+  if (cluster) {
+    actions.push(
+      `Rewatch ${formatDuration(cluster.startMs)}-${formatDuration(cluster.endMs)} first (` +
+        `${cluster.deaths} death${cluster.deaths === 1 ? '' : 's'}, ${(cluster.idleMs / 1000).toFixed(0)}s idle) ` +
+        `— it's your single biggest lever this run.`
+    );
+  }
+  const remaining = gaps.filter((g) => g.category !== 'deaths');
+  for (const g of remaining.slice(0, cluster ? 4 : 5)) actions.push(g.advice);
+  if (!actions.length) {
+    actions.push('No further action needed — this run already tracks the cohort closely on every metric measured here.');
+  }
+
+  const recap =
+    `${gaps.length} measurable gap${gaps.length === 1 ? '' : 's'} found in this run` +
+    (headline.dpsGapPct != null
+      ? `, together estimated to explain ~${honesty.explainedPct}% of the ${headline.dpsGapPct}% DPS gap vs the +${headline.cohortLevel} cohort.`
+      : '.');
+
+  return { recap, actions };
 }
 
 function describeGap(g) {
@@ -65,6 +100,8 @@ function describeGap(g) {
       return `${g.title.replace(' (active time)', '')} (${g.mine} vs ${g.cohort})`;
     case 'spender':
       return `RP-spender mix (${g.mine} vs ${g.cohort} Epidemic share)`;
+    case 'waste':
+      return `Runic Power wasted to overcapping (${g.mine} vs ${g.cohort})`;
     default:
       return g.title;
   }

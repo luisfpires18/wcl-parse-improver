@@ -102,6 +102,12 @@ summary:hover { color: var(--text); }
 .honesty { border-top: 1px solid var(--border); padding-top: 0.7rem; margin-top: 1.2rem; }
 .summary { background: var(--panel2); border: 1px solid var(--border); border-radius: 6px; padding: 0.7rem 0.9rem; margin: 0.8rem 0; line-height: 1.5; }
 
+.next-steps { border-top: 2px solid var(--accent); margin-top: 1.2rem; padding-top: 0.8rem; }
+.next-steps h3 { color: var(--accent); }
+.next-steps-recap { color: var(--muted); font-size: 0.85rem; margin: 0 0 0.5rem; }
+.next-steps ol { margin: 0; padding-left: 1.3rem; }
+.next-steps li { margin-bottom: 0.5rem; line-height: 1.45; }
+
 .timeline-wrap { margin: 0.6rem 0 1rem; }
 .timeline-sub { color: var(--muted); font-size: 0.82rem; margin: 0.6rem 0 0.2rem; }
 .timeline-svg { width: 100%; height: auto; display: block; }

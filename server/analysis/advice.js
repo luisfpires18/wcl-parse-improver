@@ -28,15 +28,21 @@ export function adviceFor(gapItem, bundle) {
       );
     case 'ability':
       return (
-        `Top players get ${gapItem.cohort} of this vs your ${gapItem.mine}` +
+        `Top players cast ${gapItem.name} at ${gapItem.cohort} vs your ${gapItem.mine}` +
         (gapItem.damageSharePct ? ` and it carries ~${gapItem.damageSharePct}% of their damage` : '') +
         `; press it closer to on-cooldown / weave it more often.`
       );
     case 'uptime':
       return (
-        `Measured only while actively playing (idle/death windows excluded), their median uptime is ` +
-        `${gapItem.cohort} vs your ${gapItem.mine} — a genuine buff-management gap, not a downtime artifact; ` +
-        `keep this effect rolling.`
+        `Their median ${gapItem.name} uptime is ${gapItem.cohort} vs your ${gapItem.mine} ` +
+        `(measured only while actively playing, idle/death windows excluded) — a genuine buff-management ` +
+        `gap, not a downtime artifact; keep it rolling.`
+      );
+    case 'waste':
+      return (
+        `You lost ${gapItem.mine} of your potential Runic Power to overcapping (~${gapItem.wastedAmount} RP over the run) ` +
+        `vs their ${gapItem.cohort} — spend Runic Power before it caps rather than holding it for a "better" moment; ` +
+        `every point wasted is a Death Coil or Epidemic you didn't get to cast.`
       );
     case 'spender':
       return (
