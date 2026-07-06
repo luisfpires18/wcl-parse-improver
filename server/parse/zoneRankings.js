@@ -144,7 +144,7 @@ function numOrNull(v) {
 
 /** Format ms as m:ss for display. */
 export function formatDuration(ms) {
-  if (typeof ms !== 'number' || !Number.isFinite(ms) || ms <= 0) return '—';
+  if (typeof ms !== 'number' || !Number.isFinite(ms) || ms < 0) return '—';
   const totalSec = Math.floor(ms / 1000); // WCL floors, matching the site display
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;

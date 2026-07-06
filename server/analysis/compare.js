@@ -1,0 +1,232 @@
+// Compare my run metrics against the cohort (median across top-N runs) and
+// produce a ranked, human-readable gap report.
+//
+// Severity is a rough estimate of % DPS impact so gaps can be ordered.
+// The weights are documented heuristics, not truth — the honesty section
+// reports how much of the real DPS gap they explain.
+import { computeRunMetrics, median } from './metrics.js';
+import { adviceFor } from './advice.js';
+
+// Ability cast-count diffs below this share of damage are noise — skip.
+const MIN_DAMAGE_SHARE = 0.01;
+const MIN_UPTIME_DIFF_PP = 8;
+const MIN_COHORT_UPTIME = 25;
+// consumables / cosmetic rows that would pollute the ability diff
+const IGNORED_ABILITIES = new Set([
+  'Acherus Deathcharger',
+  'Raise Ally',
+  "Charge!", // gauntlet extra action button appears for everyone
+]);
+
+export function buildReport(bundle) {
+  const mine = computeRunMetrics(bundle.mine.detail);
+  const cohortMetrics = bundle.cohort.map((c) => computeRunMetrics(c.detail));
+  const myDps = bundle.mine.meta.dps ?? null;
+  const cohortDps = bundle.cohort.map((c) => c.meta.dps).filter((v) => typeof v === 'number');
+  const cohortMedianDps = median(cohortDps);
+  const dpsGapPct = myDps && cohortMedianDps ? (100 * (cohortMedianDps - myDps)) / cohortMedianDps : null;
+
+  const gaps = [];
+
+  // 1) deaths
+  const cohortDeaths = median(cohortMetrics.map((m) => m.deaths.length));
+  if (mine.deaths.length > cohortDeaths) {
+    const extra = mine.deaths.length - cohortDeaths;
+    gaps.push(gap('deaths', 'Deaths', mine.deaths.length, cohortDeaths, 'deaths', extra * 4, {
+      deathTimes: mine.deaths.map((d) => d.atMs),
+    }));
+  }
+
+  // 2) downtime
+  const cohortIdle = median(cohortMetrics.map((m) => m.downtime.idlePct));
+  if (mine.downtime.idlePct != null && cohortIdle != null && mine.downtime.idlePct > cohortIdle + 1) {
+    gaps.push(
+      gap('downtime', 'Idle time (gaps > 5s with zero casts)', round1(mine.downtime.idlePct), round1(cohortIdle), '% of fight',
+        mine.downtime.idlePct - cohortIdle, { windows: mine.downtime.windows })
+    );
+  }
+
+  // 3) total CPM
+  const cohortCPM = median(cohortMetrics.map((m) => m.totalCPM));
+  if (cohortCPM && mine.totalCPM < cohortCPM * 0.97) {
+    const diffPct = (100 * (cohortCPM - mine.totalCPM)) / cohortCPM;
+    gaps.push(gap('cpm', 'Total casts per minute', round1(mine.totalCPM), round1(cohortCPM), 'CPM', diffPct * 0.8));
+  }
+
+  // 4) per-ability cast diffs, weighted by the cohort's damage share
+  const abilityRows = abilityDiffs(mine, cohortMetrics);
+  for (const row of abilityRows) {
+    if (Math.abs(row.severity) < 0.5) continue;
+    if (row.severity > 0) {
+      gaps.push(
+        gap('ability', `${row.name} usage`, `${round1(row.myCpm)} CPM`, `${round1(row.cohortCpm)} CPM`, null, row.severity, {
+          damageSharePct: round1(100 * row.share),
+          myCasts: row.myCasts,
+        })
+      );
+    }
+  }
+
+  // 5) aura uptimes — only auras I actually have are actionable; auras I never
+  // gained at all are almost certainly group-comp buffs or talent differences.
+  const { actionable: uptimeRows, compOnly } = uptimeDiffs(mine, cohortMetrics);
+  for (const row of uptimeRows) {
+    gaps.push(
+      gap('uptime', `${row.name} uptime`, `${round1(row.mine)}%`, `${round1(row.cohort)}%`, null, row.diff * 0.15)
+    );
+  }
+  const compNotes = compOnly.map((row) => ({
+    name: row.name,
+    cohortPct: round1(row.cohort),
+    note: `Cohort runs have ${row.name} at ~${round1(row.cohort)}% uptime; you never had it — likely a group buff from their comp or a talent difference, not directly actionable.`,
+  }));
+
+  // 6) spender mix (informational severity)
+  const cohortEpidemicShare = median(cohortMetrics.map((m) => m.spender.epidemicShare));
+  if (mine.spender.epidemicShare != null && cohortEpidemicShare != null) {
+    const diff = Math.abs(mine.spender.epidemicShare - cohortEpidemicShare);
+    if (diff > 0.1) {
+      gaps.push(
+        gap('spender', 'Epidemic share of RP spenders (cast-count based)',
+          `${Math.round(100 * mine.spender.epidemicShare)}%`, `${Math.round(100 * cohortEpidemicShare)}%`, null, diff * 5)
+      );
+    }
+  }
+
+  gaps.sort((a, b) => b.severity - a.severity);
+  for (const g of gaps) g.advice = adviceFor(g, bundle);
+
+  // honesty: how much of the DPS gap do the rotational severities cover?
+  // Deaths, idle time and total CPM overlap (a death causes idle causes low
+  // CPM) — count only the largest of the throughput cluster, plus the rest
+  // discounted, and never claim more than 95%.
+  const sevOf = (cat) => gaps.filter((g) => g.category === cat).reduce((a, g) => a + g.severity, 0);
+  const throughput = Math.max(sevOf('cpm'), sevOf('downtime')) + sevOf('deaths');
+  const rest = (sevOf('ability') + sevOf('uptime') + sevOf('spender')) * 0.6;
+  const explained = throughput + rest;
+  const honesty = {
+    dpsGapPct: dpsGapPct != null ? round1(dpsGapPct) : null,
+    explainedPct: dpsGapPct ? round1(Math.min(95, (100 * explained) / dpsGapPct)) : null,
+    note:
+      'Severity values are heuristic %-DPS estimates; overlapping causes are only counted once. ' +
+      'The unexplained remainder is likely routing, pull size, group comp and funnel — ' +
+      'things a parse comparison cannot see.' +
+      (compNotes.length
+        ? ` Note: the cohort also had ${compNotes.slice(0, 3).map((n) => n.name).join(', ')} from their group comp — a real slice of the gap sits there, not in your play.`
+        : ''),
+  };
+
+  return {
+    headline: {
+      dungeon: bundle.mine.detail.fight.name,
+      myKeyLevel: bundle.mine.detail.fight.keystoneLevel,
+      cohortLevel: bundle.targetLevel,
+      levelOffset: bundle.params.levelOffset,
+      myDps: myDps ? Math.round(myDps) : null,
+      cohortMedianDps: cohortMedianDps ? Math.round(cohortMedianDps) : null,
+      dpsGapPct: dpsGapPct != null ? round1(dpsGapPct) : null,
+      myBestPercent: bundle.mine.meta.bestPercent != null ? round1(bundle.mine.meta.bestPercent) : null,
+      cohortSize: bundle.cohort.length,
+      cohortNames: bundle.cohort.map((c) => c.meta.name),
+    },
+    gaps,
+    compNotes,
+    tables: {
+      cpm: abilityRows.map((r) => ({
+        name: r.name,
+        myCasts: r.myCasts,
+        myCpm: round1(r.myCpm),
+        cohortCpm: round1(r.cohortCpm),
+        damageSharePct: round1(100 * r.share),
+      })),
+      uptimes: allUptimes(mine, cohortMetrics),
+      downtime: { ...mine.downtime, cohortIdlePct: cohortIdle != null ? round1(cohortIdle) : null },
+      deaths: {
+        mine: mine.deaths,
+        cohortMedian: cohortDeaths,
+      },
+      spender: {
+        mine: mine.spender,
+        cohortEpidemicShare,
+      },
+    },
+    honesty,
+  };
+}
+
+function abilityDiffs(mine, cohortMetrics) {
+  const names = new Set();
+  for (const m of [mine, ...cohortMetrics]) for (const n of m.abilities.keys()) names.add(n);
+  const rows = [];
+  for (const name of names) {
+    if (IGNORED_ABILITIES.has(name)) continue;
+    const myCpm = mine.abilities.get(name)?.cpm ?? 0;
+    const cohortCpm = median(cohortMetrics.map((m) => m.abilities.get(name)?.cpm ?? 0)) ?? 0;
+    const share = median(cohortMetrics.map((m) => m.damageShare.get(name) ?? 0)) ?? 0;
+    if (share < MIN_DAMAGE_SHARE && cohortCpm < 0.5 && myCpm < 0.5) continue;
+    const relDiff = cohortCpm ? (cohortCpm - myCpm) / cohortCpm : myCpm ? -1 : 0;
+    // severity ≈ missing casts × how much of their damage this ability carries
+    const severity = relDiff * Math.max(share, 0.005) * 100;
+    rows.push({
+      name,
+      myCasts: mine.abilities.get(name)?.casts ?? 0,
+      myCpm,
+      cohortCpm,
+      share,
+      severity,
+    });
+  }
+  rows.sort((a, b) => Math.abs(b.severity) - Math.abs(a.severity));
+  return rows;
+}
+
+function uptimeDiffs(mine, cohortMetrics) {
+  const actionable = [];
+  const compOnly = [];
+  for (const [name, cohortVal] of cohortAuraMedians(cohortMetrics)) {
+    if (cohortVal < MIN_COHORT_UPTIME) continue;
+    const mineAura = mine.auras.get(name);
+    const mineVal = mineAura?.uptimePct ?? 0;
+    const diff = cohortVal - mineVal;
+    if (diff < MIN_UPTIME_DIFF_PP) continue;
+    // never gained the aura at all -> group buff from their comp or a talent
+    // difference; report separately, don't rank as an actionable gap
+    if (!mineAura || (mineVal === 0 && (mineAura.uses ?? 0) === 0)) {
+      compOnly.push({ name, mine: 0, cohort: cohortVal, diff });
+    } else {
+      actionable.push({ name, mine: mineVal, cohort: cohortVal, diff });
+    }
+  }
+  actionable.sort((a, b) => b.diff - a.diff);
+  compOnly.sort((a, b) => b.diff - a.diff);
+  return { actionable: actionable.slice(0, 8), compOnly: compOnly.slice(0, 10) };
+}
+
+function allUptimes(mine, cohortMetrics) {
+  const rows = [];
+  for (const [name, cohortVal] of cohortAuraMedians(cohortMetrics)) {
+    const mineVal = mine.auras.get(name)?.uptimePct ?? 0;
+    if (cohortVal < 5 && mineVal < 5) continue;
+    rows.push({ name, minePct: round1(mineVal), cohortPct: round1(cohortVal), diffPp: round1(cohortVal - mineVal) });
+  }
+  rows.sort((a, b) => b.diffPp - a.diffPp);
+  return rows;
+}
+
+function cohortAuraMedians(cohortMetrics) {
+  const names = new Set();
+  for (const m of cohortMetrics) for (const n of m.auras.keys()) names.add(n);
+  const out = new Map();
+  for (const name of names) {
+    out.set(name, median(cohortMetrics.map((m) => m.auras.get(name)?.uptimePct ?? 0)) ?? 0);
+  }
+  return out;
+}
+
+function gap(category, title, mine, cohort, unit, severity, extra = {}) {
+  return { category, title, mine, cohort, unit, severity: round1(Math.max(0, severity)), ...extra };
+}
+
+function round1(v) {
+  return typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 10) / 10 : v;
+}
