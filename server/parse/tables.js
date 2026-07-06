@@ -35,6 +35,13 @@ export function parseBuffsTable(table) {
         guid: a.guid ?? null,
         uptimeMs: numOr0(a.totalUptime),
         uses: numOr0(a.totalUses),
+        // report-relative [start,end] application windows; needed for
+        // active-time uptime (intersection with engaged windows)
+        bands: Array.isArray(a.bands)
+          ? a.bands
+              .filter((b) => b && typeof b.startTime === 'number' && typeof b.endTime === 'number')
+              .map((b) => ({ startTime: b.startTime, endTime: b.endTime }))
+          : [],
       }))
       .sort((a, b) => b.uptimeMs - a.uptimeMs),
   };

@@ -67,18 +67,31 @@ export function buildReport(bundle) {
     }
   }
 
-  // 5) aura uptimes — only auras I actually have are actionable; auras I never
-  // gained at all are almost certainly group-comp buffs or talent differences.
-  const { actionable: uptimeRows, compOnly } = uptimeDiffs(mine, cohortMetrics);
+  // 5) aura uptimes — measured over ENGAGED time (fight minus idle windows),
+  // so downtime/deaths don't double-count as buff-management failures.
+  // Only auras I actually have are actionable; auras I never gained at all
+  // are almost certainly group-comp buffs or talent differences.
+  const { actionable: uptimeRows, downtimeCaused, compOnly } = uptimeDiffs(mine, cohortMetrics);
   for (const row of uptimeRows) {
     gaps.push(
-      gap('uptime', `${row.name} uptime`, `${round1(row.mine)}%`, `${round1(row.cohort)}%`, null, row.diff * 0.15)
+      gap('uptime', `${row.name} uptime (active time)`, `${round1(row.mineActive)}%`, `${round1(row.cohortActive)}%`, null, row.activeDiff * 0.15, {
+        rawMine: round1(row.mineRaw),
+        rawCohort: round1(row.cohortRaw),
+      })
     );
   }
   const compNotes = compOnly.map((row) => ({
     name: row.name,
-    cohortPct: round1(row.cohort),
-    note: `Cohort runs have ${row.name} at ~${round1(row.cohort)}% uptime; you never had it — likely a group buff from their comp or a talent difference, not directly actionable.`,
+    cohortPct: round1(row.cohortRaw),
+    note: `Cohort runs have ${row.name} at ~${round1(row.cohortRaw)}% uptime; you never had it — likely a group buff from their comp or a talent difference, not directly actionable.`,
+  }));
+  const downtimeNotes = downtimeCaused.map((row) => ({
+    name: row.name,
+    mineRaw: round1(row.mineRaw),
+    cohortRaw: round1(row.cohortRaw),
+    mineActive: round1(row.mineActive),
+    cohortActive: round1(row.cohortActive),
+    note: `${row.name}: raw uptime ${round1(row.mineRaw)}% vs their ${round1(row.cohortRaw)}%, but while actively playing you keep it at ${round1(row.mineActive)}% vs their ${round1(row.cohortActive)}% — the loss comes from deaths/downtime, already counted above. Fix those, not the buff.`,
   }));
 
   // 6) spender mix (informational severity)
@@ -131,6 +144,7 @@ export function buildReport(bundle) {
     },
     gaps,
     compNotes,
+    downtimeNotes,
     tables: {
       cpm: abilityRows.map((r) => ({
         name: r.name,
@@ -186,32 +200,62 @@ function abilityDiffs(mine, cohortMetrics) {
 
 function uptimeDiffs(mine, cohortMetrics) {
   const actionable = [];
+  const downtimeCaused = [];
   const compOnly = [];
-  for (const [name, cohortVal] of cohortAuraMedians(cohortMetrics)) {
-    if (cohortVal < MIN_COHORT_UPTIME) continue;
+  for (const [name, cohort] of cohortAuraMedians(cohortMetrics)) {
+    if (cohort.raw < MIN_COHORT_UPTIME) continue;
     const mineAura = mine.auras.get(name);
-    const mineVal = mineAura?.uptimePct ?? 0;
-    const diff = cohortVal - mineVal;
-    if (diff < MIN_UPTIME_DIFF_PP) continue;
+    const mineRaw = mineAura?.uptimePct ?? 0;
+    const mineActive = mineAura?.activeUptimePct ?? mineRaw;
+    const rawDiff = cohort.raw - mineRaw;
+    const activeDiff = (cohort.active ?? cohort.raw) - mineActive;
+    if (rawDiff < MIN_UPTIME_DIFF_PP && activeDiff < MIN_UPTIME_DIFF_PP) continue;
+
+    const row = {
+      name,
+      mineRaw,
+      cohortRaw: cohort.raw,
+      mineActive,
+      cohortActive: cohort.active ?? cohort.raw,
+      rawDiff,
+      activeDiff,
+    };
     // never gained the aura at all -> group buff from their comp or a talent
     // difference; report separately, don't rank as an actionable gap
-    if (!mineAura || (mineVal === 0 && (mineAura.uses ?? 0) === 0)) {
-      compOnly.push({ name, mine: 0, cohort: cohortVal, diff });
+    if (!mineAura || (mineRaw === 0 && (mineAura.uses ?? 0) === 0)) {
+      compOnly.push(row);
+    } else if (activeDiff < MIN_UPTIME_DIFF_PP / 2) {
+      // big raw gap but fine while actively playing -> the loss is downtime/
+      // deaths, which are already ranked as their own gaps
+      downtimeCaused.push(row);
     } else {
-      actionable.push({ name, mine: mineVal, cohort: cohortVal, diff });
+      actionable.push(row);
     }
   }
-  actionable.sort((a, b) => b.diff - a.diff);
-  compOnly.sort((a, b) => b.diff - a.diff);
-  return { actionable: actionable.slice(0, 8), compOnly: compOnly.slice(0, 10) };
+  actionable.sort((a, b) => b.activeDiff - a.activeDiff);
+  downtimeCaused.sort((a, b) => b.rawDiff - a.rawDiff);
+  compOnly.sort((a, b) => b.rawDiff - a.rawDiff);
+  return {
+    actionable: actionable.slice(0, 8),
+    downtimeCaused: downtimeCaused.slice(0, 8),
+    compOnly: compOnly.slice(0, 10),
+  };
 }
 
 function allUptimes(mine, cohortMetrics) {
   const rows = [];
-  for (const [name, cohortVal] of cohortAuraMedians(cohortMetrics)) {
-    const mineVal = mine.auras.get(name)?.uptimePct ?? 0;
-    if (cohortVal < 5 && mineVal < 5) continue;
-    rows.push({ name, minePct: round1(mineVal), cohortPct: round1(cohortVal), diffPp: round1(cohortVal - mineVal) });
+  for (const [name, cohort] of cohortAuraMedians(cohortMetrics)) {
+    const mineAura = mine.auras.get(name);
+    const mineRaw = mineAura?.uptimePct ?? 0;
+    if (cohort.raw < 5 && mineRaw < 5) continue;
+    rows.push({
+      name,
+      minePct: round1(mineRaw),
+      mineActivePct: round1(mineAura?.activeUptimePct ?? mineRaw),
+      cohortPct: round1(cohort.raw),
+      cohortActivePct: round1(cohort.active ?? cohort.raw),
+      diffPp: round1(cohort.raw - mineRaw),
+    });
   }
   rows.sort((a, b) => b.diffPp - a.diffPp);
   return rows;
@@ -222,7 +266,15 @@ function cohortAuraMedians(cohortMetrics) {
   for (const m of cohortMetrics) for (const n of m.auras.keys()) names.add(n);
   const out = new Map();
   for (const name of names) {
-    out.set(name, median(cohortMetrics.map((m) => m.auras.get(name)?.uptimePct ?? 0)) ?? 0);
+    out.set(name, {
+      raw: median(cohortMetrics.map((m) => m.auras.get(name)?.uptimePct ?? 0)) ?? 0,
+      active: median(
+        cohortMetrics.map((m) => {
+          const a = m.auras.get(name);
+          return a ? (a.activeUptimePct ?? a.uptimePct) : 0;
+        })
+      ),
+    });
   }
   return out;
 }

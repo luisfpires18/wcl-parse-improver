@@ -32,6 +32,11 @@ for (const w of report.tables.downtime.windows ?? []) {
   console.log(`  at ${formatDuration(w.startRelMs)}  idle ${(w.durMs / 1000).toFixed(1)}s`);
 }
 
+if (report.downtimeNotes?.length) {
+  console.log('\n--- Uptime losses caused by downtime/deaths (not buff management) ---');
+  for (const n of report.downtimeNotes) console.log(`  ${n.note}`);
+}
+
 if (report.compNotes?.length) {
   console.log('\n--- Group comp / talent differences (not actionable) ---');
   for (const n of report.compNotes) console.log(`  ${n.name}: cohort ~${n.cohortPct}%, you 0%`);

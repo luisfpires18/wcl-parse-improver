@@ -16,12 +16,24 @@ export function computeRunMetrics(detail) {
     abilities.set(a.name, { casts: a.casts, cpm: a.casts / minutes });
   }
 
+  const downtime = computeDowntime(detail.castEvents ?? [], fight);
+  // "engaged" = fight span minus my idle windows (>5s zero-cast gaps, which
+  // include death → re-engage stretches). Uptime measured only inside these
+  // windows isolates buff management from downtime/deaths/routing.
+  const engaged = engagedWindows(fight, downtime.allWindows);
+  const engagedMs = engaged.reduce((acc, w) => acc + (w.end - w.start), 0);
+
   const auras = new Map();
   for (const a of detail.buffs?.auras ?? []) {
     // duplicate aura names can appear (e.g. two "Lesser Ghoul" rows) — keep the larger
     const uptimePct = (100 * a.uptimeMs) / (detail.buffs.totalTimeMs || activeMs);
+    const activeUptimePct = engagedMs
+      ? (100 * intersectMs(a.bands ?? [], engaged)) / engagedMs
+      : null;
     const prev = auras.get(a.name);
-    if (!prev || prev.uptimePct < uptimePct) auras.set(a.name, { uptimePct, uses: a.uses });
+    if (!prev || prev.uptimePct < uptimePct) {
+      auras.set(a.name, { uptimePct, activeUptimePct, uses: a.uses });
+    }
   }
 
   const damageShare = new Map();
@@ -35,8 +47,6 @@ export function computeRunMetrics(detail) {
     topAbility: d.topAbility,
   }));
 
-  const downtime = computeDowntime(detail.castEvents ?? [], fight);
-
   const totalCasts = detail.casts?.totalCasts ?? 0;
   const deathCoil = abilities.get('Death Coil')?.casts ?? 0;
   const epidemic = abilities.get('Epidemic')?.casts ?? 0;
@@ -44,6 +54,7 @@ export function computeRunMetrics(detail) {
   return {
     fightDurMs,
     activeMs,
+    engagedMs,
     totalCasts,
     totalCPM: totalCasts / minutes,
     abilities,
@@ -59,6 +70,38 @@ export function computeRunMetrics(detail) {
   };
 }
 
+/** Fight span minus idle windows -> sorted non-overlapping absolute windows. */
+function engagedWindows(fight, idleWindows) {
+  const start = fight.startTime ?? null;
+  const end = fight.endTime ?? null;
+  if (start == null || end == null) return [];
+  const idles = (idleWindows ?? [])
+    .map((w) => ({ start: w.startAbsMs, end: w.startAbsMs + w.durMs }))
+    .sort((a, b) => a.start - b.start);
+  const out = [];
+  let cursor = start;
+  for (const idle of idles) {
+    if (idle.start > cursor) out.push({ start: cursor, end: Math.min(idle.start, end) });
+    cursor = Math.max(cursor, idle.end);
+    if (cursor >= end) break;
+  }
+  if (cursor < end) out.push({ start: cursor, end });
+  return out;
+}
+
+/** Total overlap between aura bands and engaged windows (both absolute ms). */
+function intersectMs(bands, engaged) {
+  let total = 0;
+  for (const band of bands) {
+    for (const w of engaged) {
+      const lo = Math.max(band.startTime, w.start);
+      const hi = Math.min(band.endTime, w.end);
+      if (hi > lo) total += hi - lo;
+    }
+  }
+  return total;
+}
+
 /** Gaps > 5s with zero casts, fight-relative. Includes lead-in and tail. */
 function computeDowntime(castEvents, fight) {
   const start = fight.startTime ?? null;
@@ -71,15 +114,18 @@ function computeDowntime(castEvents, fight) {
   let prev = start;
   for (const t of [...stamps, end]) {
     const gap = t - prev;
-    if (gap > DOWNTIME_GAP_MS) windows.push({ startRelMs: prev - start, durMs: gap });
+    if (gap > DOWNTIME_GAP_MS) {
+      windows.push({ startRelMs: prev - start, startAbsMs: prev, durMs: gap });
+    }
     prev = Math.max(prev, t);
   }
   const totalMs = windows.reduce((acc, w) => acc + w.durMs, 0);
-  windows.sort((a, b) => b.durMs - a.durMs);
+  const byDuration = [...windows].sort((a, b) => b.durMs - a.durMs);
   return {
     totalMs,
     count: windows.length,
-    windows: windows.slice(0, 8),
+    windows: byDuration.slice(0, 8),
+    allWindows: windows,
     idlePct: (100 * totalMs) / (end - start),
   };
 }

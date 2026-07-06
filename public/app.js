@@ -142,7 +142,8 @@ function renderReport(encounterID, offset, r) {
           <span class="sev">${g.severity}</span>
           <b>${esc(g.title)}</b>
           <span class="vals">mine <b>${esc(String(g.mine))}</b>${g.unit ? ' ' + esc(g.unit) : ''}
-            · cohort <b>${esc(String(g.cohort))}</b>${g.unit ? ' ' + esc(g.unit) : ''}</span>
+            · cohort <b>${esc(String(g.cohort))}</b>${g.unit ? ' ' + esc(g.unit) : ''}
+            ${g.rawMine != null ? `· raw ${esc(String(g.rawMine))}% vs ${esc(String(g.rawCohort))}%` : ''}</span>
         </div>
         <div class="gap-advice">${esc(g.advice)}</div>
       </li>`
@@ -161,7 +162,17 @@ function renderReport(encounterID, offset, r) {
     .slice(0, 30)
     .map(
       (u) => `<tr><td>${esc(u.name)}</td><td class="num">${u.minePct}%</td>
-        <td class="num">${u.cohortPct}%</td><td class="num">${u.diffPp}</td></tr>`
+        <td class="num">${u.mineActivePct}%</td>
+        <td class="num">${u.cohortPct}%</td>
+        <td class="num">${u.cohortActivePct}%</td>
+        <td class="num">${u.diffPp}</td></tr>`
+    )
+    .join('');
+
+  const downtimeNoteRows = (r.downtimeNotes ?? [])
+    .map(
+      (n) => `<tr><td>${esc(n.name)}</td><td class="num">${n.mineRaw}% → ${n.mineActive}%</td>
+        <td class="num">${n.cohortRaw}% → ${n.cohortActive}%</td></tr>`
     )
     .join('');
 
@@ -190,10 +201,14 @@ function renderReport(encounterID, offset, r) {
         <table><thead><tr><th>Ability</th><th>My casts</th><th>My CPM</th><th>Cohort CPM</th><th>Their dmg share</th></tr></thead>
         <tbody>${cpmRows}</tbody></table>
       </details>
-      <details><summary>Buff/debuff uptimes</summary>
-        <table><thead><tr><th>Aura</th><th>Mine</th><th>Cohort</th><th>Diff (pp)</th></tr></thead>
+      <details><summary>Buff/debuff uptimes (raw + active-time)</summary>
+        <table><thead><tr><th>Aura</th><th>Mine raw</th><th>Mine active</th><th>Cohort raw</th><th>Cohort active</th><th>Diff (pp)</th></tr></thead>
         <tbody>${uptimeRows}</tbody></table>
       </details>
+      ${downtimeNoteRows ? `<details><summary>Uptime losses caused by downtime/deaths (already counted above)</summary>
+        <table><thead><tr><th>Aura</th><th>Mine raw → active</th><th>Cohort raw → active</th></tr></thead>
+        <tbody>${downtimeNoteRows}</tbody></table>
+      </details>` : ''}
       <details><summary>My downtime windows (idle ${r.tables.downtime.idlePct ?? '—'}% vs cohort ${r.tables.downtime.cohortIdlePct ?? '—'}%)</summary>
         <table><thead><tr><th>At</th><th>Idle</th></tr></thead><tbody>${downtimeRows}</tbody></table>
       </details>

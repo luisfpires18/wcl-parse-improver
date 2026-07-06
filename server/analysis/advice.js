@@ -33,7 +33,11 @@ export function adviceFor(gapItem, bundle) {
         `; press it closer to on-cooldown / weave it more often.`
       );
     case 'uptime':
-      return `Their median uptime is ${gapItem.cohort} vs your ${gapItem.mine} — keep this effect rolling; the difference is free damage.`;
+      return (
+        `Measured only while actively playing (idle/death windows excluded), their median uptime is ` +
+        `${gapItem.cohort} vs your ${gapItem.mine} — a genuine buff-management gap, not a downtime artifact; ` +
+        `keep this effect rolling.`
+      );
     case 'spender':
       return (
         `Your RP-spender mix differs notably from the cohort (${gapItem.mine} Epidemic share vs their ${gapItem.cohort}) — ` +
