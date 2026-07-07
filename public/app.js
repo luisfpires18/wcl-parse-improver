@@ -127,17 +127,25 @@ function renderOverview({ character, overall, dungeons }) {
       </table>
     </div>`;
 
+  // Default comparison level for a dungeon = the highest key level the
+  // character has actually logged there (that's the run that gates invites),
+  // not a fixed global. Falls back to DEFAULT_LEVEL if unknown.
+  const defaultLevelFor = (encounterID) => {
+    const d = dungeons.find((x) => x.encounterID === encounterID);
+    return typeof d?.keyLevel === 'number' ? d.keyLevel : DEFAULT_LEVEL;
+  };
+
   $('#overview tbody').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-analyze]');
     const tr = e.target.closest('tr[data-encounter]');
     const id = btn?.dataset.analyze ?? tr?.dataset.encounter;
-    if (id) loadReport(Number(id), DEFAULT_LEVEL);
+    if (id) loadReport(Number(id), defaultLevelFor(Number(id)));
   });
   $('#worst').addEventListener('click', () => {
     const ranked = [...dungeons]
       .filter((d) => typeof d.bestPercent === 'number')
       .sort((a, b) => a.bestPercent - b.bestPercent);
-    if (ranked.length) loadReport(ranked[0].encounterID, DEFAULT_LEVEL);
+    if (ranked.length) loadReport(ranked[0].encounterID, defaultLevelFor(ranked[0].encounterID));
   });
   $('#refresh-overview').addEventListener('click', () => loadOverview(true));
 }
@@ -348,10 +356,12 @@ function renderNextSteps(headline, nextSteps) {
 
 function renderReport(encounterID, level, compareTo, r) {
   const h = r.headline;
-  const levelBtns = LEVEL_CHOICES.map(
-    (lvl) =>
-      `<button class="mini ${lvl === level ? 'accent' : ''}" data-level="${lvl}">+${lvl}${lvl === DEFAULT_LEVEL ? ' (default)' : ''}</button>`
-  ).join(' ');
+  // always include the loaded level in the choices, even if outside the
+  // default 18-25 range (e.g. a very high push); the active one is accented
+  const levels = [...new Set([...LEVEL_CHOICES, level])].sort((a, b) => a - b);
+  const levelBtns = levels
+    .map((lvl) => `<button class="mini ${lvl === level ? 'accent' : ''}" data-level="${lvl}">+${lvl}</button>`)
+    .join(' ');
 
   const players = lastCohortPlayers ?? h.cohortPlayers;
   const playerOptions = players
