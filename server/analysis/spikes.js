@@ -150,12 +150,12 @@ function castCountsByName(detail) {
 }
 
 /**
- * Ordered cast sequence from the pull start — the literal spell-cast order,
- * so you can read a top player's rotation flow. Each entry tags kind
- * (damage / amp / util) so the UI can colour amplifiers. Capped at `limit`
- * casts (the opener + first pulls is where the sequence is learnable).
+ * Ordered cast sequence for the whole run — the literal spell-cast order,
+ * so the UI can show the rotation flow for any window the user brushes on
+ * the DPS chart. Each entry tags kind (damage / amp / util) for colouring.
+ * Capped at `limit` only as a payload safety bound (a run is ~1300 casts).
  */
-export function castOrder(detail, limit = 60) {
+export function castOrder(detail, limit = 4000) {
   const nameOf = new Map((detail.casts?.abilities ?? []).map((a) => [a.guid, a.name]));
   const dmg = damageNamesOf(detail);
   const start = detail.fight?.startTime ?? 0;

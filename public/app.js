@@ -287,6 +287,11 @@ const CHART_H = 260;
 
 const fmtSec = (s) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
 
+// interactivity state: the full cast-order lists + chart geometry, so brushing
+// the chart can filter the cast order / composition to any time window.
+let dpsState = null;
+let dpsChartGeom = null;
+
 function dpsChartSvg(mine, other) {
   const plotW = CHART_W - CHART_L - CHART_R;
   const plotH = CHART_H - CHART_T - CHART_B;
@@ -296,6 +301,7 @@ function dpsChartSvg(mine, other) {
     mine.durationMs / 1000,
     other.durationMs / 1000
   );
+  dpsChartGeom = { maxSec, x0: CHART_L, plotW, plotTop: CHART_T, plotH };
   const maxDps = Math.max(1, ...mine.points.map((p) => p.dps), ...other.points.map((p) => p.dps));
   const x = (sec) => CHART_L + (maxSec > 0 ? (sec / maxSec) * plotW : 0);
   const y = (dps) => CHART_T + plotH - (dps / maxDps) * plotH;
@@ -325,7 +331,62 @@ function dpsChartSvg(mine, other) {
   parts.push(legend(CHART_L, DPS_MINE_COLOR, `You (${fmtK(mine.totalDamage / (mine.durationMs / 1000))} avg)`));
   parts.push(legend(CHART_L + 180, DPS_OTHER_COLOR, `${other.label} (${fmtK(other.totalDamage / (other.durationMs / 1000))} avg)`));
 
+  // brush selection band (updated during drag) + transparent overlay on top
+  // to capture pointer events for selecting a time window
+  parts.push(`<rect id="dps-brush" x="0" y="${CHART_T}" width="0" height="${plotH}" fill="var(--accent)" opacity="0.16" pointer-events="none"></rect>`);
+  parts.push(`<rect id="dps-overlay" x="${CHART_L}" y="${CHART_T}" width="${plotW}" height="${plotH}" fill="transparent" style="cursor:crosshair"></rect>`);
+
   return `<svg class="dps-chart-svg" viewBox="0 0 ${CHART_W} ${CHART_H}" preserveAspectRatio="xMinYMin meet">${parts.join('')}</svg>`;
+}
+
+// --- brush: drag on the chart to pick a time window ---
+function wireDpsBrush() {
+  const svg = document.querySelector('.dps-chart-svg');
+  const overlay = document.querySelector('#dps-overlay');
+  const sel = document.querySelector('#dps-brush');
+  if (!svg || !overlay || !sel || !dpsChartGeom) return;
+  const g = dpsChartGeom;
+  const toViewX = (clientX) => {
+    const r = svg.getBoundingClientRect();
+    return ((clientX - r.left) / r.width) * CHART_W;
+  };
+  const toSec = (vx) => Math.max(0, Math.min(g.maxSec, ((vx - g.x0) / g.plotW) * g.maxSec));
+  const secToX = (sec) => g.x0 + (sec / g.maxSec) * g.plotW;
+  let x0 = null;
+  const onMove = (e) => {
+    if (x0 == null) return;
+    const x1 = toViewX(e.clientX);
+    sel.setAttribute('x', Math.min(x0, x1));
+    sel.setAttribute('width', Math.abs(x1 - x0));
+  };
+  const onUp = (e) => {
+    if (x0 == null) return;
+    const x1 = toViewX(e.clientX);
+    let a = toSec(Math.min(x0, x1));
+    let b = toSec(Math.max(x0, x1));
+    if (b - a < 4) {
+      // treat a click as a ±20s window centred on it
+      const c = toSec(x1);
+      a = Math.max(0, c - 20);
+      b = Math.min(g.maxSec, c + 20);
+      sel.setAttribute('x', secToX(a));
+      sel.setAttribute('width', secToX(b) - secToX(a));
+    }
+    x0 = null;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    setCastWindow(a, b);
+  };
+  overlay.addEventListener('mousedown', (e) => {
+    x0 = toViewX(e.clientX);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    e.preventDefault();
+  });
+}
+function clearBrush() {
+  const sel = document.querySelector('#dps-brush');
+  if (sel) sel.setAttribute('width', 0);
 }
 
 function renderSpikeAnalysis(sa) {
@@ -349,57 +410,102 @@ function renderSpikeAnalysis(sa) {
     <div class="spike-analysis">
       <h4>Why their spikes are higher <small>— same rotation, where the damage goes</small></h4>
       <p class="spike-headline">${esc(sa.headline)}</p>
-      ${renderRotationTable(sa.rotation)}
       ${sa.openerNote ? `<p class="spike-opener"><b>Opener:</b> ${esc(sa.openerNote)}</p>` : ''}
+      <div id="rotation-dyn"></div>
       <ol class="spikes">${rows}</ol>
     </div>`;
+}
+
+/** Filter the full cast-order lists to a time window and render columns + composition. */
+function setCastWindow(loSec, hiSec) {
+  const el = document.querySelector('#rotation-dyn');
+  if (!el || !dpsState) return;
+  const inWin = (c) => c.tSec >= loSec && c.tSec <= hiSec;
+  const them = dpsState.order.them.filter(inWin);
+  const mine = dpsState.order.mine.filter(inWin);
+  const whole = loSec <= 0 && hiSec >= dpsState.durationSec - 1;
+  const label = whole ? 'whole run' : `${fmtSec(loSec)}–${fmtSec(hiSec)}`;
+  el.innerHTML = `
+    <div class="ord-bar">Rotation for <b>${label}</b> — drag on the chart above to inspect any pull${
+      whole ? '' : ` · <a href="#" id="ord-reset">reset to whole run</a>`
+    }</div>
+    ${renderCastOrderCols(them, mine)}
+    ${renderWindowComposition(them, mine)}`;
+  const reset = document.querySelector('#ord-reset');
+  if (reset)
+    reset.addEventListener('click', (e) => {
+      e.preventDefault();
+      clearBrush();
+      setCastWindow(0, dpsState.durationSec);
+    });
 }
 
 function castKindClass(kind) {
   return kind === 'damage' ? 'p-blue' : kind === 'amp' ? 'p-orange' : 'p-gray';
 }
 
-function renderCastOrder(order) {
-  if (!order || (!order.mine?.length && !order.them?.length)) return '';
+const ORD_DISPLAY_CAP = 150;
+
+function renderCastOrderCols(them, mine) {
   const col = (list, title) => {
-    const items = (list ?? [])
+    const shown = list.slice(0, ORD_DISPLAY_CAP);
+    const items = shown
       .map((c) => `<li><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="${castKindClass(c.kind)}">${esc(c.name)}</span></li>`)
       .join('');
-    return `<div class="ord-col"><div class="ord-head">${esc(title)}</div><ol class="ord-list">${items}</ol></div>`;
+    const more = list.length > ORD_DISPLAY_CAP ? `<li class="ord-more">…and ${list.length - ORD_DISPLAY_CAP} more — select a smaller window on the chart</li>` : '';
+    return `<div class="ord-col"><div class="ord-head">${esc(title)} <small>(${list.length})</small></div><ol class="ord-list">${items}${more}</ol></div>`;
   };
   return `
-    <details open><summary>Cast order from the pull start (their rotation flow vs yours)</summary>
-      <div class="ord-wrap">
-        ${col(order.them, 'Them — cast order')}
-        ${col(order.mine, 'You — cast order')}
-      </div>
-      <p class="table-note"><small>Literal spell-cast sequence from 0:00 (first ~60 casts — the opener and first pulls, where the rotation flow is learnable).
-        <span class="p-blue">Blue</span> = damage, <span class="p-orange">orange</span> = amplifier (Army/Dark Transformation/pot), grey = utility. Read their column top-down to see their opener + priority.</small></p>
-    </details>`;
+    <div class="ord-wrap">
+      ${col(them, `${esc(dpsState?.otherLabel ?? 'Them')} — cast order`)}
+      ${col(mine, 'You — cast order')}
+    </div>
+    <p class="table-note"><small>Literal spell-cast sequence for the selected window.
+      <span class="p-blue">Blue</span> = damage, <span class="p-orange">orange</span> = amplifier (Army/Dark Transformation/pot), grey = utility. Read their column top-down to see their flow.</small></p>`;
 }
 
-function renderRotationTable(rot) {
-  if (!rot || !rot.rows?.length) return '';
-  const rows = rot.rows
-    .filter((r) => r.mine + r.them >= 3) // hide one-off noise
+/** Cosine similarity + per-ability count table for casts in the selected window. */
+function renderWindowComposition(them, mine) {
+  if (them.length + mine.length < 6) return '';
+  const count = (list) => {
+    const m = new Map();
+    for (const c of list) m.set(c.name, (m.get(c.name) ?? 0) + 1);
+    return m;
+  };
+  const kindOf = new Map([...them, ...mine].map((c) => [c.name, c.kind]));
+  const mc = count(mine);
+  const tc = count(them);
+  const names = [...new Set([...mc.keys(), ...tc.keys()])];
+  const mTot = mine.length || 1;
+  const tTot = them.length || 1;
+  let dot = 0;
+  let nm = 0;
+  let nt = 0;
+  for (const n of names) {
+    const a = mc.get(n) ?? 0;
+    const b = tc.get(n) ?? 0;
+    dot += a * b;
+    nm += a * a;
+    nt += b * b;
+  }
+  const sim = nm && nt ? Math.round((dot / (Math.sqrt(nm) * Math.sqrt(nt))) * 100) : 0;
+  const rows = names
+    .map((n) => {
+      const mine2 = mc.get(n) ?? 0;
+      const them2 = tc.get(n) ?? 0;
+      const diffPp = Math.round(1000 * (mine2 / mTot - them2 / tTot)) / 10;
+      return { n, mine: mine2, them: them2, diffPp, kind: kindOf.get(n) };
+    })
+    .sort((a, b) => b.them - a.them)
     .map((r) => {
-      const big = Math.abs(r.diffPp) >= 2;
       const tag = r.kind === 'amp' ? ' <small class="util">amp</small>' : r.kind === 'util' ? ' <small class="util">util</small>' : '';
-      return `<tr class="${big ? 'rot-big' : ''}">
-        <td>${esc(r.name)}${tag}</td>
-        <td class="num">${r.mine} <small>(${r.minePct}%)</small></td>
-        <td class="num">${r.them} <small>(${r.themPct}%)</small></td>
-        <td class="num">${r.diffPp > 0 ? '+' : ''}${r.diffPp}pp</td>
-      </tr>`;
+      return `<tr class="${Math.abs(r.diffPp) >= 2 ? 'rot-big' : ''}"><td>${esc(r.n)}${tag}</td>
+        <td class="num">${r.mine}</td><td class="num">${r.them}</td><td class="num">${r.diffPp > 0 ? '+' : ''}${r.diffPp}pp</td></tr>`;
     })
     .join('');
   return `
-    ${renderCastOrder(rot.order)}
-    <details><summary>Rotation composition — ${rot.similarityPct}% match (cast counts, proves same/different rotation)</summary>
-      <table class="rot-table"><thead>
-        <tr><th>Ability</th><th>You (share)</th><th>Them (share)</th><th>Diff</th></tr>
-      </thead><tbody>${rows}</tbody></table>
-      <p class="table-note"><small>Cosine similarity of each run's cast-count composition. Rows with a ≥2pp share gap are highlighted — those are the real rotation differences (e.g. they weight Scourge Strike more; you spend globals on utility they skip).</small></p>
+    <details><summary>Rotation composition for this window — ${sim}% match</summary>
+      <table class="rot-table"><thead><tr><th>Ability</th><th>You</th><th>Them</th><th>Diff</th></tr></thead><tbody>${rows}</tbody></table>
     </details>`;
 }
 
@@ -423,10 +529,18 @@ async function loadDpsChart(encounterID, level, compareTo) {
     const cur = $('#dps-chart');
     if (!cur) return; // report was replaced while loading
     cur.classList.remove('dps-chart-loading');
+    const sa = data.spikeAnalysis;
+    dpsState = {
+      order: sa?.rotation?.order ?? { mine: [], them: [] },
+      otherLabel: data.other.label,
+      durationSec: Math.max(data.mine.durationMs, data.other.durationMs) / 1000,
+    };
     cur.innerHTML =
       dpsChartSvg(data.mine, data.other) +
-      `<p class="table-note"><small>5-second bins of effective damage (includes your pets). Both runs start at 0; a shorter run ends earlier on the axis. The curve shows WHEN your output lands (burst windows vs lulls); absolute totals differ slightly from the parse number due to how WCL counts overkill.</small></p>` +
-      renderSpikeAnalysis(data.spikeAnalysis);
+      `<p class="table-note"><small>5-second bins of effective damage (includes your pets). Both runs start at 0; a shorter run ends earlier on the axis. Drag across the chart to inspect any pull's rotation below; the curve shows WHEN your output lands. Absolute totals differ slightly from the parse number due to how WCL counts overkill.</small></p>` +
+      renderSpikeAnalysis(sa);
+    wireDpsBrush();
+    setCastWindow(0, dpsState.durationSec); // default: whole run
   } catch (err) {
     const cur = $('#dps-chart');
     if (cur) cur.innerHTML = `<span class="error">DPS chart failed: ${esc(err.message)}</span>`;

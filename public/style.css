@@ -176,6 +176,10 @@ ol.spikes { list-style: none; padding: 0; margin: 0; }
 .ord-list li { display: flex; gap: 0.5rem; padding: 0.08rem 0.6rem; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
 .ord-list li:hover { background: var(--panel2); }
 .ord-t { color: var(--muted); min-width: 2.8rem; text-align: right; }
+.ord-bar { font-size: 0.85rem; color: var(--muted); margin: 0.4rem 0; }
+.ord-bar b { color: var(--text); }
+.ord-more { color: var(--muted); font-style: italic; padding: 0.2rem 0.6rem; }
+#dps-overlay:active { cursor: ew-resize; }
 .rot-table td small { color: var(--muted); }
 .rot-table tr.rot-big td { background: var(--panel2); }
 .rot-table tr.rot-big td:last-child { color: var(--viz-warning); font-weight: 600; }
