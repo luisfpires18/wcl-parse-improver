@@ -304,6 +304,22 @@ function renderGuideSection(guide) {
     </div>`;
 }
 
+function renderParsePlan(plan) {
+  if (!plan) return '';
+  const chips = (plan.tiers ?? [])
+    .map((t) => {
+      const sign = t.dpsDelta >= 0 ? '+' : '';
+      return `<span class="tier-chip p-${t.tier}">${t.tier} ${t.threshold}%+<br><small>${sign}${t.pctDeltaNeeded}% DPS</small></span>`;
+    })
+    .join('');
+  return `
+    <div class="parse-plan">
+      <h3>Path to your next parse color</h3>
+      ${chips ? `<div class="tier-chips">${chips}</div>` : ''}
+      <p class="parse-plan-text">${esc(plan.text)}</p>
+    </div>`;
+}
+
 function renderNextSteps(headline, nextSteps) {
   if (!nextSteps) return '';
   const items = nextSteps.actions.map((a) => `<li>${esc(a)}</li>`).join('');
@@ -421,6 +437,8 @@ function renderReport(encounterID, level, compareTo, r) {
 
       <h3>Biggest gaps first</h3>
       <ol class="gaps">${gapRows || '<li>No significant rotational gaps found.</li>'}</ol>
+
+      ${renderParsePlan(r.parsePlan)}
 
       ${renderTimelineSection(r.timeline, r.timelineInfo)}
 

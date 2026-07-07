@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-07-06T23:52:00.242Z",
+ "generatedAt": "2026-07-07T09:02:52.991Z",
  "params": {
   "name": "Unreally",
   "serverSlug": "aggra-portugues",
@@ -11,6 +11,7 @@
   "level": 20
  },
  "targetLevel": 20,
+ "compareTo": null,
  "mine": {
   "meta": {
    "keyLevel": 20,
@@ -24103,7 +24104,17 @@
      "foreign": 2
     }
    }
-  }
+  },
+  "historyAtLevel": [
+   {
+    "rankPercent": 22.472672280046318,
+    "dps": 195547.59490001202
+   },
+   {
+    "rankPercent": 8.999969081245942,
+    "dps": 185506.88480997086
+   }
+  ]
  },
  "cohort": [
   {

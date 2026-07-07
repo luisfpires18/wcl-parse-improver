@@ -8,6 +8,7 @@ import { computeRunMetrics, median, IGNORED_ABILITIES } from './metrics.js';
 import { adviceFor } from './advice.js';
 import { buildTimeline, buildTimelineInfo } from './timeline.js';
 import { buildSummary } from './summary.js';
+import { buildParsePlan, describeParsePlan } from './parseTiers.js';
 
 // Ability cast-count diffs below this share of damage are noise — skip.
 const MIN_DAMAGE_SHARE = 0.01;
@@ -190,6 +191,15 @@ export function buildReport(bundle) {
   if (timeline) timeline.otherRoleLabel = bundle.cohort[0].label ?? null;
   const timelineInfo = buildTimelineInfo(timeline);
 
+  const parsePlan = buildParsePlan({
+    myBestPercent: bundle.mine.meta.bestPercent,
+    myDps,
+    history: bundle.mine.historyAtLevel,
+    gaps,
+    honestyExplainedPct: honesty.explainedPct,
+  });
+  parsePlan.text = describeParsePlan(parsePlan);
+
   return {
     headline,
     gaps,
@@ -197,6 +207,7 @@ export function buildReport(bundle) {
     downtimeNotes,
     timeline,
     timelineInfo,
+    parsePlan,
     summary: buildSummary({ headline, gaps, honesty }),
     tables: {
       cpm: abilityRows.map((r) => ({

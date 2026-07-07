@@ -84,6 +84,22 @@ tr.clickable:hover td { background: var(--panel2); }
 .p-orange { color: #ff8000; }
 .p-pink   { color: #e268a8; }
 
+.parse-plan { margin: 0.8rem 0; }
+.tier-chips { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.4rem 0 0.6rem; }
+.tier-chip {
+  border: 1px solid currentColor;
+  background: var(--panel2);
+  border-radius: 6px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  text-align: center;
+  line-height: 1.4;
+}
+.tier-chip small { font-weight: 400; color: var(--text); }
+.parse-plan-text { font-size: 0.88rem; line-height: 1.5; color: var(--text); }
+
 ol.gaps { list-style: none; padding: 0; margin: 0.4rem 0; }
 .gap {
   border: 1px solid var(--border);

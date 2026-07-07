@@ -88,6 +88,14 @@ export async function buildComparison({
     }
   }
 
+  // My own (rankPercent, dps) pairs at exactly this key level — percentile is
+  // bracket-relative, so mixing levels would corrupt any DPS<->percentile
+  // read. Used to project "how much DPS to reach the next parse tier" from
+  // real logged data instead of guessing a population curve WCL never gives us.
+  const historyAtLevel = myRuns.runs
+    .filter((r) => r.keyLevel === targetLevel && typeof r.dps === 'number' && typeof r.rankPercent === 'number')
+    .map((r) => ({ rankPercent: r.rankPercent, dps: r.dps }));
+
   return {
     generatedAt: new Date().toISOString(),
     params: { name, serverSlug, serverRegion, zoneID, encounterID, className, specName, level },
@@ -101,6 +109,7 @@ export async function buildComparison({
         runsAtLevel: summary.runsAtLevel,
       },
       detail: mineDetail,
+      historyAtLevel,
     },
     cohort: finalCohort,
   };
