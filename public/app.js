@@ -328,6 +328,25 @@ function dpsChartSvg(mine, other) {
   return `<svg class="dps-chart-svg" viewBox="0 0 ${CHART_W} ${CHART_H}" preserveAspectRatio="xMinYMin meet">${parts.join('')}</svg>`;
 }
 
+function renderSpikeAnalysis(sa) {
+  if (!sa || !sa.spikes?.length) return '';
+  const rows = sa.spikes
+    .map(
+      (s) => `<li class="spike-row">
+        <div class="spike-head"><b>${esc(s.atLabel)}</b> — them <b class="p-purple">${fmtK(s.theirDps)}</b> vs you <b class="p-blue">${fmtK(s.myDps)}</b>
+          <span class="vals">(+${fmtK(s.gapDps)} their favor)</span></div>
+        <div class="spike-note">${esc(s.note)}</div>
+      </li>`
+    )
+    .join('');
+  return `
+    <div class="spike-analysis">
+      <h4>Why their spikes are higher</h4>
+      <p class="spike-headline">${esc(sa.headline)}</p>
+      <ol class="spikes">${rows}</ol>
+    </div>`;
+}
+
 function renderDpsChartSection(targetName) {
   return `
     <h3>DPS over time <small>${targetName ? `— you vs ${esc(targetName)}` : ''}</small></h3>
@@ -350,7 +369,8 @@ async function loadDpsChart(encounterID, level, compareTo) {
     cur.classList.remove('dps-chart-loading');
     cur.innerHTML =
       dpsChartSvg(data.mine, data.other) +
-      `<p class="table-note"><small>5-second bins of effective damage (includes your pets). Both runs start at 0; a shorter run ends earlier on the axis. The curve shows WHEN your output lands (burst windows vs lulls); absolute totals differ slightly from the parse number due to how WCL counts overkill.</small></p>`;
+      `<p class="table-note"><small>5-second bins of effective damage (includes your pets). Both runs start at 0; a shorter run ends earlier on the axis. The curve shows WHEN your output lands (burst windows vs lulls); absolute totals differ slightly from the parse number due to how WCL counts overkill.</small></p>` +
+      renderSpikeAnalysis(data.spikeAnalysis);
   } catch (err) {
     const cur = $('#dps-chart');
     if (cur) cur.innerHTML = `<span class="error">DPS chart failed: ${esc(err.message)}</span>`;

@@ -4,6 +4,7 @@ import { loadEnv, PROJECT_ROOT } from './env.js';
 import { fetchOverview, fetchDamageSeries } from './wcl/api.js';
 import { buildComparison, DEFAULT_LEVEL } from './wcl/comparison.js';
 import { buildReport, pickSimilarIndex } from './analysis/compare.js';
+import { analyzeSpikes } from './analysis/spikes.js';
 import { getGuideReference } from './guide/unholyDkGuide.js';
 
 loadEnv();
@@ -90,7 +91,13 @@ app.get('/api/dps-series', async (req, res) => {
       fightID: target.detail.fightID,
       playerName: target.meta.name,
     });
-    res.json({ mine, other, otherLabel: target.label ?? null });
+    const spikeAnalysis = analyzeSpikes({
+      mineDetail: bundle.mine.detail,
+      otherDetail: target.detail,
+      mineSeries: mine,
+      otherSeries: other,
+    });
+    res.json({ mine, other, otherLabel: target.label ?? null, spikeAnalysis });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
