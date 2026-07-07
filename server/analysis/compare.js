@@ -177,6 +177,14 @@ export function buildReport(bundle) {
       const levelNote = lvl && lvl !== bundle.targetLevel ? `, +${lvl} not +${bundle.targetLevel}` : '';
       return c.label ? `${c.meta.name} (${c.label}${levelNote})` : c.meta.name;
     }),
+    // structured list for a UI dropdown — pick one to get a full 1:1 report
+    // against just that player instead of the aggregate median
+    cohortPlayers: bundle.cohort.map((c) => ({
+      name: c.meta.name,
+      label: c.label ?? null,
+      keyLevel: c.detail.fight.keystoneLevel,
+    })),
+    compareTo: bundle.compareTo ?? null,
   };
   const timeline = bundle.cohort[0] ? buildTimeline(bundle.mine.detail, bundle.cohort[0].detail) : null;
   if (timeline) timeline.otherRoleLabel = bundle.cohort[0].label ?? null;

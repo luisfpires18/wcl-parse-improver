@@ -130,7 +130,12 @@ function renderOverview({ character, overall, dungeons }) {
   });
 }
 
-async function loadReport(encounterID, level) {
+// Cohort dropdown options persist across a compareTo refetch — a
+// compareTo response only contains the one filtered player, so the
+// dropdown would otherwise lose every other option after the first pick.
+let lastCohortPlayers = null;
+
+async function loadReport(encounterID, level, compareTo = '') {
   const dungeon = currentOverview?.dungeons.find((d) => d.encounterID === encounterID);
   setStatus(
     `Building report for <b>${esc(dungeon?.name ?? encounterID)}</b> at +${level}… ` +
@@ -141,10 +146,12 @@ async function loadReport(encounterID, level) {
     const params = charQuery();
     params.set('encounter', encounterID);
     params.set('level', level);
+    if (compareTo) params.set('compareTo', compareTo);
     const res = await fetch(`/api/report?${params}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-    renderReport(encounterID, level, data);
+    if (!compareTo) lastCohortPlayers = data.headline.cohortPlayers;
+    renderReport(encounterID, level, compareTo, data);
     setStatus('');
     $('#report').scrollIntoView({ behavior: 'smooth' });
   } catch (err) {
@@ -307,12 +314,25 @@ function renderNextSteps(headline, nextSteps) {
     </div>`;
 }
 
-function renderReport(encounterID, level, r) {
+function renderReport(encounterID, level, compareTo, r) {
   const h = r.headline;
   const levelBtns = LEVEL_CHOICES.map(
     (lvl) =>
       `<button class="mini ${lvl === level ? 'accent' : ''}" data-level="${lvl}">+${lvl}${lvl === DEFAULT_LEVEL ? ' (default)' : ''}</button>`
   ).join(' ');
+
+  const players = lastCohortPlayers ?? h.cohortPlayers;
+  const playerOptions = players
+    .map((p) => {
+      const display = p.label ? `${p.name} (${p.label}, +${p.keyLevel})` : `${p.name} (+${p.keyLevel})`;
+      return `<option value="${esc(p.name)}" ${p.name === compareTo ? 'selected' : ''}>${esc(display)}</option>`;
+    })
+    .join('');
+  const compareSelect = `
+    <select id="compare-to" class="mini">
+      <option value="">All ${players.length} (median)</option>
+      ${playerOptions}
+    </select>`;
 
   const gapRows = r.gaps
     .map(
@@ -391,11 +411,12 @@ function renderReport(encounterID, level, r) {
     <div class="card">
       <h2>${esc(h.dungeon)} +${h.myKeyLevel}${h.myKeyLevel !== h.requestedLevel ? ` <small>(closest to requested +${h.requestedLevel})</small>` : ''} — <span class="${pctClass(h.myBestPercent)}">${h.myBestPercent}%</span> parse</h2>
       <p>
-        <b>${fmtK(h.myDps)}</b> me &nbsp;vs&nbsp; <b>${fmtK(h.cohortMedianDps)}</b> median of ${h.cohortSize} at +${h.cohortLevel}
+        <b>${fmtK(h.myDps)}</b> me &nbsp;vs&nbsp; <b>${fmtK(h.cohortMedianDps)}</b> ${compareTo ? 'them' : `median of ${h.cohortSize}`} at +${h.cohortLevel}
         &nbsp;→&nbsp; gap <b>${h.dpsGapPct}%</b>
         <br /><small>compared against: ${h.cohortNames.map(esc).join(', ')}</small>
       </p>
       <p>compare at level: ${levelBtns}</p>
+      <p>focus comparison on: ${compareSelect}</p>
 
       <h3>Biggest gaps first</h3>
       <ol class="gaps">${gapRows || '<li>No significant rotational gaps found.</li>'}</ol>
@@ -440,8 +461,9 @@ function renderReport(encounterID, level, r) {
     </div>`;
 
   $('#report').querySelectorAll('[data-level]').forEach((b) =>
-    b.addEventListener('click', () => loadReport(encounterID, Number(b.dataset.level)))
+    b.addEventListener('click', () => loadReport(encounterID, Number(b.dataset.level), compareTo))
   );
+  $('#compare-to').addEventListener('change', (e) => loadReport(encounterID, level, e.target.value));
 }
 
 loadOverview();

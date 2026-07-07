@@ -23,6 +23,10 @@ const norm = (s) => String(s ?? '').trim().toLowerCase();
  * @param {number} [p.level] absolute keystone level to compare at (default 20).
  *   Both "mine" and the cohort try to match this exactly, falling back to
  *   whichever level each player actually has logged that's closest to it.
+ * @param {string} [p.compareTo] player name — if given, the cohort is
+ *   narrowed to just that one player after fetching, so every downstream
+ *   stat (gaps, tables, timeline) becomes a focused 1:1 comparison instead
+ *   of a median across the whole cohort.
  */
 export async function buildComparison({
   name,
@@ -33,6 +37,7 @@ export async function buildComparison({
   className = 'DeathKnight',
   specName = 'Unholy',
   level = DEFAULT_LEVEL,
+  compareTo = null,
 }) {
   const myRuns = await fetchMyEncounterRuns({ name, serverSlug, serverRegion, encounterID });
   const summary = summarizeAtLevel(myRuns, level);
@@ -75,10 +80,19 @@ export async function buildComparison({
     throw new Error(`No usable comparison runs fetched for encounter ${encounterID} at +${targetLevel}`);
   }
 
+  let finalCohort = results;
+  if (compareTo) {
+    finalCohort = results.filter((r) => norm(r.meta.name) === norm(compareTo));
+    if (!finalCohort.length) {
+      throw new Error(`${compareTo} is not in the comparison cohort for this dungeon/level`);
+    }
+  }
+
   return {
     generatedAt: new Date().toISOString(),
     params: { name, serverSlug, serverRegion, zoneID, encounterID, className, specName, level },
     targetLevel,
+    compareTo,
     mine: {
       meta: {
         ...summary.bestRun,
@@ -88,7 +102,7 @@ export async function buildComparison({
       },
       detail: mineDetail,
     },
-    cohort: results,
+    cohort: finalCohort,
   };
 }
 

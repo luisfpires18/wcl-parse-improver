@@ -37,11 +37,13 @@ app.get('/api/report', async (req, res) => {
     const encounterID = Number(req.query.encounter);
     if (!encounterID) return res.status(400).json({ error: 'encounter query param required' });
     const level = Math.max(2, Math.min(30, Number(req.query.level || DEFAULT_LEVEL)));
+    const compareTo = req.query.compareTo ? String(req.query.compareTo) : null;
 
     const bundle = await buildComparison({
       ...charParams(req.query),
       encounterID,
       level,
+      compareTo,
     });
     res.json(buildReport(bundle));
   } catch (err) {

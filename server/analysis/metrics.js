@@ -11,6 +11,7 @@ export const IGNORED_ABILITIES = new Set([
   'Raise Ally',
   "Charge!", // gauntlet extra action button appears for everyone
   'Raise Dead', // pet-alive uptime is noisy — dismissed for mechanics/skips, not a rotation habit worth flagging
+  'Void-Touched', // a consumable (rune) proc, not a rotation/gameplay decision
 ]);
 
 export function computeRunMetrics(detail) {
