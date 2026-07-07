@@ -659,6 +659,25 @@ function renderGuideSection(guide) {
     </div>`;
 }
 
+function renderConsumables(c) {
+  if (!c) return '';
+  const flaskCell = (f, stat) =>
+    f ? `${esc(f.name)}${stat ? ` <b class="p-orange">${esc(stat)}</b>` : ''} <small>(${f.pct}%)</small>` : '<span class="p-gray">none</span>';
+  const foodCell = (f) => (f ? `${esc(f.name)} <small>(${f.pct}%)</small>` : '<span class="p-gray">none</span>');
+  return `
+    <div class="consumables">
+      <h3>Consumables <small>— you vs ${esc(c.otherLabel)}</small></h3>
+      <table class="rot-table">
+        <thead><tr><th></th><th>You</th><th>${esc(c.otherLabel)}</th></tr></thead>
+        <tbody>
+          <tr><td>Flask</td><td>${flaskCell(c.flask.mine, c.flask.myStat)}</td><td>${flaskCell(c.flask.them, c.flask.theirStat)}</td></tr>
+          <tr><td>Food</td><td>${foodCell(c.food.mine)}</td><td>${foodCell(c.food.them)}</td></tr>
+        </tbody>
+      </table>
+      ${c.flaskNote ? `<p class="spike-note">${esc(c.flaskNote)}</p>` : ''}
+    </div>`;
+}
+
 function renderParsePlan(plan) {
   if (!plan) return '';
   const chips = (plan.tiers ?? [])
@@ -802,6 +821,8 @@ function renderReport(encounterID, level, compareTo, r) {
       <ol class="gaps">${gapRows || '<li>No significant rotational gaps found.</li>'}</ol>
 
       ${renderParsePlan(r.parsePlan)}
+
+      ${renderConsumables(r.consumables)}
 
       ${renderTimelineSection(r.timeline, r.timelineInfo)}
 

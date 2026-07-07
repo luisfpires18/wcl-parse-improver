@@ -85,6 +85,8 @@ tr.clickable:hover td { background: var(--panel2); }
 .p-orange { color: #ff8000; }
 .p-pink   { color: #e268a8; }
 
+.consumables { margin: 0.8rem 0; }
+.consumables table { max-width: 640px; }
 .parse-plan { margin: 0.8rem 0; }
 .tier-chips { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.4rem 0 0.6rem; }
 .tier-chip {

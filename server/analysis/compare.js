@@ -252,6 +252,7 @@ export function buildReport(bundle) {
   const timelineInfo = buildTimelineInfo(timeline);
 
   const damageDone = target ? buildDamageDoneTable(bundle.mine.detail, target.detail) : null;
+  const consumables = target ? buildConsumables(bundle.mine.detail, target.detail, target.meta.name) : null;
 
   const parsePlan = buildParsePlan({
     myBestPercent: bundle.mine.meta.bestPercent,
@@ -273,6 +274,7 @@ export function buildReport(bundle) {
     timelineInfo,
     parsePlan,
     damageDone,
+    consumables,
     summary: buildSummary({ headline, gaps, honesty }),
     tables: {
       cpm: abilityRows.map((r) => ({
@@ -484,6 +486,57 @@ export function buildDamageDoneTable(mineDetail, otherDetail) {
       theirDamage: other.totalDamage,
       theirDps: Math.round(other.totalDps),
     },
+  };
+}
+
+// Flask → the secondary stat it grants (Midnight S1). Only the ones confirmed
+// are mapped; an unmapped flask shows its name with no stat label.
+const FLASK_STAT = {
+  'Flask of the Shattered Sun': 'Crit',
+  'Flask of the Magisters': 'Mastery',
+  'Flask of Tempered Swiftness': 'Haste',
+  'Flask of Tempered Versatility': 'Versatility',
+  'Flask of Alchemical Chaos': 'Rotating stats',
+};
+
+function findAura(detail, re) {
+  const tt = detail.buffs?.totalTimeMs || 1;
+  const a = (detail.buffs?.auras ?? [])
+    .filter((x) => re.test(x.name))
+    .sort((p, q) => q.uptimeMs - p.uptimeMs)[0];
+  return a ? { name: a.name, pct: Math.round((100 * a.uptimeMs) / tt) } : null;
+}
+
+const consumablesOf = (detail) => ({
+  flask: findAura(detail, /flask|phial/i),
+  food: findAura(detail, /well fed/i),
+});
+
+/**
+ * Flask + food comparison (mine vs one target). Surfaces which flask each
+ * ran — with the stat it grants — so a suboptimal flask choice is visible.
+ */
+export function buildConsumables(mineDetail, otherDetail, otherName) {
+  const mine = consumablesOf(mineDetail);
+  const them = consumablesOf(otherDetail);
+  const statOf = (f) => (f ? FLASK_STAT[f.name] ?? null : null);
+  const myStat = statOf(mine.flask);
+  const theirStat = statOf(them.flask);
+
+  let flaskNote = null;
+  if (mine.flask && them.flask && myStat && theirStat && myStat !== theirStat) {
+    flaskNote =
+      `You run the ${myStat} flask (${mine.flask.name}); they run the ${theirStat} flask (${them.flask.name}). ` +
+      `Unholy's stat priority is Mastery > Crit > Haste > Versatility (per the rotation guide), so match the flask to that.`;
+  } else if (!mine.flask && them.flask) {
+    flaskNote = `You had no flask up; they ran ${them.flask.name}${theirStat ? ` (${theirStat})` : ''}. Free stats you're missing.`;
+  }
+
+  return {
+    otherLabel: otherName,
+    flask: { mine: mine.flask, them: them.flask, myStat, theirStat },
+    food: { mine: mine.food, them: them.food },
+    flaskNote,
   };
 }
 
