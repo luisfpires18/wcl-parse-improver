@@ -98,7 +98,15 @@ export function rotationComposition(mineDetail, otherDetail) {
     nt += b * b;
   }
   const cos = nm && nt ? dot / (Math.sqrt(nm) * Math.sqrt(nt)) : 0;
-  const similarityPct = Math.round(cos * 100);
+  const similarityPct = Math.round(cos * 100); // composition (spell mix) — order-blind
+
+  // ORDER matters: cosine of cast-transition (bigram) vectors. Two runs with
+  // the same spell mix but different sequencing score high above and low here.
+  const mySeq = orderedCastNames(mineDetail);
+  const theirSeq = orderedCastNames(otherDetail);
+  const sequencePct = Math.round(bigramCosine(mySeq, theirSeq) * 100);
+  const myTopTrans = topTransition(mySeq);
+  const theirTopTrans = topTransition(theirSeq);
 
   const rows = names
     .map((name) => {
@@ -131,11 +139,29 @@ export function rotationComposition(mineDetail, otherDetail) {
     const top = iSpendOn.slice(0, 3).map((r) => `${r.name} ${r.mine}${r.them ? `/${r.them}` : ''}`);
     bits.push(`you spend more globals on ${listOf(top)}${iSpendOn.some((r) => r.kind !== 'damage') ? ' (some non-damage)' : ''}`);
   }
-  const summary =
-    `Cast composition is ${similarityPct}% similar — ${similarityPct >= 88 ? 'the same rotation, confirmed from the logs' : 'the rotations differ, see the table'}.` +
-    (bits.length ? ` Biggest differences: ${listOf(bits)}.` : '');
 
-  return { similarityPct, sameRotation: similarityPct >= 88, summary, rows };
+  // two honest numbers: spell mix (composition, order-blind) and cast order
+  // (transitions, order-sensitive). The second is lower when sequencing differs.
+  const orderBit =
+    myTopTrans && theirTopTrans && myTopTrans !== theirTopTrans
+      ? ` Their most common sequence is ${theirTopTrans}; yours is ${myTopTrans}.`
+      : '';
+  const summary =
+    `Same spell mix — ${similarityPct}% composition match — but cast-order (sequence) only ${sequencePct}%: ` +
+    `you use the same abilities in different order.` +
+    orderBit +
+    (bits.length ? ` On counts: ${listOf(bits)}.` : '');
+
+  return {
+    similarityPct,
+    sequencePct,
+    // "same rotation" now needs both: same spells AND similar sequencing
+    sameRotation: similarityPct >= 88 && sequencePct >= 85,
+    summary,
+    rows,
+    myTopTransition: myTopTrans,
+    theirTopTransition: theirTopTrans,
+  };
 }
 
 function castCountsByName(detail) {
@@ -147,6 +173,53 @@ function castCountsByName(detail) {
     c.set(n, (c.get(n) ?? 0) + 1);
   }
   return c;
+}
+
+/** Ordered list of cast ability names (excluding cosmetic), for sequence analysis. */
+function orderedCastNames(detail) {
+  const nameOf = new Map((detail.casts?.abilities ?? []).map((a) => [a.guid, a.name]));
+  const out = [];
+  for (const ev of detail.castEvents ?? []) {
+    const n = nameOf.get(ev.abilityGameID);
+    if (n && !IGNORED_ABILITIES.has(n)) out.push(n);
+  }
+  return out;
+}
+
+/** Cosine similarity of consecutive-cast (bigram) vectors — order-sensitive. */
+export function bigramCosine(seqA, seqB) {
+  const bg = (seq) => {
+    const m = new Map();
+    for (let i = 0; i + 1 < seq.length; i++) {
+      const k = `${seq[i]}>${seq[i + 1]}`;
+      m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    return m;
+  };
+  const a = bg(seqA);
+  const b = bg(seqB);
+  let dot = 0;
+  let na = 0;
+  let nb = 0;
+  for (const k of new Set([...a.keys(), ...b.keys()])) {
+    const x = a.get(k) ?? 0;
+    const y = b.get(k) ?? 0;
+    dot += x * y;
+    na += x * x;
+    nb += y * y;
+  }
+  return na && nb ? dot / (Math.sqrt(na) * Math.sqrt(nb)) : 0;
+}
+
+/** The most common "A → B" transition in a cast sequence, phrased. */
+function topTransition(seq) {
+  const m = new Map();
+  for (let i = 0; i + 1 < seq.length; i++) {
+    const k = `${seq[i]} → ${seq[i + 1]}`;
+    m.set(k, (m.get(k) ?? 0) + 1);
+  }
+  const top = [...m.entries()].sort((x, y) => y[1] - x[1])[0];
+  return top ? top[0] : null;
 }
 
 /**
@@ -279,9 +352,9 @@ export function analyzeSpikes({ mineDetail, otherDetail, mineSeries, otherSeries
   const parts = [];
   if (openerNote) parts.push(`you engage pulls later`);
   if (avgThem - avgMine >= 2) parts.push(`they fit more damage casts into each burst (${Math.round(avgThem)} vs your ${Math.round(avgMine)})`);
-  const headline = rotation.sameRotation
-    ? `${rotation.summary}${parts.length ? ` So with the same rotation, the gap is ${listOf(parts)} — uptime and cast density, not missing cooldowns.` : ''}`
-    : rotation.summary;
+  const headline = `${rotation.summary}${
+    parts.length ? ` On top of the sequencing, ${listOf(parts)} — uptime and cast density.` : ''
+  }`;
 
   return { headline, rotation, openerNote, windows };
 }

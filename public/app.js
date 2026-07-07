@@ -464,7 +464,32 @@ function renderCastOrderCols(them, mine) {
       <span class="p-blue">Blue</span> = damage, <span class="p-orange">orange</span> = amplifier (Army/Dark Transformation/pot), grey = utility. Read their column top-down to see their flow.</small></p>`;
 }
 
-/** Cosine similarity + per-ability count table for casts in the selected window. */
+// order-sensitive cosine of cast-transition (bigram) vectors
+function bigramSim(a, b) {
+  const bg = (list) => {
+    const m = new Map();
+    for (let i = 0; i + 1 < list.length; i++) {
+      const k = `${list[i].name}>${list[i + 1].name}`;
+      m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    return m;
+  };
+  const A = bg(a);
+  const B = bg(b);
+  let dot = 0;
+  let na = 0;
+  let nb = 0;
+  for (const k of new Set([...A.keys(), ...B.keys()])) {
+    const x = A.get(k) ?? 0;
+    const y = B.get(k) ?? 0;
+    dot += x * y;
+    na += x * x;
+    nb += y * y;
+  }
+  return na && nb ? Math.round((dot / (Math.sqrt(na) * Math.sqrt(nb))) * 100) : 0;
+}
+
+/** Spell-mix + cast-order similarity + per-ability count table for a window. */
 function renderWindowComposition(them, mine) {
   if (them.length + mine.length < 6) return '';
   const count = (list) => {
@@ -489,6 +514,7 @@ function renderWindowComposition(them, mine) {
     nt += b * b;
   }
   const sim = nm && nt ? Math.round((dot / (Math.sqrt(nm) * Math.sqrt(nt))) * 100) : 0;
+  const orderSim = bigramSim(mine, them);
   const rows = names
     .map((n) => {
       const mine2 = mc.get(n) ?? 0;
@@ -504,7 +530,8 @@ function renderWindowComposition(them, mine) {
     })
     .join('');
   return `
-    <details><summary>Rotation composition for this window — ${sim}% match</summary>
+    <details><summary>Rotation match for this window — spell mix ${sim}% · cast order ${orderSim}%</summary>
+      <p class="table-note"><small><b>Spell mix</b> = which abilities and how many (ignores order). <b>Cast order</b> = cosine of cast-to-cast transitions (order-sensitive) — lower means you sequence the same spells differently.</small></p>
       <table class="rot-table"><thead><tr><th>Ability</th><th>You</th><th>Them</th><th>Diff</th></tr></thead><tbody>${rows}</tbody></table>
     </details>`;
 }
