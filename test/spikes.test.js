@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzeSpikes } from '../server/analysis/spikes.js';
+import { analyzeSpikes, rotationComposition } from '../server/analysis/spikes.js';
 
 function makeSeries(spikeBins, high, low, nBins = 12, binMs = 5000) {
   const points = [];
@@ -80,4 +80,29 @@ test('analyzeSpikes: flags a late engagement start (opener note)', () => {
 
 test('analyzeSpikes: safe on empty series', () => {
   assert.equal(analyzeSpikes({ mineDetail: makeDetail([]), otherDetail: makeDetail([]), mineSeries: { points: [] }, otherSeries: { points: [] } }), null);
+});
+
+test('rotationComposition: near-identical casts score high similarity (same rotation, confirmed)', () => {
+  const ev = (n) => Array.from({ length: n }, (_, i) => ({ timestamp: 1000 + i * 500, abilityGameID: 1 }));
+  const mine = makeDetail([...ev(10), { timestamp: 9000, abilityGameID: 2 }]); // 10 Scourge + 1 Army
+  const other = makeDetail([...ev(11), { timestamp: 9000, abilityGameID: 2 }]); // 11 Scourge + 1 Army
+  const rc = rotationComposition(mine, other);
+  assert.ok(rc.similarityPct >= 95, `expected high similarity, got ${rc.similarityPct}`);
+  assert.equal(rc.sameRotation, true);
+  assert.ok(rc.summary.includes('same rotation'));
+  const ss = rc.rows.find((r) => r.name === 'Scourge Strike');
+  assert.equal(ss.mine, 10);
+  assert.equal(ss.them, 11);
+  assert.equal(ss.kind, 'damage');
+  const army = rc.rows.find((r) => r.name === 'Army of the Dead');
+  assert.equal(army.kind, 'amp'); // amplifier, not util
+});
+
+test('rotationComposition: divergent casts score low similarity (different rotation)', () => {
+  // mine: all Scourge; theirs: all Mind Freeze (orthogonal vectors)
+  const mine = makeDetail(Array.from({ length: 10 }, () => ({ timestamp: 1000, abilityGameID: 1 })));
+  const other = makeDetail(Array.from({ length: 10 }, () => ({ timestamp: 1000, abilityGameID: 3 })));
+  const rc = rotationComposition(mine, other);
+  assert.ok(rc.similarityPct < 88, `expected low similarity, got ${rc.similarityPct}`);
+  assert.equal(rc.sameRotation, false);
 });

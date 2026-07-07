@@ -349,9 +349,34 @@ function renderSpikeAnalysis(sa) {
     <div class="spike-analysis">
       <h4>Why their spikes are higher <small>— same rotation, where the damage goes</small></h4>
       <p class="spike-headline">${esc(sa.headline)}</p>
+      ${renderRotationTable(sa.rotation)}
       ${sa.openerNote ? `<p class="spike-opener"><b>Opener:</b> ${esc(sa.openerNote)}</p>` : ''}
       <ol class="spikes">${rows}</ol>
     </div>`;
+}
+
+function renderRotationTable(rot) {
+  if (!rot || !rot.rows?.length) return '';
+  const rows = rot.rows
+    .filter((r) => r.mine + r.them >= 3) // hide one-off noise
+    .map((r) => {
+      const big = Math.abs(r.diffPp) >= 2;
+      const tag = r.kind === 'amp' ? ' <small class="util">amp</small>' : r.kind === 'util' ? ' <small class="util">util</small>' : '';
+      return `<tr class="${big ? 'rot-big' : ''}">
+        <td>${esc(r.name)}${tag}</td>
+        <td class="num">${r.mine} <small>(${r.minePct}%)</small></td>
+        <td class="num">${r.them} <small>(${r.themPct}%)</small></td>
+        <td class="num">${r.diffPp > 0 ? '+' : ''}${r.diffPp}pp</td>
+      </tr>`;
+    })
+    .join('');
+  return `
+    <details><summary>Rotation composition — ${rot.similarityPct}% match (proves same/different rotation)</summary>
+      <table class="rot-table"><thead>
+        <tr><th>Ability</th><th>You (share)</th><th>Them (share)</th><th>Diff</th></tr>
+      </thead><tbody>${rows}</tbody></table>
+      <p class="table-note"><small>Cosine similarity of each run's cast-count composition. Rows with a ≥2pp share gap are highlighted — those are the real rotation differences (e.g. they weight Scourge Strike more; you spend globals on utility they skip).</small></p>
+    </details>`;
 }
 
 function renderDpsChartSection(targetName) {

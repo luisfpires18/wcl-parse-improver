@@ -72,6 +72,83 @@ function firstDamageCastSec(casts, dmgNames) {
 const countIn = (times, lo, hi) => (times ?? []).filter((t) => t >= lo && t <= hi).length;
 const isPeak = (pts, i) => pts[i].dps >= (pts[i - 1]?.dps ?? 0) && pts[i].dps >= (pts[i + 1]?.dps ?? 0);
 
+/**
+ * Confirm from cast data whether the two runs use the same rotation, and show
+ * exactly where the composition differs. Cosine similarity of the whole-run
+ * cast-count vectors (>= ~0.9 = same rotation) plus a per-ability table of
+ * count + cast-share for each side. Damage-ability rows are marked so the UI
+ * can separate "they press X more" from "you spend globals on defensives".
+ */
+export function rotationComposition(mineDetail, otherDetail) {
+  const my = castCountsByName(mineDetail);
+  const their = castCountsByName(otherDetail);
+  const dmg = new Set([...damageNamesOf(mineDetail), ...damageNamesOf(otherDetail)]);
+  const names = [...new Set([...my.keys(), ...their.keys()])];
+  const myTotal = [...my.values()].reduce((a, b) => a + b, 0) || 1;
+  const theirTotal = [...their.values()].reduce((a, b) => a + b, 0) || 1;
+
+  let dot = 0;
+  let nm = 0;
+  let nt = 0;
+  for (const n of names) {
+    const a = my.get(n) ?? 0;
+    const b = their.get(n) ?? 0;
+    dot += a * b;
+    nm += a * a;
+    nt += b * b;
+  }
+  const cos = nm && nt ? dot / (Math.sqrt(nm) * Math.sqrt(nt)) : 0;
+  const similarityPct = Math.round(cos * 100);
+
+  const rows = names
+    .map((name) => {
+      const mine = my.get(name) ?? 0;
+      const them = their.get(name) ?? 0;
+      return {
+        name,
+        mine,
+        them,
+        minePct: Math.round((1000 * mine) / myTotal) / 10,
+        themPct: Math.round((1000 * them) / theirTotal) / 10,
+        diffPp: Math.round((1000 * (mine / myTotal - them / theirTotal))) / 10,
+        kind: dmg.has(name) ? 'damage' : AMPLIFIERS.has(name) ? 'amp' : 'util',
+      };
+    })
+    .sort((a, b) => b.them - a.them);
+
+  // headline diffs: the damage ability they press most-more, and the biggest
+  // block of globals I spend that they don't (defensives / over-casts)
+  const theyPressMore = rows
+    .filter((r) => r.kind === 'damage' && r.them - r.mine >= 10)
+    .sort((a, b) => b.them - b.mine - (a.them - a.mine))[0];
+  const iSpendOn = rows
+    .filter((r) => r.mine - r.them >= 8)
+    .sort((a, b) => b.mine - b.them - (a.mine - a.them));
+
+  const bits = [];
+  if (theyPressMore) bits.push(`they cast ${theyPressMore.name} far more (${theyPressMore.them} vs your ${theyPressMore.mine})`);
+  if (iSpendOn.length) {
+    const top = iSpendOn.slice(0, 3).map((r) => `${r.name} ${r.mine}${r.them ? `/${r.them}` : ''}`);
+    bits.push(`you spend more globals on ${listOf(top)}${iSpendOn.some((r) => r.kind !== 'damage') ? ' (some non-damage)' : ''}`);
+  }
+  const summary =
+    `Cast composition is ${similarityPct}% similar — ${similarityPct >= 88 ? 'the same rotation, confirmed from the logs' : 'the rotations differ, see the table'}.` +
+    (bits.length ? ` Biggest differences: ${listOf(bits)}.` : '');
+
+  return { similarityPct, sameRotation: similarityPct >= 88, summary, rows };
+}
+
+function castCountsByName(detail) {
+  const nameOf = new Map((detail.casts?.abilities ?? []).map((a) => [a.guid, a.name]));
+  const c = new Map();
+  for (const ev of detail.castEvents ?? []) {
+    const n = nameOf.get(ev.abilityGameID);
+    if (!n || IGNORED_ABILITIES.has(n)) continue;
+    c.set(n, (c.get(n) ?? 0) + 1);
+  }
+  return c;
+}
+
 export function analyzeSpikes({ mineDetail, otherDetail, mineSeries, otherSeries }) {
   if (!mineSeries?.points?.length || !otherSeries?.points?.length) return null;
 
@@ -167,17 +244,20 @@ export function analyzeSpikes({ mineDetail, otherDetail, mineSeries, otherSeries
     };
   });
 
-  // headline
+  // rotation similarity — proven from cast composition, not assumed
+  const rotation = rotationComposition(mineDetail, otherDetail);
+
+  // headline builds on the confirmed similarity + measured gaps
   const avgMine = perBurstCasts.reduce((a, b) => a + b.mine, 0) / (perBurstCasts.length || 1);
   const avgThem = perBurstCasts.reduce((a, b) => a + b.them, 0) / (perBurstCasts.length || 1);
   const parts = [];
-  if (openerNote) parts.push(`You engage pulls later than they do`);
+  if (openerNote) parts.push(`you engage pulls later`);
   if (avgThem - avgMine >= 2) parts.push(`they fit more damage casts into each burst (${Math.round(avgThem)} vs your ${Math.round(avgMine)})`);
-  const headline = parts.length
-    ? `Same rotation, but ${parts.join(' and ')} — the gap is uptime and cast density inside the burst, not missing cooldowns.`
-    : `Your burst composition tracks theirs closely; the remaining gap is target count / pull size, not your rotation.`;
+  const headline = rotation.sameRotation
+    ? `${rotation.summary}${parts.length ? ` So with the same rotation, the gap is ${listOf(parts)} — uptime and cast density, not missing cooldowns.` : ''}`
+    : rotation.summary;
 
-  return { headline, openerNote, windows };
+  return { headline, rotation, openerNote, windows };
 }
 
 function listOf(arr) {
