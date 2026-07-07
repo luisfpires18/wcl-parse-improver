@@ -46,26 +46,43 @@ function fitLine(points) {
 
 /**
  * @param {object} p
- * @param {number} p.myBestPercent
+ * @param {number} p.myBestPercent percentile at the level being compared here (bracket-locked)
+ * @param {number} [p.overallBestPercent] the site's real "Best %" for this dungeon — highest
+ *   level with any logged run, which may be a harder key than the one being compared. Never
+ *   show a tier as a "target" if this already clears it, even if the level-locked percentile
+ *   above hasn't (different brackets aren't comparable, but the site only shows one number).
+ * @param {number} [p.overallBestLevel] the key level that overallBestPercent came from
  * @param {number} p.myDps
  * @param {{rankPercent:number, dps:number}[]} p.history my own logged runs at this exact key level
  * @param {object[]} p.gaps ranked gaps (compare.js shape: {title, severity, ...})
  * @param {number} p.honestyExplainedPct
  */
-export function buildParsePlan({ myBestPercent, myDps, history, gaps, honestyExplainedPct }) {
+export function buildParsePlan({ myBestPercent, overallBestPercent, overallBestLevel, myDps, history, gaps, honestyExplainedPct }) {
   const points = (history ?? []).filter(
     (h) => typeof h.rankPercent === 'number' && typeof h.dps === 'number'
   );
   const distinctPercents = new Set(points.map((p) => p.rankPercent)).size;
 
-  const currentTier = tierFor(myBestPercent);
-  const nextTiers = TIERS.filter((t) => t.min > (myBestPercent ?? 0)).slice(0, MAX_TIERS_SHOWN);
+  // floor = whichever is higher: this level's own percentile, or the site's
+  // real overall best (possibly from a harder key) — a lower-bracket number
+  // must never claim a tier the player has already reached elsewhere
+  const floor = Math.max(myBestPercent ?? 0, overallBestPercent ?? 0);
+  const outrankedByOverall = (overallBestPercent ?? 0) > (myBestPercent ?? 0);
+
+  const currentTier = tierFor(floor);
+  const nextTiers = TIERS.filter((t) => t.min > floor).slice(0, MAX_TIERS_SHOWN);
+
+  const overallNote = {
+    overallBestPercent: typeof overallBestPercent === 'number' ? Math.round(overallBestPercent * 10) / 10 : null,
+    overallBestLevel: overallBestLevel ?? null,
+    outrankedByOverall,
+  };
 
   if (!nextTiers.length) {
-    return { currentTier: currentTier?.name ?? null, historyCount: points.length, insufficientData: false, atTopTier: true, tiers: [] };
+    return { currentTier: currentTier?.name ?? null, historyCount: points.length, insufficientData: false, atTopTier: true, tiers: [], ...overallNote };
   }
   if (distinctPercents < MIN_POINTS) {
-    return { currentTier: currentTier?.name ?? null, historyCount: points.length, insufficientData: true, atTopTier: false, tiers: [] };
+    return { currentTier: currentTier?.name ?? null, historyCount: points.length, insufficientData: true, atTopTier: false, tiers: [], ...overallNote };
   }
 
   const { a, b } = fitLine(points);
@@ -110,6 +127,7 @@ export function buildParsePlan({ myBestPercent, myDps, history, gaps, honestyExp
     atTopTier: false,
     regression: { minObserved, maxObserved, n: distinctPercents },
     tiers,
+    ...overallNote,
   };
 }
 
@@ -118,12 +136,18 @@ const CAP = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 /** Render buildParsePlan()'s output into one readable paragraph. */
 export function describeParsePlan(plan) {
   if (!plan) return null;
+
+  const overallPrefix = plan.outrankedByOverall
+    ? `Your real Best % for this dungeon is already ${plan.overallBestPercent}% (at +${plan.overallBestLevel}) — ` +
+      `higher than this level's own percentile, so tiers already covered by that aren't shown as targets here. `
+    : '';
+
   if (plan.atTopTier) {
-    return `Already at the top tier (pink) for this comparison level — nothing higher to target here.`;
+    return `${overallPrefix}Already at the top tier (pink) for this comparison — nothing higher to target here.`;
   }
   if (plan.insufficientData) {
     return (
-      `Only ${plan.historyCount} of your own logged run${plan.historyCount === 1 ? '' : 's'} at this exact key level ` +
+      `${overallPrefix}Only ${plan.historyCount} of your own logged run${plan.historyCount === 1 ? '' : 's'} at this exact key level ` +
       `— not enough to fit a DPS-to-percentile line (need at least 2 at different percentiles). Log a few more runs ` +
       `at this level for a real number here; in the meantime use the DPS gap above the "compared against" line as ` +
       `your rough target.`
@@ -148,5 +172,5 @@ export function describeParsePlan(plan) {
       `${conf}. ${coverage}`
     );
   });
-  return lines.join(' ');
+  return overallPrefix + lines.join(' ');
 }

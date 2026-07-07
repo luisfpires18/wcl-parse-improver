@@ -193,6 +193,8 @@ export function buildReport(bundle) {
 
   const parsePlan = buildParsePlan({
     myBestPercent: bundle.mine.meta.bestPercent,
+    overallBestPercent: bundle.mine.meta.overallBestPercent,
+    overallBestLevel: bundle.mine.meta.overallBestLevel,
     myDps,
     history: bundle.mine.historyAtLevel,
     gaps,

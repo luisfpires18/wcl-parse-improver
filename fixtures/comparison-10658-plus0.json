@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-07-07T09:02:52.991Z",
+ "generatedAt": "2026-07-07T09:12:29.937Z",
  "params": {
   "name": "Unreally",
   "serverSlug": "aggra-portugues",
@@ -32,7 +32,9 @@
    },
    "bestPercent": 22.472672280046318,
    "medianPercent": 15.73632068064613,
-   "runsAtLevel": 2
+   "runsAtLevel": 2,
+   "overallBestPercent": 31.059660060207875,
+   "overallBestLevel": 21
   },
   "detail": {
    "code": "pVcDfvmLqj1b6Z9X",

@@ -134,3 +134,47 @@ test('buildReport attaches a real parsePlan for the live-refetched Pit fixture (
   assert.ok(report.parsePlan.text.length > 0);
   assert.ok(!report.parsePlan.text.includes('undefined'));
 });
+
+test('a tier already reached at a harder key level is never re-shown as a target (real Pit data: 31.1% overall at +21 vs 22.5% at +20)', () => {
+  const report = buildReport(pit);
+  assert.equal(report.parsePlan.overallBestPercent, 31.1);
+  assert.equal(report.parsePlan.overallBestLevel, 21);
+  assert.equal(report.parsePlan.outrankedByOverall, true);
+  // green (25%+) is already covered by the overall 31.1% -- must not appear
+  assert.ok(!report.parsePlan.tiers.some((t) => t.tier === 'green'));
+  assert.ok(report.parsePlan.text.startsWith('Your real Best % for this dungeon is already 31.1%'));
+});
+
+test('buildParsePlan: overallBestPercent below the level-locked percent does not affect anything (no false prefix)', () => {
+  const plan = buildParsePlan({
+    myBestPercent: 40,
+    overallBestPercent: 10, // lower -- this level's own run is already the best
+    overallBestLevel: 18,
+    myDps: 150000,
+    history: [
+      { rankPercent: 30, dps: 140000 },
+      { rankPercent: 40, dps: 150000 },
+    ],
+    gaps: [{ title: 'Gap', severity: 20 }],
+    honestyExplainedPct: 90,
+  });
+  assert.equal(plan.outrankedByOverall, false);
+  assert.ok(!describeParsePlan(plan).includes('Your real Best %'));
+});
+
+test('buildParsePlan: overall best already at pink means atTopTier even if this level is only green', () => {
+  const plan = buildParsePlan({
+    myBestPercent: 30,
+    overallBestPercent: 99.2,
+    overallBestLevel: 25,
+    myDps: 150000,
+    history: [
+      { rankPercent: 25, dps: 145000 },
+      { rankPercent: 30, dps: 150000 },
+    ],
+    gaps: [],
+    honestyExplainedPct: 90,
+  });
+  assert.equal(plan.atTopTier, true);
+  assert.match(describeParsePlan(plan), /Your real Best % for this dungeon is already 99\.2%/);
+});

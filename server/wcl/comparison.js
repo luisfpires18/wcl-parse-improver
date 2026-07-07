@@ -2,7 +2,7 @@
 // my run at (or closest to) a requested key level, vs the live top-5 WCL
 // ranking at that level plus two fixed named reference players.
 import { fetchMyEncounterRuns, fetchTopRuns, fetchRunDetail } from './api.js';
-import { summarizeAtLevel, pickLevel } from '../parse/encounterRankings.js';
+import { summarizeAtLevel, summarizeBestLevel, pickLevel } from '../parse/encounterRankings.js';
 import { dumpDebug } from './client.js';
 
 export const DEFAULT_LEVEL = 20;
@@ -45,6 +45,12 @@ export async function buildComparison({
     throw new Error(`No logged run near +${level} found for encounter ${encounterID}`);
   }
   const targetLevel = summary.keyLevel;
+  // the site's real "Best %" for this dungeon — highest level with logged
+  // runs, which may be a harder key than the one being compared here.
+  // Percentile is bracket-relative, so this is NOT necessarily higher than
+  // the level-locked summary above, but it's what actually gates invites and
+  // must never be silently outranked by a lower-bracket number.
+  const overallSummary = summarizeBestLevel(myRuns);
 
   const mineDetail = await fetchRunDetail({
     code: summary.bestRun.report.code,
@@ -107,6 +113,8 @@ export async function buildComparison({
         bestPercent: summary.bestPercent,
         medianPercent: summary.medianPercent,
         runsAtLevel: summary.runsAtLevel,
+        overallBestPercent: overallSummary.bestPercent,
+        overallBestLevel: overallSummary.keyLevel,
       },
       detail: mineDetail,
       historyAtLevel,
