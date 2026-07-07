@@ -162,6 +162,11 @@ ol.spikes { list-style: none; padding: 0; margin: 0; }
 .spike-row { border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: 0.5rem 0.7rem; margin-bottom: 0.4rem; background: var(--panel2); }
 .spike-head { font-size: 0.88rem; }
 .spike-head .vals { color: var(--muted); font-size: 0.82rem; }
+.spike-opener { font-size: 0.88rem; line-height: 1.5; margin: 0 0 0.5rem; }
+.spike-amps { color: var(--muted); margin: 0.2rem 0; }
+.spike-casts { margin: 0.2rem 0; }
+.spike-casts .cd { display: inline-block; margin-right: 0.5rem; color: var(--muted); white-space: nowrap; }
+.spike-casts .cd.behind b { color: var(--viz-warning); }
 .spike-note { font-size: 0.86rem; margin-top: 0.25rem; line-height: 1.45; }
 .dps-chart-loading { color: var(--muted); font-size: 0.85rem; padding: 0.6rem 0; }
 .dmg-table th.grp { text-align: center; color: var(--text); border-bottom: 1px solid var(--border); }

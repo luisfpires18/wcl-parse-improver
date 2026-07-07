@@ -329,20 +329,27 @@ function dpsChartSvg(mine, other) {
 }
 
 function renderSpikeAnalysis(sa) {
-  if (!sa || !sa.spikes?.length) return '';
-  const rows = sa.spikes
-    .map(
-      (s) => `<li class="spike-row">
+  if (!sa || !sa.windows?.length) return '';
+  const rows = sa.windows
+    .map((s) => {
+      const casts = (s.castDiffs ?? [])
+        .map((d) => `<span class="cd ${d.diff > 0 ? 'behind' : ''}">${esc(d.name)} <b>${d.them}</b>/${d.mine}</span>`)
+        .join(' ');
+      const amps = s.theirAmps?.length ? `<div class="spike-amps"><small>amplifiers — them: ${s.theirAmps.map(esc).join(', ')}${s.myAmps?.length ? ` · you: ${s.myAmps.map(esc).join(', ')}` : ' · you: none'}</small></div>` : '';
+      return `<li class="spike-row">
         <div class="spike-head"><b>${esc(s.atLabel)}</b> — them <b class="p-purple">${fmtK(s.theirDps)}</b> vs you <b class="p-blue">${fmtK(s.myDps)}</b>
-          <span class="vals">(+${fmtK(s.gapDps)} their favor)</span></div>
+          <span class="vals">(+${fmtK(s.gapDps)} their favor · ${s.theirCastTotal} vs your ${s.myCastTotal} damage casts)</span></div>
+        ${amps}
+        <div class="spike-casts"><small>damage casts (them/you): ${casts}</small></div>
         <div class="spike-note">${esc(s.note)}</div>
-      </li>`
-    )
+      </li>`;
+    })
     .join('');
   return `
     <div class="spike-analysis">
-      <h4>Why their spikes are higher</h4>
+      <h4>Why their spikes are higher <small>— same rotation, where the damage goes</small></h4>
       <p class="spike-headline">${esc(sa.headline)}</p>
+      ${sa.openerNote ? `<p class="spike-opener"><b>Opener:</b> ${esc(sa.openerNote)}</p>` : ''}
       <ol class="spikes">${rows}</ol>
     </div>`;
 }
