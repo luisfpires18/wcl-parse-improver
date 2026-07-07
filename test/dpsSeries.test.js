@@ -1,7 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { binDamageEvents, parseDamageTable } from '../server/parse/tables.js';
-import { pickSimilarIndex, buildDamageDoneTable } from '../server/analysis/compare.js';
+import { pickSimilarIndex, buildDamageDoneTable, buildReport } from '../server/analysis/compare.js';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const pit = JSON.parse(readFileSync(path.join(ROOT, 'fixtures', 'comparison-10658-plus0.json'), 'utf8'));
 
 test('binDamageEvents buckets amounts into per-bin DPS', () => {
   const fight = { startTime: 1000, endTime: 1000 + 15000 }; // 15s, 3 bins of 5s
@@ -73,6 +79,21 @@ test('pickSimilarIndex prefers same level over closer duration', () => {
 test('pickSimilarIndex is safe on empty/unknown input', () => {
   assert.equal(pickSimilarIndex([], 1000, 21), 0);
   assert.equal(pickSimilarIndex([{ detail: {} }], null, 21), 0);
+});
+
+test('buildReport exposes similarPlayers (parse-search group) from the bundle', () => {
+  const report = buildReport(pit);
+  const sp = report.headline.similarPlayers;
+  assert.ok(Array.isArray(sp) && sp.length > 0, 'expected similar-parse candidates');
+  const cohortNames = new Set(report.headline.cohortPlayers.map((p) => p.name));
+  for (const p of sp) {
+    assert.ok(typeof p.name === 'string' && p.name.length > 0);
+    assert.ok(typeof p.matchPct === 'number' && p.matchPct >= 0 && p.matchPct <= 100);
+    // similar list must not duplicate the base cohort
+    assert.ok(!cohortNames.has(p.name), `${p.name} should not be in both groups`);
+  }
+  // sorted by route match, descending
+  for (let i = 1; i < sp.length; i++) assert.ok(sp[i - 1].matchPct >= sp[i].matchPct);
 });
 
 test('buildDamageDoneTable joins damage + casts, sorted by my damage', () => {

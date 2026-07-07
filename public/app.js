@@ -154,6 +154,7 @@ function renderOverview({ character, overall, dungeons }) {
 // compareTo response only contains the one filtered player, so the
 // dropdown would otherwise lose every other option after the first pick.
 let lastCohortPlayers = null;
+let lastSimilarPlayers = null;
 
 async function loadReport(encounterID, level, compareTo = '', refresh = false) {
   const dungeon = currentOverview?.dungeons.find((d) => d.encounterID === encounterID);
@@ -173,7 +174,10 @@ async function loadReport(encounterID, level, compareTo = '', refresh = false) {
     const res = await fetch(`/api/report?${params}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-    if (!compareTo) lastCohortPlayers = data.headline.cohortPlayers;
+    if (!compareTo) {
+      lastCohortPlayers = data.headline.cohortPlayers;
+      lastSimilarPlayers = data.headline.similarPlayers;
+    }
     renderReport(encounterID, level, compareTo, data);
     setStatus('');
     $('#report').scrollIntoView({ behavior: 'smooth' });
@@ -475,16 +479,20 @@ function renderReport(encounterID, level, compareTo, r) {
     .join(' ');
 
   const players = lastCohortPlayers ?? h.cohortPlayers;
-  const playerOptions = players
-    .map((p) => {
-      const display = p.label ? `${p.name} (${p.label}, +${p.keyLevel})` : `${p.name} (+${p.keyLevel})`;
-      return `<option value="${esc(p.name)}" ${p.name === compareTo ? 'selected' : ''}>${esc(display)}</option>`;
-    })
+  const similar = lastSimilarPlayers ?? h.similarPlayers ?? [];
+  const opt = (name, display) =>
+    `<option value="${esc(name)}" ${name === compareTo ? 'selected' : ''}>${esc(display)}</option>`;
+  const topOptions = players
+    .map((p) => opt(p.name, p.label ? `${p.name} (${p.label}, +${p.keyLevel})` : `${p.name} (+${p.keyLevel})`))
+    .join('');
+  const similarOptions = similar
+    .map((p) => opt(p.name, `${p.name} — ${p.matchPct}% route match${p.dps ? `, ${(p.dps / 1000).toFixed(1)}k` : ''}`))
     .join('');
   const compareSelect = `
     <select id="compare-to" class="mini">
       <option value="">All ${players.length} (median)</option>
-      ${playerOptions}
+      <optgroup label="Top players">${topOptions}</optgroup>
+      ${similarOptions ? `<optgroup label="Parses similar to your run">${similarOptions}</optgroup>` : ''}
     </select>`;
 
   const gapRows = r.gaps

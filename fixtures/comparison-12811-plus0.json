@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-07-07T09:12:30.191Z",
+ "generatedAt": "2026-07-07T13:18:21.690Z",
  "params": {
   "name": "Unreally",
   "serverSlug": "aggra-portugues",
@@ -10834,144 +10834,168 @@
       "name": "Rider's Champion",
       "guid": 444005,
       "total": 45942788,
+      "hits": 13196,
       "composite": true
      },
      {
       "name": "Army of the Damned",
       "guid": 1242294,
       "total": 45205013,
+      "hits": 9308,
       "composite": true
      },
      {
       "name": "Lesser Ghoul",
       "guid": 275430,
       "total": 41583183,
+      "hits": 27583,
       "composite": true
      },
      {
       "name": "Putrefy",
       "guid": 1247378,
       "total": 37883861,
+      "hits": 2047,
       "composite": true
      },
      {
       "name": "Hammerchewer",
       "guid": 52150,
       "total": 34550763,
+      "hits": 4946,
       "composite": true
      },
      {
       "name": "Graveyard",
       "guid": 383269,
       "total": 28192530,
+      "hits": 4470,
       "composite": true
      },
      {
       "name": "Dread Plague",
       "guid": 1240996,
       "total": 27795012,
+      "hits": 1241,
       "composite": true
      },
      {
       "name": "Virulent Plague",
       "guid": 191587,
       "total": 27179775,
+      "hits": 3068,
       "composite": true
      },
      {
       "name": "Pestilence",
       "guid": 327093,
       "total": 23632373,
+      "hits": 0,
       "composite": false
      },
      {
       "name": "Scourge Strike",
       "guid": 55090,
       "total": 18585590,
+      "hits": 1219,
       "composite": true
      },
      {
       "name": "Raise Abomination",
       "guid": 288853,
       "total": 18406028,
+      "hits": 1749,
       "composite": true
      },
      {
       "name": "Necrotic Coil",
       "guid": 1242174,
       "total": 18275532,
+      "hits": 741,
       "composite": true
      },
      {
       "name": "Epidemic",
       "guid": 207317,
       "total": 9566507,
+      "hits": 4114,
       "composite": true
      },
      {
       "name": "Death Coil",
       "guid": 47632,
       "total": 5068276,
+      "hits": 203,
       "composite": true
      },
      {
       "name": "Melee",
       "guid": 1,
       "total": 4897025,
+      "hits": 808,
       "composite": false
      },
      {
       "name": "Soul Reaper",
       "guid": 343294,
       "total": 3883772,
+      "hits": 76,
       "composite": true
      },
      {
       "name": "Death and Decay",
       "guid": 43265,
       "total": 2963426,
+      "hits": 4968,
       "composite": true
      },
      {
       "name": "Festering Scythe",
       "guid": 458128,
       "total": 2252255,
+      "hits": 276,
       "composite": false
      },
      {
       "name": "Dread Plague",
       "guid": 1242564,
       "total": 1748251,
+      "hits": 108,
       "composite": false
      },
      {
       "name": "Festering Strike",
       "guid": 85948,
       "total": 514562,
+      "hits": 72,
       "composite": false
      },
      {
       "name": "Death Strike",
       "guid": 49998,
       "total": 243822,
+      "hits": 53,
       "composite": true
      },
      {
       "name": "Lesser Ghoul",
       "guid": 1277098,
       "total": 137700,
+      "hits": 339,
       "composite": true
      },
      {
       "name": "Asphyxiate",
       "guid": 221562,
       "total": 0,
+      "hits": 0,
       "composite": false
      },
      {
       "name": "Blinding Sleet",
       "guid": 207167,
       "total": 0,
+      "hits": 0,
       "composite": false
      }
     ],
@@ -37044,144 +37068,168 @@
        "name": "Graveyard",
        "guid": 383269,
        "total": 74205911,
+       "hits": 5959,
        "composite": true
       },
       {
        "name": "Army of the Damned",
        "guid": 1242294,
        "total": 55374640,
+       "hits": 10277,
        "composite": true
       },
       {
        "name": "Rider's Champion",
        "guid": 444005,
        "total": 48907195,
+       "hits": 16446,
        "composite": true
       },
       {
        "name": "Lesser Ghoul",
        "guid": 275430,
        "total": 46380992,
+       "hits": 29998,
        "composite": true
       },
       {
        "name": "Putrefy",
        "guid": 1247378,
        "total": 42014550,
+       "hits": 1919,
        "composite": true
       },
       {
        "name": "泥浆之颅",
        "guid": 52150,
        "total": 37399269,
+       "hits": 4602,
        "composite": true
       },
       {
        "name": "Dread Plague",
        "guid": 1240996,
        "total": 26841521,
+       "hits": 1245,
        "composite": true
       },
       {
        "name": "Virulent Plague",
        "guid": 191587,
        "total": 26561972,
+       "hits": 3231,
        "composite": true
       },
       {
        "name": "Scourge Strike",
        "guid": 55090,
        "total": 21569415,
+       "hits": 1466,
        "composite": true
       },
       {
        "name": "Pestilence",
        "guid": 327093,
        "total": 21505386,
+       "hits": 0,
        "composite": false
       },
       {
        "name": "Raise Abomination",
        "guid": 288853,
        "total": 17470213,
+       "hits": 1378,
        "composite": true
       },
       {
        "name": "Epidemic",
        "guid": 207317,
        "total": 13067060,
+       "hits": 5567,
        "composite": true
       },
       {
        "name": "Necrotic Coil",
        "guid": 1242174,
        "total": 11126291,
+       "hits": 243,
        "composite": true
       },
       {
        "name": "Death Coil",
        "guid": 47632,
        "total": 5126471,
+       "hits": 210,
        "composite": true
       },
       {
        "name": "Melee",
        "guid": 1,
        "total": 4541208,
+       "hits": 691,
        "composite": false
       },
       {
        "name": "Death and Decay",
        "guid": 43265,
        "total": 3014901,
+       "hits": 4252,
        "composite": true
       },
       {
        "name": "Soul Reaper",
        "guid": 343294,
        "total": 2950648,
+       "hits": 53,
        "composite": true
       },
       {
        "name": "Festering Scythe",
        "guid": 458128,
        "total": 2782144,
+       "hits": 352,
        "composite": false
       },
       {
        "name": "Dread Plague",
        "guid": 1242564,
        "total": 2308467,
+       "hits": 129,
        "composite": false
       },
       {
        "name": "Festering Strike",
        "guid": 85948,
        "total": 635711,
+       "hits": 81,
        "composite": false
       },
       {
        "name": "Lesser Ghoul",
        "guid": 1277098,
        "total": 119351,
+       "hits": 256,
        "composite": true
       },
       {
        "name": "Death Strike",
        "guid": 49998,
        "total": 53607,
+       "hits": 11,
        "composite": true
       },
       {
        "name": "Blood Draw",
        "guid": 374606,
        "total": 37685,
+       "hits": 9,
        "composite": false
       },
       {
        "name": "Blinding Sleet",
        "guid": 207167,
        "total": 0,
+       "hits": 0,
        "composite": false
       }
      ],
@@ -64766,144 +64814,168 @@
        "name": "Graveyard",
        "guid": 383269,
        "total": 61629433,
+       "hits": 5858,
        "composite": true
       },
       {
        "name": "Army of the Damned",
        "guid": 1242294,
        "total": 53989008,
+       "hits": 9753,
        "composite": true
       },
       {
        "name": "Lesser Ghoul",
        "guid": 275430,
        "total": 53856052,
+       "hits": 33254,
        "composite": true
       },
       {
        "name": "Rider's Champion",
        "guid": 444005,
        "total": 53212689,
+       "hits": 16668,
        "composite": true
       },
       {
        "name": "Putrefy",
        "guid": 1247378,
        "total": 43415598,
+       "hits": 1842,
        "composite": true
       },
       {
        "name": "白骨撕裂者",
        "guid": 52150,
        "total": 43266116,
+       "hits": 5023,
        "composite": true
       },
       {
        "name": "Dread Plague",
        "guid": 1240996,
        "total": 28136413,
+       "hits": 1305,
        "composite": true
       },
       {
        "name": "Virulent Plague",
        "guid": 191587,
        "total": 26850834,
+       "hits": 3047,
        "composite": true
       },
       {
        "name": "Scourge Strike",
        "guid": 55090,
        "total": 20943276,
+       "hits": 1282,
        "composite": true
       },
       {
        "name": "Pestilence",
        "guid": 327093,
        "total": 20852597,
+       "hits": 0,
        "composite": false
       },
       {
        "name": "Raise Abomination",
        "guid": 288853,
        "total": 18309577,
+       "hits": 1347,
        "composite": true
       },
       {
        "name": "Necrotic Coil",
        "guid": 1242174,
        "total": 17101514,
+       "hits": 414,
        "composite": true
       },
       {
        "name": "Epidemic",
        "guid": 207317,
        "total": 16896272,
+       "hits": 7301,
        "composite": true
       },
       {
        "name": "Melee",
        "guid": 1,
        "total": 5448913,
+       "hits": 894,
        "composite": false
       },
       {
        "name": "Death Coil",
        "guid": 47632,
        "total": 5400434,
+       "hits": 207,
        "composite": true
       },
       {
        "name": "Death and Decay",
        "guid": 43265,
        "total": 3453681,
+       "hits": 4509,
        "composite": true
       },
       {
        "name": "Soul Reaper",
        "guid": 343294,
        "total": 2620176,
+       "hits": 49,
        "composite": true
       },
       {
        "name": "Festering Scythe",
        "guid": 458128,
        "total": 2088738,
+       "hits": 206,
        "composite": false
       },
       {
        "name": "Dread Plague",
        "guid": 1242564,
        "total": 1944329,
+       "hits": 95,
        "composite": false
       },
       {
        "name": "Festering Strike",
        "guid": 85948,
        "total": 549170,
+       "hits": 75,
        "composite": false
       },
       {
        "name": "Blood Draw",
        "guid": 374606,
        "total": 139582,
+       "hits": 37,
        "composite": false
       },
       {
        "name": "Lesser Ghoul",
        "guid": 1277098,
        "total": 121298,
+       "hits": 281,
        "composite": true
       },
       {
        "name": "Death Strike",
        "guid": 49998,
        "total": 91868,
+       "hits": 20,
        "composite": true
       },
       {
        "name": "Blinding Sleet",
        "guid": 207167,
        "total": 0,
+       "hits": 0,
        "composite": false
       }
      ],
@@ -92162,156 +92234,182 @@
        "name": "Graveyard",
        "guid": 383269,
        "total": 74143543,
+       "hits": 6228,
        "composite": true
       },
       {
        "name": "Army of the Damned",
        "guid": 1242294,
        "total": 57552954,
+       "hits": 10782,
        "composite": true
       },
       {
        "name": "Rider's Champion",
        "guid": 444005,
        "total": 49692269,
+       "hits": 16122,
        "composite": true
       },
       {
        "name": "Lesser Ghoul",
        "guid": 275430,
        "total": 48303608,
+       "hits": 31497,
        "composite": true
       },
       {
        "name": "腐烂潜伏者",
        "guid": 52150,
        "total": 44614180,
+       "hits": 5244,
        "composite": true
       },
       {
        "name": "Putrefy",
        "guid": 1247378,
        "total": 40208328,
+       "hits": 2074,
        "composite": true
       },
       {
        "name": "Virulent Plague",
        "guid": 191587,
        "total": 28296923,
+       "hits": 3207,
        "composite": true
       },
       {
        "name": "Dread Plague",
        "guid": 1240996,
        "total": 27783870,
+       "hits": 1275,
        "composite": true
       },
       {
        "name": "Pestilence",
        "guid": 327093,
        "total": 22086788,
+       "hits": 0,
        "composite": false
       },
       {
        "name": "Scourge Strike",
        "guid": 55090,
        "total": 18773996,
+       "hits": 1269,
        "composite": true
       },
       {
        "name": "Raise Abomination",
        "guid": 288853,
        "total": 18691828,
+       "hits": 1493,
        "composite": true
       },
       {
        "name": "Necrotic Coil",
        "guid": 1242174,
        "total": 16763609,
+       "hits": 403,
        "composite": true
       },
       {
        "name": "Epidemic",
        "guid": 207317,
        "total": 15721012,
+       "hits": 6957,
        "composite": true
       },
       {
        "name": "Death Coil",
        "guid": 47632,
        "total": 4776898,
+       "hits": 196,
        "composite": true
       },
       {
        "name": "Melee",
        "guid": 1,
        "total": 4574659,
+       "hits": 730,
        "composite": false
       },
       {
        "name": "Soul Reaper",
        "guid": 343294,
        "total": 3309252,
+       "hits": 65,
        "composite": true
       },
       {
        "name": "Death and Decay",
        "guid": 43265,
        "total": 3092453,
+       "hits": 4794,
        "composite": true
       },
       {
        "name": "Festering Scythe",
        "guid": 458128,
        "total": 2388168,
+       "hits": 292,
        "composite": false
       },
       {
        "name": "Dread Plague",
        "guid": 1242564,
        "total": 2384354,
+       "hits": 148,
        "composite": false
       },
       {
        "name": "Festering Strike",
        "guid": 85948,
        "total": 477356,
+       "hits": 71,
        "composite": false
       },
       {
        "name": "Halazzi's Claws",
        "guid": 1241784,
        "total": 339007,
+       "hits": 21,
        "composite": true
       },
       {
        "name": "Lesser Ghoul",
        "guid": 1277098,
        "total": 114226,
+       "hits": 279,
        "composite": true
       },
       {
        "name": "Blood Draw",
        "guid": 374606,
        "total": 59924,
+       "hits": 11,
        "composite": false
       },
       {
        "name": "Death Strike",
        "guid": 49998,
        "total": 31897,
+       "hits": 6,
        "composite": true
       },
       {
        "name": "Blinding Sleet",
        "guid": 207167,
        "total": 0,
+       "hits": 0,
        "composite": false
       },
       {
        "name": "Asphyxiate",
        "guid": 221562,
        "total": 0,
+       "hits": 0,
        "composite": false
       }
      ],
@@ -117628,150 +117726,175 @@
        "name": "Graveyard",
        "guid": 383269,
        "total": 77917610,
+       "hits": 6205,
        "composite": true
       },
       {
        "name": "Army of the Damned",
        "guid": 1242294,
        "total": 54270237,
+       "hits": 9216,
        "composite": true
       },
       {
        "name": "Rider's Champion",
        "guid": 444005,
        "total": 47492270,
+       "hits": 14410,
        "composite": true
       },
       {
        "name": "Lesser Ghoul",
        "guid": 275430,
        "total": 47296261,
+       "hits": 29141,
        "composite": true
       },
       {
        "name": "砂石啜饮者",
        "guid": 52150,
        "total": 38309932,
+       "hits": 4312,
        "composite": true
       },
       {
        "name": "Putrefy",
        "guid": 1247378,
        "total": 35582547,
+       "hits": 1663,
        "composite": true
       },
       {
        "name": "Dread Plague",
        "guid": 1240996,
        "total": 27946326,
+       "hits": 1239,
        "composite": true
       },
       {
        "name": "Virulent Plague",
        "guid": 191587,
        "total": 24934227,
+       "hits": 2789,
        "composite": true
       },
       {
        "name": "Scourge Strike",
        "guid": 55090,
        "total": 21450233,
+       "hits": 1253,
        "composite": true
       },
       {
        "name": "Pestilence",
        "guid": 327093,
        "total": 20094201,
+       "hits": 0,
        "composite": false
       },
       {
        "name": "Raise Abomination",
        "guid": 288853,
        "total": 19642693,
+       "hits": 1468,
        "composite": true
       },
       {
        "name": "Necrotic Coil",
        "guid": 1242174,
        "total": 17151929,
+       "hits": 401,
        "composite": true
       },
       {
        "name": "Epidemic",
        "guid": 207317,
        "total": 11413287,
+       "hits": 4689,
        "composite": true
       },
       {
        "name": "Dread Plague",
        "guid": 1242564,
        "total": 5745253,
+       "hits": 319,
        "composite": false
       },
       {
        "name": "Death Coil",
        "guid": 47632,
        "total": 5534199,
+       "hits": 217,
        "composite": true
       },
       {
        "name": "Melee",
        "guid": 1,
        "total": 5486083,
+       "hits": 829,
        "composite": false
       },
       {
        "name": "Soul Reaper",
        "guid": 343294,
        "total": 3378243,
+       "hits": 59,
        "composite": true
       },
       {
        "name": "Death and Decay",
        "guid": 43265,
        "total": 3017802,
+       "hits": 4069,
        "composite": true
       },
       {
        "name": "Festering Scythe",
        "guid": 458128,
        "total": 3008711,
+       "hits": 304,
        "composite": false
       },
       {
        "name": "Festering Strike",
        "guid": 85948,
        "total": 615041,
+       "hits": 80,
        "composite": false
       },
       {
        "name": "Lesser Ghoul",
        "guid": 1277098,
        "total": 96467,
+       "hits": 243,
        "composite": true
       },
       {
        "name": "Blood Draw",
        "guid": 374606,
        "total": 83363,
+       "hits": 16,
        "composite": false
       },
       {
        "name": "Death Strike",
        "guid": 49998,
        "total": 3553,
+       "hits": 1,
        "composite": true
       },
       {
        "name": "Chains of Ice",
        "guid": 45524,
        "total": 0,
+       "hits": 0,
        "composite": false
       },
       {
        "name": "War",
        "guid": 327096,
        "total": 0,
+       "hits": 0,
        "composite": false
       }
      ],
@@ -143623,150 +143746,175 @@
        "name": "Army of the Damned",
        "guid": 1242294,
        "total": 54694900,
+       "hits": 9978,
        "composite": true
       },
       {
        "name": "Rider's Champion",
        "guid": 444005,
        "total": 53789931,
+       "hits": 15949,
        "composite": true
       },
       {
        "name": "Lesser Ghoul",
        "guid": 275430,
        "total": 50172847,
+       "hits": 31353,
        "composite": true
       },
       {
        "name": "Graveyard",
        "guid": 383269,
        "total": 47613913,
+       "hits": 5555,
        "composite": true
       },
       {
        "name": "肋骨击碎者",
        "guid": 52150,
        "total": 43710813,
+       "hits": 5157,
        "composite": true
       },
       {
        "name": "Putrefy",
        "guid": 1247378,
        "total": 39817496,
+       "hits": 1847,
        "composite": true
       },
       {
        "name": "Dread Plague",
        "guid": 1240996,
        "total": 27102400,
+       "hits": 1220,
        "composite": true
       },
       {
        "name": "Virulent Plague",
        "guid": 191587,
        "total": 25302888,
+       "hits": 3144,
        "composite": true
       },
       {
        "name": "Scourge Strike",
        "guid": 55090,
        "total": 25263116,
+       "hits": 1550,
        "composite": true
       },
       {
        "name": "Pestilence",
        "guid": 327093,
        "total": 24722279,
+       "hits": 0,
        "composite": false
       },
       {
        "name": "Raise Abomination",
        "guid": 288853,
        "total": 21214342,
+       "hits": 1634,
        "composite": true
       },
       {
        "name": "Necrotic Coil",
        "guid": 1242174,
        "total": 20796506,
+       "hits": 537,
        "composite": true
       },
       {
        "name": "Epidemic",
        "guid": 207317,
        "total": 15119470,
+       "hits": 6274,
        "composite": true
       },
       {
        "name": "Death Coil",
        "guid": 47632,
        "total": 5084012,
+       "hits": 201,
        "composite": true
       },
       {
        "name": "Melee",
        "guid": 1,
        "total": 4540349,
+       "hits": 709,
        "composite": false
       },
       {
        "name": "Dread Plague",
        "guid": 1242564,
        "total": 4428137,
+       "hits": 216,
        "composite": false
       },
       {
        "name": "Soul Reaper",
        "guid": 343294,
        "total": 3211734,
+       "hits": 59,
        "composite": true
       },
       {
        "name": "Death and Decay",
        "guid": 43265,
        "total": 2888325,
+       "hits": 4091,
        "composite": true
       },
       {
        "name": "Festering Scythe",
        "guid": 458128,
        "total": 2432512,
+       "hits": 278,
        "composite": false
       },
       {
        "name": "Festering Strike",
        "guid": 85948,
        "total": 563762,
+       "hits": 75,
        "composite": false
       },
       {
        "name": "Blood Draw",
        "guid": 374606,
        "total": 132696,
+       "hits": 30,
        "composite": false
       },
       {
        "name": "Lesser Ghoul",
        "guid": 1277098,
        "total": 115834,
+       "hits": 266,
        "composite": true
       },
       {
        "name": "Death Strike",
        "guid": 49998,
        "total": 15456,
+       "hits": 3,
        "composite": true
       },
       {
        "name": "Blinding Sleet",
        "guid": 207167,
        "total": 0,
+       "hits": 0,
        "composite": false
       },
       {
        "name": "Death Grip",
        "guid": 49576,
        "total": 0,
+       "hits": 0,
        "composite": false
       }
      ],
@@ -170883,150 +171031,175 @@
        "name": "Graveyard",
        "guid": 383269,
        "total": 65875037,
+       "hits": 9852,
        "composite": true
       },
       {
        "name": "Lesser Ghoul",
        "guid": 275430,
        "total": 59457104,
+       "hits": 34654,
        "composite": true
       },
       {
        "name": "Rider's Champion",
        "guid": 444005,
        "total": 58667328,
+       "hits": 20084,
        "composite": true
       },
       {
        "name": "Army of the Damned",
        "guid": 1242294,
        "total": 56906070,
+       "hits": 10001,
        "composite": true
       },
       {
        "name": "Putrefy",
        "guid": 1247378,
        "total": 52710378,
+       "hits": 2381,
        "composite": true
       },
       {
        "name": "卵石掠夺者",
        "guid": 52150,
        "total": 50739112,
+       "hits": 5162,
        "composite": true
       },
       {
        "name": "Virulent Plague",
        "guid": 191587,
        "total": 34402639,
+       "hits": 3509,
        "composite": true
       },
       {
        "name": "Dread Plague",
        "guid": 1240996,
        "total": 31749038,
+       "hits": 1290,
        "composite": true
       },
       {
        "name": "Pestilence",
        "guid": 327093,
        "total": 28917806,
+       "hits": 0,
        "composite": false
       },
       {
        "name": "Raise Abomination",
        "guid": 288853,
        "total": 27670913,
+       "hits": 2198,
        "composite": true
       },
       {
        "name": "Scourge Strike",
        "guid": 55090,
        "total": 20648739,
+       "hits": 1329,
        "composite": true
       },
       {
        "name": "Epidemic",
        "guid": 207317,
        "total": 16210698,
+       "hits": 6651,
        "composite": true
       },
       {
        "name": "Necrotic Coil",
        "guid": 1242174,
        "total": 9093022,
+       "hits": 314,
        "composite": true
       },
       {
        "name": "Melee",
        "guid": 1,
        "total": 4581367,
+       "hits": 681,
        "composite": false
       },
       {
        "name": "Death Coil",
        "guid": 47632,
        "total": 4306991,
+       "hits": 167,
        "composite": true
       },
       {
        "name": "Death and Decay",
        "guid": 43265,
        "total": 3884877,
+       "hits": 5475,
        "composite": true
       },
       {
        "name": "Festering Scythe",
        "guid": 458128,
        "total": 3743829,
+       "hits": 395,
        "composite": false
       },
       {
        "name": "Soul Reaper",
        "guid": 343294,
        "total": 2929877,
+       "hits": 59,
        "composite": true
       },
       {
        "name": "Dread Plague",
        "guid": 1242564,
        "total": 1965778,
+       "hits": 99,
        "composite": false
       },
       {
        "name": "Rotmire's Sporeheart",
        "guid": 1285139,
        "total": 922913,
+       "hits": 97,
        "composite": true
       },
       {
        "name": "Omnium Folio",
        "guid": 1302265,
        "total": 909874,
+       "hits": 293,
        "composite": true
       },
       {
        "name": "Festering Strike",
        "guid": 85948,
        "total": 545997,
+       "hits": 77,
        "composite": false
       },
       {
        "name": "Blood Draw",
        "guid": 374606,
        "total": 208875,
+       "hits": 64,
        "composite": false
       },
       {
        "name": "Lesser Ghoul",
        "guid": 1277098,
        "total": 133645,
+       "hits": 304,
        "composite": true
       },
       {
        "name": "Death Strike",
        "guid": 49998,
        "total": 3004,
+       "hits": 1,
        "composite": true
       }
      ],
@@ -197675,132 +197848,154 @@
        "name": "Army of the Damned",
        "guid": 1242294,
        "total": 55183317,
+       "hits": 9942,
        "composite": true
       },
       {
        "name": "Rider's Champion",
        "guid": 444005,
        "total": 49474465,
+       "hits": 14637,
        "composite": true
       },
       {
        "name": "Graveyard",
        "guid": 383269,
        "total": 47664120,
+       "hits": 5627,
        "composite": true
       },
       {
        "name": "Lesser Ghoul",
        "guid": 275430,
        "total": 42298773,
+       "hits": 30748,
        "composite": true
       },
       {
        "name": "Skullgobbler",
        "guid": 52150,
        "total": 41638656,
+       "hits": 5347,
        "composite": true
       },
       {
        "name": "Putrefy",
        "guid": 1247378,
        "total": 37341256,
+       "hits": 1979,
        "composite": true
       },
       {
        "name": "Dread Plague",
        "guid": 1240996,
        "total": 26853275,
+       "hits": 1384,
        "composite": true
       },
       {
        "name": "Virulent Plague",
        "guid": 191587,
        "total": 24200923,
+       "hits": 3201,
        "composite": true
       },
       {
        "name": "Scourge Strike",
        "guid": 55090,
        "total": 20254725,
+       "hits": 1409,
        "composite": true
       },
       {
        "name": "Pestilence",
        "guid": 327093,
        "total": 20142687,
+       "hits": 0,
        "composite": false
       },
       {
        "name": "Raise Abomination",
        "guid": 288853,
        "total": 17426974,
+       "hits": 1596,
        "composite": true
       },
       {
        "name": "Epidemic",
        "guid": 207317,
        "total": 11993143,
+       "hits": 5450,
        "composite": true
       },
       {
        "name": "Necrotic Coil",
        "guid": 1242174,
        "total": 11182227,
+       "hits": 411,
        "composite": true
       },
       {
        "name": "Death Coil",
        "guid": 47632,
        "total": 5129082,
+       "hits": 227,
        "composite": true
       },
       {
        "name": "Melee",
        "guid": 1,
        "total": 4869726,
+       "hits": 857,
        "composite": false
       },
       {
        "name": "Soul Reaper",
        "guid": 343294,
        "total": 3251244,
+       "hits": 69,
        "composite": true
       },
       {
        "name": "Death and Decay",
        "guid": 43265,
        "total": 3114645,
+       "hits": 4984,
        "composite": true
       },
       {
        "name": "Festering Scythe",
        "guid": 458128,
        "total": 2021042,
+       "hits": 258,
        "composite": false
       },
       {
        "name": "Dread Plague",
        "guid": 1242564,
        "total": 1826260,
+       "hits": 134,
        "composite": false
       },
       {
        "name": "Festering Strike",
        "guid": 85948,
        "total": 551477,
+       "hits": 78,
        "composite": false
       },
       {
        "name": "Lesser Ghoul",
        "guid": 1277098,
        "total": 122851,
+       "hits": 314,
        "composite": true
       },
       {
        "name": "Death Strike",
        "guid": 49998,
        "total": 3240,
+       "hits": 1,
        "composite": true
       }
      ],
@@ -213160,6 +213355,96 @@
     "buffSources": null
    },
    "label": "EU top"
+  }
+ ],
+ "similarCandidates": [
+  {
+   "name": "伊伊猪宝丶",
+   "dps": 244836.99838000536,
+   "durationMs": 1974054,
+   "keyLevel": 20,
+   "report": {
+    "code": "xrfz6NwtQ9LJcnjY",
+    "fightID": 1
+   },
+   "matchPct": 100
+  },
+  {
+   "name": "Ehrasmus",
+   "dps": 242670.67097002268,
+   "durationMs": 1978353,
+   "keyLevel": 20,
+   "report": {
+    "code": "6RjPYX92qgkzpvBx",
+    "fightID": 14
+   },
+   "matchPct": 100
+  },
+  {
+   "name": "十年丷",
+   "dps": 255948.50721001625,
+   "durationMs": 2006339,
+   "keyLevel": 20,
+   "report": {
+    "code": "CgtKx4f3rhLaGbVz",
+    "fightID": 29
+   },
+   "matchPct": 99
+  },
+  {
+   "name": "吐司椰椰",
+   "dps": 244751.4046599865,
+   "durationMs": 1956521,
+   "keyLevel": 20,
+   "report": {
+    "code": "B4MgQaZyt6Y8DKJV",
+    "fightID": 9
+   },
+   "matchPct": 99
+  },
+  {
+   "name": "驺吾",
+   "dps": 242132.63975000381,
+   "durationMs": 1997952,
+   "keyLevel": 20,
+   "report": {
+    "code": "hLxH9dRTjcpN3YCW",
+    "fightID": 4
+   },
+   "matchPct": 99
+  },
+  {
+   "name": "Factoyrat",
+   "dps": 257527.96447998285,
+   "durationMs": 1945613,
+   "keyLevel": 20,
+   "report": {
+    "code": "19wyhJ4kYKgrMDqz",
+    "fightID": 19
+   },
+   "matchPct": 98
+  },
+  {
+   "name": "叛逆之刃",
+   "dps": 248688.49230998755,
+   "durationMs": 1939156,
+   "keyLevel": 20,
+   "report": {
+    "code": "fXQVvcdDwKBbRzq7",
+    "fightID": 1
+   },
+   "matchPct": 98
+  },
+  {
+   "name": "寒冰小土豆",
+   "dps": 241816.53095000982,
+   "durationMs": 2015934,
+   "keyLevel": 20,
+   "report": {
+    "code": "PVmCpFtr2ZbWQN6G",
+    "fightID": 2
+   },
+   "matchPct": 98
   }
  ]
 }

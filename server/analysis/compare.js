@@ -228,6 +228,14 @@ export function buildReport(bundle) {
       label: c.label ?? null,
       keyLevel: c.detail.fight.keystoneLevel,
     })),
+    // "parses similar to yours" — a second dropdown group (WCL parse-search).
+    // Detail isn't fetched for these until one is selected.
+    similarPlayers: (bundle.similarCandidates ?? []).map((c) => ({
+      name: c.name,
+      matchPct: c.matchPct,
+      dps: c.dps != null ? Math.round(c.dps) : null,
+      keyLevel: c.keyLevel,
+    })),
     compareTo: bundle.compareTo ?? null,
   };
   // Single-run target for the 1:1 views (timeline, damage table, DPS chart):

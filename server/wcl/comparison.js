@@ -87,11 +87,39 @@ export async function buildComparison({
     throw new Error(`No usable comparison runs fetched for encounter ${encounterID} at +${targetLevel}`);
   }
 
+  // "Parses similar to yours" (mirrors WCL's parse-search): the same ranked
+  // page, minus the runs already in the base cohort, ranked by how close the
+  // fight duration is to mine (≈ similar route). No detail fetched here —
+  // these are dropdown options; a run's detail is pulled only when selected.
+  const mineFight = mineDetail.fight;
+  const myDurationMs = mineFight.keystoneTime ?? mineFight.endTime - mineFight.startTime;
+  const cohortNameSet = new Set(results.map((r) => norm(r.meta.name)));
+  const similarCandidates = top.entries
+    .filter((e) => e.name && e.report?.code && e.report?.fightID != null && !cohortNameSet.has(norm(e.name)))
+    .map((e) => ({
+      name: e.name,
+      dps: e.dps,
+      durationMs: e.durationMs,
+      keyLevel: e.keyLevel,
+      report: e.report,
+      matchPct: matchPercent(e.durationMs, myDurationMs),
+    }))
+    .sort((a, b) => b.matchPct - a.matchPct)
+    .slice(0, 8);
+
   let finalCohort = results;
   if (compareTo) {
-    finalCohort = results.filter((r) => norm(r.meta.name) === norm(compareTo));
-    if (!finalCohort.length) {
-      throw new Error(`${compareTo} is not in the comparison cohort for this dungeon/level`);
+    const inCohort = results.filter((r) => norm(r.meta.name) === norm(compareTo));
+    if (inCohort.length) {
+      finalCohort = inCohort;
+    } else {
+      // a "similar parse" outside the base cohort — fetch just that one run now
+      const cand = top.entries.find((e) => norm(e.name) === norm(compareTo) && e.report?.code);
+      if (!cand) {
+        throw new Error(`${compareTo} is not among the ranked runs for this dungeon/level`);
+      }
+      const { meta, detail } = await fetchRankedPlayerRun(cand);
+      finalCohort = [{ meta, detail, label: 'Similar parse' }];
     }
   }
 
@@ -121,7 +149,14 @@ export async function buildComparison({
       historyAtLevel,
     },
     cohort: finalCohort,
+    similarCandidates,
   };
+}
+
+/** Route-similarity % from fight-duration closeness (rankings are all same level). */
+function matchPercent(dur, myMs) {
+  if (typeof dur !== 'number' || typeof myMs !== 'number' || myMs <= 0) return 0;
+  return Math.round(100 * Math.max(0, 1 - Math.abs(dur - myMs) / myMs));
 }
 
 function namedLabelFor(name) {
