@@ -22,9 +22,16 @@ function charParams(query) {
   };
 }
 
+// `refresh=1` bypasses the disk cache for ranking queries (use after logging
+// new runs). Any truthy string other than "0"/"false" counts as on.
+function wantsRefresh(query) {
+  const v = query.refresh;
+  return v != null && v !== '' && v !== '0' && v !== 'false';
+}
+
 app.get('/api/overview', async (req, res) => {
   try {
-    const overview = await fetchOverview(charParams(req.query));
+    const overview = await fetchOverview({ ...charParams(req.query), refresh: wantsRefresh(req.query) });
     const { raw, ...rest } = overview; // raw payload not needed by the UI
     res.json(rest);
   } catch (err) {
@@ -44,6 +51,7 @@ app.get('/api/report', async (req, res) => {
       encounterID,
       level,
       compareTo,
+      refresh: wantsRefresh(req.query),
     });
     res.json(buildReport(bundle));
   } catch (err) {

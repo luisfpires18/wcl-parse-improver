@@ -38,8 +38,9 @@ export async function buildComparison({
   specName = 'Unholy',
   level = DEFAULT_LEVEL,
   compareTo = null,
+  refresh = false,
 }) {
-  const myRuns = await fetchMyEncounterRuns({ name, serverSlug, serverRegion, encounterID });
+  const myRuns = await fetchMyEncounterRuns({ name, serverSlug, serverRegion, encounterID, refresh });
   const summary = summarizeAtLevel(myRuns, level);
   if (!summary.bestRun?.report?.code) {
     throw new Error(`No logged run near +${level} found for encounter ${encounterID}`);
@@ -59,7 +60,7 @@ export async function buildComparison({
     includeBuffSources: true,
   });
 
-  const top = await fetchTopRuns({ encounterID, zoneID, keyLevel: targetLevel, className, specName });
+  const top = await fetchTopRuns({ encounterID, zoneID, keyLevel: targetLevel, className, specName, refresh });
   const top5 = top.entries.filter((e) => e.name && e.report?.code && e.report?.fightID != null).slice(0, 5);
 
   const rankedNames = new Set(top5.map((e) => norm(e.name)));
@@ -76,7 +77,7 @@ export async function buildComparison({
     try {
       const { meta, detail } = c.entry
         ? await fetchRankedPlayerRun(c.entry)
-        : await fetchNamedPlayerRun({ ...c.named, encounterID, targetLevel });
+        : await fetchNamedPlayerRun({ ...c.named, encounterID, targetLevel, refresh });
       results.push({ meta, detail, label: c.label });
     } catch (err) {
       dumpDebug('cohort-run-skipped', { candidate: c, error: String(err) });
@@ -134,8 +135,8 @@ async function fetchRankedPlayerRun(entry) {
 }
 
 /** Fetch a specific named player's run closest to targetLevel on this encounter. */
-async function fetchNamedPlayerRun({ name, serverSlug, serverRegion, encounterID, targetLevel }) {
-  const { runs } = await fetchMyEncounterRuns({ name, serverSlug, serverRegion, encounterID });
+async function fetchNamedPlayerRun({ name, serverSlug, serverRegion, encounterID, targetLevel, refresh = false }) {
+  const { runs } = await fetchMyEncounterRuns({ name, serverSlug, serverRegion, encounterID, refresh });
   const withReport = runs.filter((r) => r.report?.code && r.report?.fightID != null);
   if (!withReport.length) throw new Error(`No usable run for ${name} on encounter ${encounterID}`);
   const pickedLevel = pickLevel(withReport, targetLevel);

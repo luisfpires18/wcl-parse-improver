@@ -74,12 +74,14 @@ const gapPhrase = (v) => {
 const esc = (s) =>
   String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-async function loadOverview() {
-  setStatus('Loading overview…');
+async function loadOverview(refresh = false) {
+  setStatus(refresh ? 'Refreshing from Warcraft Logs (bypassing cache)…' : 'Loading overview…');
   $('#overview').innerHTML = '';
   $('#report').innerHTML = '';
   try {
-    const res = await fetch(`/api/overview?${charQuery()}`);
+    const params = charQuery();
+    if (refresh) params.set('refresh', '1');
+    const res = await fetch(`/api/overview?${params}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
     currentOverview = data;
@@ -109,7 +111,9 @@ function renderOverview({ character, overall, dungeons }) {
 
   $('#overview').innerHTML = `
     <div class="card">
-      <h2>${esc(character)}</h2>
+      <h2>${esc(character)}
+        <button id="refresh-overview" class="mini" title="Re-fetch from Warcraft Logs, bypassing the local cache — use after logging new runs">↻ Refresh data</button>
+      </h2>
       <p>Best avg: <b class="${pctClass(overall.bestPerformanceAverage)}">${fmtPct(overall.bestPerformanceAverage)}</b> ·
          Median avg: <b class="${pctClass(overall.medianPerformanceAverage)}">${fmtPct(overall.medianPerformanceAverage)}</b>
          <small>(parse percentiles at the shown key level — matches the WCL site)</small>
@@ -135,6 +139,7 @@ function renderOverview({ character, overall, dungeons }) {
       .sort((a, b) => a.bestPercent - b.bestPercent);
     if (ranked.length) loadReport(ranked[0].encounterID, DEFAULT_LEVEL);
   });
+  $('#refresh-overview').addEventListener('click', () => loadOverview(true));
 }
 
 // Cohort dropdown options persist across a compareTo refetch — a
@@ -142,11 +147,13 @@ function renderOverview({ character, overall, dungeons }) {
 // dropdown would otherwise lose every other option after the first pick.
 let lastCohortPlayers = null;
 
-async function loadReport(encounterID, level, compareTo = '') {
+async function loadReport(encounterID, level, compareTo = '', refresh = false) {
   const dungeon = currentOverview?.dungeons.find((d) => d.encounterID === encounterID);
   setStatus(
     `Building report for <b>${esc(dungeon?.name ?? encounterID)}</b> at +${level}… ` +
-      `<small>first fetch pulls several reports from WCL and takes up to a minute; cached afterwards</small>`
+      (refresh
+        ? `<small>refreshing rankings from WCL (bypassing cache)</small>`
+        : `<small>first fetch pulls several reports from WCL and takes up to a minute; cached afterwards</small>`)
   );
   $('#report').innerHTML = '';
   try {
@@ -154,6 +161,7 @@ async function loadReport(encounterID, level, compareTo = '') {
     params.set('encounter', encounterID);
     params.set('level', level);
     if (compareTo) params.set('compareTo', compareTo);
+    if (refresh) params.set('refresh', '1');
     const res = await fetch(`/api/report?${params}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -433,7 +441,9 @@ function renderReport(encounterID, level, compareTo, r) {
 
   $('#report').innerHTML = `
     <div class="card">
-      <h2>${esc(h.dungeon)} +${h.myKeyLevel}${h.myKeyLevel !== h.requestedLevel ? ` <small>(closest to requested +${h.requestedLevel})</small>` : ''} — <span class="${pctClass(h.myBestPercent)}">${h.myBestPercent}%</span> parse</h2>
+      <h2>${esc(h.dungeon)} +${h.myKeyLevel}${h.myKeyLevel !== h.requestedLevel ? ` <small>(closest to requested +${h.requestedLevel})</small>` : ''} — <span class="${pctClass(h.myBestPercent)}">${h.myBestPercent}%</span> parse
+        <button id="refresh-report" class="mini" title="Re-fetch rankings from Warcraft Logs, bypassing the local cache — use after logging new runs">↻ Refresh data</button>
+      </h2>
       <p>
         <b>${fmtK(h.myDps)}</b> me &nbsp;vs&nbsp; <b>${fmtK(h.cohortMedianDps)}</b> ${compareTo ? 'them' : `median of ${h.cohortSize}`} at +${h.cohortLevel}
         &nbsp;→&nbsp; ${gapPhrase(h.dpsGapPct)}
@@ -480,7 +490,11 @@ function renderReport(encounterID, level, compareTo, r) {
         <ul class="comp-notes">${compNotesText.map((t) => `<li><small>${esc(t)}</small></li>`).join('')}</ul>
       </details>` : ''}
 
-      <p class="honesty">DPS gap ${r.honesty.dpsGapPct}% — rotational metrics explain ~${r.honesty.explainedPct}% of it.<br />
+      <p class="honesty">${
+        r.honesty.explainedPct != null
+          ? `DPS gap ${r.honesty.dpsGapPct}% — rotational metrics explain ~${r.honesty.explainedPct}% of it.`
+          : `No positive DPS gap to attribute here (you match or beat this comparison).`
+      }<br />
       <small>${esc(r.honesty.note)}</small></p>
 
       ${renderNextSteps(h, r.summary?.nextSteps)}
@@ -490,6 +504,7 @@ function renderReport(encounterID, level, compareTo, r) {
     b.addEventListener('click', () => loadReport(encounterID, Number(b.dataset.level), compareTo))
   );
   $('#compare-to').addEventListener('change', (e) => loadReport(encounterID, level, e.target.value));
+  $('#refresh-report').addEventListener('click', () => loadReport(encounterID, level, compareTo, true));
 }
 
 loadOverview();

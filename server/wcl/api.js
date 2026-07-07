@@ -24,16 +24,20 @@ import {
   classifyBuffSources,
 } from '../parse/tables.js';
 
-async function fetchZoneRankings({ name, serverSlug, serverRegion, zoneID, metric, byBracket, role }) {
-  const data = await gql(ZONE_RANKINGS, {
-    name,
-    serverSlug,
-    serverRegion,
-    zoneID,
-    metric,
-    byBracket: byBracket ?? false,
-    role: role ?? 'Any',
-  });
+async function fetchZoneRankings({ name, serverSlug, serverRegion, zoneID, metric, byBracket, role, refresh }) {
+  const data = await gql(
+    ZONE_RANKINGS,
+    {
+      name,
+      serverSlug,
+      serverRegion,
+      zoneID,
+      metric,
+      byBracket: byBracket ?? false,
+      role: role ?? 'Any',
+    },
+    { noCache: refresh }
+  );
   const character = data?.characterData?.character;
   if (!character) {
     dumpDebug('character-not-found', { name, serverSlug, serverRegion, zoneID, data });
@@ -50,9 +54,13 @@ async function fetchZoneRankings({ name, serverSlug, serverRegion, zoneID, metri
  *  - zoneRankings dps byBracket (best DPS, key level, duration — exact)
  *  - encounterRankings per dungeon (site-accurate Best % / Median % at the
  *    displayed key level + report code of the best run + all logged runs)
+ *
+ * `refresh` bypasses the disk cache for these ranking queries only — use it
+ * after logging new runs. Report *contents* never change, so this stays
+ * cheap; a new best run simply yields a new report code that's a cache miss.
  */
-export async function fetchOverview({ name, serverSlug, serverRegion, zoneID }) {
-  const base = { name, serverSlug, serverRegion, zoneID };
+export async function fetchOverview({ name, serverSlug, serverRegion, zoneID, refresh = false }) {
+  const base = { name, serverSlug, serverRegion, zoneID, refresh };
   const scoreChar = await fetchZoneRankings({ ...base, metric: 'playerscore' });
   const dpsChar = await fetchZoneRankings({ ...base, metric: 'dps', byBracket: true, role: 'DPS' });
   const overview = buildOverview(scoreChar.zoneRankings, dpsChar.zoneRankings);
@@ -89,16 +97,20 @@ export async function fetchOverview({ name, serverSlug, serverRegion, zoneID }) 
 }
 
 /** All logged runs of my character on one encounter (parsed encounterRankings). */
-export async function fetchMyEncounterRuns({ name, serverSlug, serverRegion, encounterID }) {
-  const data = await gql(ENCOUNTER_RANKINGS, {
-    name,
-    serverSlug,
-    serverRegion,
-    encounterID,
-    metric: 'dps',
-    byBracket: true,
-    role: 'DPS',
-  });
+export async function fetchMyEncounterRuns({ name, serverSlug, serverRegion, encounterID, refresh = false }) {
+  const data = await gql(
+    ENCOUNTER_RANKINGS,
+    {
+      name,
+      serverSlug,
+      serverRegion,
+      encounterID,
+      metric: 'dps',
+      byBracket: true,
+      role: 'DPS',
+    },
+    { noCache: refresh }
+  );
   const scalar = data?.characterData?.character?.encounterRankings;
   return parseEncounterRankings(scalar);
 }
@@ -122,17 +134,22 @@ export async function fetchTopRuns({
   className = 'DeathKnight',
   specName = 'Unholy',
   page = 1,
+  refresh = false,
 }) {
-  const brackets = await getZoneBrackets(zoneID);
+  const brackets = await getZoneBrackets(zoneID); // bracket defs never change — always cached
   const bracketIndex = Math.round((keyLevel - brackets.min) / (brackets.bucket || 1)) + 1;
-  const data = await gql(CHARACTER_RANKINGS, {
-    encounterID,
-    className,
-    specName,
-    bracket: bracketIndex,
-    page,
-    metric: 'dps',
-  });
+  const data = await gql(
+    CHARACTER_RANKINGS,
+    {
+      encounterID,
+      className,
+      specName,
+      bracket: bracketIndex,
+      page,
+      metric: 'dps',
+    },
+    { noCache: refresh }
+  );
   const parsed = parseCharacterRankings(data?.worldData?.encounter?.characterRankings);
   // trust but verify the bracket->level mapping
   const offLevel = parsed.entries.filter((e) => e.keyLevel !== keyLevel);
