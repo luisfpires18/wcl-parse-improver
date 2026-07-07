@@ -18,12 +18,16 @@ export function computeRunMetrics(detail) {
   const fight = detail.fight ?? {};
   const fightDurMs =
     fight.keystoneTime ?? (fight.endTime && fight.startTime ? fight.endTime - fight.startTime : null);
-  const activeMs = detail.casts?.totalTimeMs ?? fightDurMs ?? 1;
+  // First positive duration wins; 0 / negative / missing are all "unknown".
+  // Never fall back to 1ms — that would turn any cast count into a
+  // multi-thousand CPM. When duration is unknown, per-minute rates are 0.
+  const activeMs = firstPositive(detail.casts?.totalTimeMs, fightDurMs) ?? 0;
   const minutes = activeMs / 60000;
+  const perMinute = (count) => (minutes > 0 ? count / minutes : 0);
 
   const abilities = new Map();
   for (const a of detail.casts?.abilities ?? []) {
-    abilities.set(a.name, { casts: a.casts, cpm: a.casts / minutes });
+    abilities.set(a.name, { casts: a.casts, cpm: perMinute(a.casts) });
   }
 
   const downtime = computeDowntime(detail.castEvents ?? [], fight);
@@ -34,9 +38,10 @@ export function computeRunMetrics(detail) {
   const engagedMs = engaged.reduce((acc, w) => acc + (w.end - w.start), 0);
 
   const auras = new Map();
+  const buffsTotalMs = firstPositive(detail.buffs?.totalTimeMs, activeMs) ?? 0;
   for (const a of detail.buffs?.auras ?? []) {
     // duplicate aura names can appear (e.g. two "Lesser Ghoul" rows) — keep the larger
-    const uptimePct = (100 * a.uptimeMs) / (detail.buffs.totalTimeMs || activeMs);
+    const uptimePct = buffsTotalMs > 0 ? (100 * a.uptimeMs) / buffsTotalMs : 0;
     const activeUptimePct = engagedMs
       ? (100 * intersectMs(a.bands ?? [], engaged)) / engagedMs
       : null;
@@ -66,7 +71,7 @@ export function computeRunMetrics(detail) {
     activeMs,
     engagedMs,
     totalCasts,
-    totalCPM: totalCasts / minutes,
+    totalCPM: perMinute(totalCasts),
     abilities,
     auras,
     damageShare,
@@ -142,8 +147,8 @@ function intersectMs(bands, engaged) {
 function computeDowntime(castEvents, fight) {
   const start = fight.startTime ?? null;
   const end = fight.endTime ?? null;
-  if (start == null || end == null || !castEvents.length) {
-    return { totalMs: 0, count: 0, windows: [], idlePct: null };
+  if (start == null || end == null || end <= start || !castEvents.length) {
+    return { totalMs: 0, count: 0, windows: [], allWindows: [], idlePct: null };
   }
   const stamps = castEvents.map((c) => c.timestamp);
   const windows = [];
@@ -172,4 +177,10 @@ export function median(nums) {
   if (!s.length) return null;
   const mid = Math.floor(s.length / 2);
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+
+/** First argument that is a finite number strictly greater than 0, else null. */
+function firstPositive(...values) {
+  for (const v of values) if (typeof v === 'number' && Number.isFinite(v) && v > 0) return v;
+  return null;
 }

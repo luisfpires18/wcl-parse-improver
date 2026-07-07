@@ -64,6 +64,13 @@ const fmtTime = (ms) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 const fmtK = (v) => (typeof v === 'number' ? (v / 1000).toFixed(1) + 'k' : '—');
+// Positive gap = behind; negative = ahead of the comparison.
+const gapPhrase = (v) => {
+  if (typeof v !== 'number') return 'gap —';
+  if (v > 0) return `gap <b>${v}%</b>`;
+  if (v < 0) return `ahead by <b>${Math.abs(v)}%</b>`;
+  return `dead even`;
+};
 const esc = (s) =>
   String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -429,7 +436,7 @@ function renderReport(encounterID, level, compareTo, r) {
       <h2>${esc(h.dungeon)} +${h.myKeyLevel}${h.myKeyLevel !== h.requestedLevel ? ` <small>(closest to requested +${h.requestedLevel})</small>` : ''} — <span class="${pctClass(h.myBestPercent)}">${h.myBestPercent}%</span> parse</h2>
       <p>
         <b>${fmtK(h.myDps)}</b> me &nbsp;vs&nbsp; <b>${fmtK(h.cohortMedianDps)}</b> ${compareTo ? 'them' : `median of ${h.cohortSize}`} at +${h.cohortLevel}
-        &nbsp;→&nbsp; gap <b>${h.dpsGapPct}%</b>
+        &nbsp;→&nbsp; ${gapPhrase(h.dpsGapPct)}
         <br /><small>compared against: ${h.cohortNames.map(esc).join(', ')}</small>
       </p>
       <p>compare at level: ${levelBtns}</p>

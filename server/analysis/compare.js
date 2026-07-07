@@ -21,7 +21,14 @@ export function buildReport(bundle) {
   const myDps = bundle.mine.meta.dps ?? null;
   const cohortDps = bundle.cohort.map((c) => c.meta.dps).filter((v) => typeof v === 'number');
   const cohortMedianDps = median(cohortDps);
-  const dpsGapPct = myDps && cohortMedianDps ? (100 * (cohortMedianDps - myDps)) / cohortMedianDps : null;
+  // Negative gap = I'm ahead of the cohort (possible against a single weaker
+  // player via compareTo, or an easier-level cohort). That's a valid, honest
+  // number; downstream code must treat "no positive gap" specially rather
+  // than dividing by it (see honesty.explainedPct below).
+  const dpsGapPct =
+    myDps != null && cohortMedianDps != null && cohortMedianDps > 0
+      ? (100 * (cohortMedianDps - myDps)) / cohortMedianDps
+      : null;
 
   const gaps = [];
 
@@ -144,7 +151,9 @@ export function buildReport(bundle) {
   const offLevelCohort = bundle.cohort.filter((c) => c.detail.fight.keystoneLevel !== bundle.targetLevel);
   const honesty = {
     dpsGapPct: dpsGapPct != null ? round1(dpsGapPct) : null,
-    explainedPct: dpsGapPct ? round1(Math.min(95, (100 * explained) / dpsGapPct)) : null,
+    // only meaningful when there's a positive gap to attribute; when I match
+    // or beat the cohort (gap <= 0) there is nothing to "explain"
+    explainedPct: dpsGapPct != null && dpsGapPct > 0 ? round1(Math.min(95, (100 * explained) / dpsGapPct)) : null,
     note:
       'Severity values are heuristic %-DPS estimates; overlapping causes are only counted once. ' +
       'The unexplained remainder is likely routing, pull size, group comp and funnel — ' +

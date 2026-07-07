@@ -21,15 +21,28 @@ export function buildSummary({ headline, gaps, honesty }) {
 
   const sentences = [];
   const top = gaps[0];
-  sentences.push(`The ${headline.dpsGapPct}% DPS gap in ${headline.dungeon} is led by ${describeGap(top)}.`);
+  const gapPct = headline.dpsGapPct;
+  // gapPct: positive = behind the cohort, <= 0 = matching/ahead, null = couldn't compute
+  if (typeof gapPct === 'number' && gapPct > 0) {
+    sentences.push(`The ${gapPct}% DPS gap in ${headline.dungeon} is led by ${describeGap(top)}.`);
+  } else if (typeof gapPct === 'number') {
+    sentences.push(
+      `You already match or beat this comparison on DPS in ${headline.dungeon}; the biggest remaining ` +
+        `execution difference is ${describeGap(top)}.`
+    );
+  } else {
+    sentences.push(`In ${headline.dungeon}, the biggest execution difference is ${describeGap(top)}.`);
+  }
 
   const rest = gaps.slice(1, 4).filter((g) => g.category !== top.category);
   if (rest.length) sentences.push(`After that: ${rest.map(describeGap).join('; ')}.`);
 
-  sentences.push(
-    `Rotational metrics (deaths, downtime, cast rate, ability/uptime diffs) account for an estimated ` +
-      `${honesty.explainedPct}% of the DPS gap; the rest is routing, pull size, comp and funnel, which this report can't see.`
-  );
+  if (honesty.explainedPct != null) {
+    sentences.push(
+      `Rotational metrics (deaths, downtime, cast rate, ability/uptime diffs) account for an estimated ` +
+        `${honesty.explainedPct}% of the DPS gap; the rest is routing, pull size, comp and funnel, which this report can't see.`
+    );
+  }
 
   sentences.push(
     `Runic Power overcapping is measured directly from WCL's own resource events; individual Rune tracking ` +
@@ -52,7 +65,7 @@ function buildNextSteps({ headline, gaps, honesty }) {
 
   const recap =
     `${gaps.length} measurable gap${gaps.length === 1 ? '' : 's'} found in this run` +
-    (headline.dpsGapPct != null
+    (honesty.explainedPct != null && headline.dpsGapPct != null
       ? `, together estimated to explain ~${honesty.explainedPct}% of the ${headline.dpsGapPct}% DPS gap vs the +${headline.cohortLevel} cohort.`
       : '.');
 
