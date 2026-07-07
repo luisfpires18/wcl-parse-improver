@@ -233,7 +233,7 @@ function timelineSvg(run, laneNames) {
   return `<svg class="timeline-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMinYMin meet">${parts.join('')}</svg>`;
 }
 
-function renderTimelineSection(timeline) {
+function renderTimelineSection(timeline, timelineInfo) {
   if (!timeline || !timeline.laneNames.length) return '';
   const { laneNames, mine, other, otherRoleLabel } = timeline;
   return `
@@ -244,7 +244,8 @@ function renderTimelineSection(timeline) {
       ${timelineSvg(mine, laneNames)}
       <div class="timeline-sub">${esc(other.label)}${otherRoleLabel ? ` (${esc(otherRoleLabel)})` : ''} &middot; duration ${fmtTime(other.durationMs)}</div>
       ${timelineSvg(other, laneNames)}
-    </div>`;
+    </div>
+    ${timelineInfo ? `<p class="timeline-info"><b>Info:</b> ${esc(timelineInfo.text)}</p>` : ''}`;
 }
 
 function renderGuideSection(guide) {
@@ -421,7 +422,7 @@ function renderReport(encounterID, level, compareTo, r) {
       <h3>Biggest gaps first</h3>
       <ol class="gaps">${gapRows || '<li>No significant rotational gaps found.</li>'}</ol>
 
-      ${renderTimelineSection(r.timeline)}
+      ${renderTimelineSection(r.timeline, r.timelineInfo)}
 
       ${r.summary ? `<p class="summary">${esc(r.summary.text)}</p>` : ''}
 

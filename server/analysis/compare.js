@@ -6,7 +6,7 @@
 // reports how much of the real DPS gap they explain.
 import { computeRunMetrics, median, IGNORED_ABILITIES } from './metrics.js';
 import { adviceFor } from './advice.js';
-import { buildTimeline } from './timeline.js';
+import { buildTimeline, buildTimelineInfo } from './timeline.js';
 import { buildSummary } from './summary.js';
 
 // Ability cast-count diffs below this share of damage are noise — skip.
@@ -188,6 +188,7 @@ export function buildReport(bundle) {
   };
   const timeline = bundle.cohort[0] ? buildTimeline(bundle.mine.detail, bundle.cohort[0].detail) : null;
   if (timeline) timeline.otherRoleLabel = bundle.cohort[0].label ?? null;
+  const timelineInfo = buildTimelineInfo(timeline);
 
   return {
     headline,
@@ -195,6 +196,7 @@ export function buildReport(bundle) {
     compNotes,
     downtimeNotes,
     timeline,
+    timelineInfo,
     summary: buildSummary({ headline, gaps, honesty }),
     tables: {
       cpm: abilityRows.map((r) => ({
