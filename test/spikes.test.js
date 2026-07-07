@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzeSpikes, rotationComposition } from '../server/analysis/spikes.js';
+import { analyzeSpikes, rotationComposition, castOrder } from '../server/analysis/spikes.js';
 
 function makeSeries(spikeBins, high, low, nBins = 12, binMs = 5000) {
   const points = [];
@@ -96,6 +96,26 @@ test('rotationComposition: near-identical casts score high similarity (same rota
   assert.equal(ss.kind, 'damage');
   const army = rc.rows.find((r) => r.name === 'Army of the Dead');
   assert.equal(army.kind, 'amp'); // amplifier, not util
+});
+
+test('castOrder returns the chronological cast sequence with kind tags, capped at limit', () => {
+  const detail = makeDetail([
+    { timestamp: 3000, abilityGameID: 1 }, // Scourge @3s (fight start = 0)
+    { timestamp: 1000, abilityGameID: 2 }, // Army @1s — earliest
+    { timestamp: 2000, abilityGameID: 3 }, // Mind Freeze @2s
+  ]);
+  detail.castEvents.sort((a, b) => a.timestamp - b.timestamp);
+  const order = castOrder(detail, 10);
+  assert.deepEqual(order.map((o) => o.name), ['Army of the Dead', 'Mind Freeze', 'Scourge Strike']);
+  assert.equal(order[0].kind, 'amp'); // Army
+  assert.equal(order[1].kind, 'util'); // Mind Freeze
+  assert.equal(order[2].kind, 'damage'); // Scourge Strike
+  assert.equal(order[0].tSec, 1);
+});
+
+test('castOrder respects the limit', () => {
+  const many = Array.from({ length: 100 }, (_, i) => ({ timestamp: 1000 + i * 100, abilityGameID: 1 }));
+  assert.equal(castOrder(makeDetail(many), 25).length, 25);
 });
 
 test('rotationComposition: divergent casts score low similarity (different rotation)', () => {

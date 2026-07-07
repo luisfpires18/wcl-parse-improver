@@ -149,6 +149,30 @@ function castCountsByName(detail) {
   return c;
 }
 
+/**
+ * Ordered cast sequence from the pull start — the literal spell-cast order,
+ * so you can read a top player's rotation flow. Each entry tags kind
+ * (damage / amp / util) so the UI can colour amplifiers. Capped at `limit`
+ * casts (the opener + first pulls is where the sequence is learnable).
+ */
+export function castOrder(detail, limit = 60) {
+  const nameOf = new Map((detail.casts?.abilities ?? []).map((a) => [a.guid, a.name]));
+  const dmg = damageNamesOf(detail);
+  const start = detail.fight?.startTime ?? 0;
+  const out = [];
+  for (const ev of detail.castEvents ?? []) {
+    const name = nameOf.get(ev.abilityGameID);
+    if (!name || IGNORED_ABILITIES.has(name)) continue;
+    out.push({
+      tSec: Math.round(((ev.timestamp - start) / 1000) * 10) / 10,
+      name,
+      kind: dmg.has(name) ? 'damage' : AMPLIFIERS.has(name) ? 'amp' : 'util',
+    });
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
 export function analyzeSpikes({ mineDetail, otherDetail, mineSeries, otherSeries }) {
   if (!mineSeries?.points?.length || !otherSeries?.points?.length) return null;
 
@@ -246,6 +270,8 @@ export function analyzeSpikes({ mineDetail, otherDetail, mineSeries, otherSeries
 
   // rotation similarity — proven from cast composition, not assumed
   const rotation = rotationComposition(mineDetail, otherDetail);
+  // literal cast-order sequences from the pull start (learn their flow)
+  rotation.order = { mine: castOrder(mineDetail), them: castOrder(otherDetail) };
 
   // headline builds on the confirmed similarity + measured gaps
   const avgMine = perBurstCasts.reduce((a, b) => a + b.mine, 0) / (perBurstCasts.length || 1);

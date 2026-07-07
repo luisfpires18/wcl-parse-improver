@@ -355,6 +355,29 @@ function renderSpikeAnalysis(sa) {
     </div>`;
 }
 
+function castKindClass(kind) {
+  return kind === 'damage' ? 'p-blue' : kind === 'amp' ? 'p-orange' : 'p-gray';
+}
+
+function renderCastOrder(order) {
+  if (!order || (!order.mine?.length && !order.them?.length)) return '';
+  const col = (list, title) => {
+    const items = (list ?? [])
+      .map((c) => `<li><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="${castKindClass(c.kind)}">${esc(c.name)}</span></li>`)
+      .join('');
+    return `<div class="ord-col"><div class="ord-head">${esc(title)}</div><ol class="ord-list">${items}</ol></div>`;
+  };
+  return `
+    <details open><summary>Cast order from the pull start (their rotation flow vs yours)</summary>
+      <div class="ord-wrap">
+        ${col(order.them, 'Them — cast order')}
+        ${col(order.mine, 'You — cast order')}
+      </div>
+      <p class="table-note"><small>Literal spell-cast sequence from 0:00 (first ~60 casts — the opener and first pulls, where the rotation flow is learnable).
+        <span class="p-blue">Blue</span> = damage, <span class="p-orange">orange</span> = amplifier (Army/Dark Transformation/pot), grey = utility. Read their column top-down to see their opener + priority.</small></p>
+    </details>`;
+}
+
 function renderRotationTable(rot) {
   if (!rot || !rot.rows?.length) return '';
   const rows = rot.rows
@@ -371,7 +394,8 @@ function renderRotationTable(rot) {
     })
     .join('');
   return `
-    <details><summary>Rotation composition — ${rot.similarityPct}% match (proves same/different rotation)</summary>
+    ${renderCastOrder(rot.order)}
+    <details><summary>Rotation composition — ${rot.similarityPct}% match (cast counts, proves same/different rotation)</summary>
       <table class="rot-table"><thead>
         <tr><th>Ability</th><th>You (share)</th><th>Them (share)</th><th>Diff</th></tr>
       </thead><tbody>${rows}</tbody></table>
