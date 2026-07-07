@@ -271,6 +271,117 @@ function renderTimelineSection(timeline, timelineInfo) {
     ${timelineInfo ? `<p class="timeline-info"><b>Info:</b> ${esc(timelineInfo.text)}</p>` : ''}`;
 }
 
+// ---- DPS-over-time line chart (lazy-loaded from /api/dps-series) ----
+const DPS_MINE_COLOR = 'var(--series-1)'; // blue = me
+const DPS_OTHER_COLOR = 'var(--series-7)'; // magenta = them (WCL-like pink)
+const CHART_L = 56; // left axis gutter
+const CHART_R = 12;
+const CHART_T = 24; // legend row
+const CHART_B = 22; // x-axis
+const CHART_W = 760;
+const CHART_H = 260;
+
+const fmtSec = (s) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+
+function dpsChartSvg(mine, other) {
+  const plotW = CHART_W - CHART_L - CHART_R;
+  const plotH = CHART_H - CHART_T - CHART_B;
+  const maxSec = Math.max(
+    mine.points.at(-1)?.tSec ?? 0,
+    other.points.at(-1)?.tSec ?? 0,
+    mine.durationMs / 1000,
+    other.durationMs / 1000
+  );
+  const maxDps = Math.max(1, ...mine.points.map((p) => p.dps), ...other.points.map((p) => p.dps));
+  const x = (sec) => CHART_L + (maxSec > 0 ? (sec / maxSec) * plotW : 0);
+  const y = (dps) => CHART_T + plotH - (dps / maxDps) * plotH;
+  const poly = (points, color) =>
+    `<polyline fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" points="${points
+      .map((p) => `${x(p.tSec).toFixed(1)},${y(p.dps).toFixed(1)}`)
+      .join(' ')}"></polyline>`;
+
+  const parts = [];
+  // y gridlines + labels (0, 25, 50, 75, 100% of max)
+  for (const frac of [0, 0.25, 0.5, 0.75, 1]) {
+    const gy = CHART_T + plotH - frac * plotH;
+    parts.push(`<line x1="${CHART_L}" x2="${CHART_L + plotW}" y1="${gy}" y2="${gy}" stroke="var(--border)" stroke-width="1" opacity="0.5"></line>`);
+    parts.push(`<text x="${CHART_L - 6}" y="${gy + 3}" font-size="9" fill="var(--muted)" text-anchor="end">${fmtK(frac * maxDps)}</text>`);
+  }
+  // x ticks
+  for (const frac of [0, 0.25, 0.5, 0.75, 1]) {
+    const tx = CHART_L + frac * plotW;
+    parts.push(`<text x="${tx}" y="${CHART_T + plotH + 14}" font-size="9" fill="var(--muted)" text-anchor="${frac === 0 ? 'start' : frac === 1 ? 'end' : 'middle'}">${fmtSec(frac * maxSec)}</text>`);
+  }
+  parts.push(poly(other.points, DPS_OTHER_COLOR)); // draw theirs under mine
+  parts.push(poly(mine.points, DPS_MINE_COLOR));
+  // legend (direct labels)
+  const legend = (cx, color, text) =>
+    `<line x1="${cx}" x2="${cx + 16}" y1="12" y2="12" stroke="${color}" stroke-width="2"></line>` +
+    `<text x="${cx + 22}" y="15" font-size="10" fill="var(--text)">${esc(text)}</text>`;
+  parts.push(legend(CHART_L, DPS_MINE_COLOR, `You (${fmtK(mine.totalDamage / (mine.durationMs / 1000))} avg)`));
+  parts.push(legend(CHART_L + 180, DPS_OTHER_COLOR, `${other.label} (${fmtK(other.totalDamage / (other.durationMs / 1000))} avg)`));
+
+  return `<svg class="dps-chart-svg" viewBox="0 0 ${CHART_W} ${CHART_H}" preserveAspectRatio="xMinYMin meet">${parts.join('')}</svg>`;
+}
+
+function renderDpsChartSection(targetName) {
+  return `
+    <h3>DPS over time <small>${targetName ? `— you vs ${esc(targetName)}` : ''}</small></h3>
+    <div id="dps-chart" class="dps-chart-loading">Loading DPS-over-time (pulls damage events — up to ~15s first time, cached after)…</div>`;
+}
+
+async function loadDpsChart(encounterID, level, compareTo) {
+  const el = $('#dps-chart');
+  if (!el) return;
+  try {
+    const params = charQuery();
+    params.set('encounter', encounterID);
+    params.set('level', level);
+    if (compareTo) params.set('compareTo', compareTo);
+    const res = await fetch(`/api/dps-series?${params}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    const cur = $('#dps-chart');
+    if (!cur) return; // report was replaced while loading
+    cur.classList.remove('dps-chart-loading');
+    cur.innerHTML =
+      dpsChartSvg(data.mine, data.other) +
+      `<p class="table-note"><small>5-second bins of effective damage (includes your pets). Both runs start at 0; a shorter run ends earlier on the axis. The curve shows WHEN your output lands (burst windows vs lulls); absolute totals differ slightly from the parse number due to how WCL counts overkill.</small></p>`;
+  } catch (err) {
+    const cur = $('#dps-chart');
+    if (cur) cur.innerHTML = `<span class="error">DPS chart failed: ${esc(err.message)}</span>`;
+  }
+}
+
+function renderDamageDone(dd) {
+  if (!dd || !dd.rows.length) return '';
+  const fmtM = (v) => (v / 1e6).toFixed(1) + 'm';
+  const rows = dd.rows
+    .slice(0, 30)
+    .map(
+      (a) => `<tr>
+        <td>${esc(a.name)}</td>
+        <td class="num">${fmtM(a.myAmount)}</td><td class="num">${a.myCasts || '—'}</td><td class="num">${a.myHits || '—'}</td><td class="num">${fmtK(a.myDps)}</td>
+        <td class="num sep">${a.theirAmount ? fmtM(a.theirAmount) : '—'}</td><td class="num">${a.theirCasts || '—'}</td><td class="num">${a.theirHits || '—'}</td><td class="num">${a.theirDps ? fmtK(a.theirDps) : '—'}</td>
+      </tr>`
+    )
+    .join('');
+  const t = dd.totals;
+  return `
+    <details open><summary>Damage done — you vs ${esc(dd.otherLabel)} (per ability)</summary>
+      <table class="dmg-table">
+        <thead>
+          <tr><th rowspan="2">Ability</th><th colspan="4" class="grp">You</th><th colspan="4" class="grp sep">${esc(dd.otherLabel)}</th></tr>
+          <tr><th>Amount</th><th>Casts</th><th>Hits</th><th>DPS</th><th class="sep">Amount</th><th>Casts</th><th>Hits</th><th>DPS</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td>Total</td>
+          <td class="num">${fmtM(t.myDamage)}</td><td></td><td></td><td class="num">${fmtK(t.myDps)}</td>
+          <td class="num sep">${fmtM(t.theirDamage)}</td><td></td><td></td><td class="num">${fmtK(t.theirDps)}</td></tr></tfoot>
+      </table>
+    </details>`;
+}
+
 function renderGuideSection(guide) {
   if (!guide) return '';
   const { meta, opener, priority, breakpoints, cooldowns, mechanicNotes } = guide;
@@ -469,6 +580,10 @@ function renderReport(encounterID, level, compareTo, r) {
 
       ${renderTimelineSection(r.timeline, r.timelineInfo)}
 
+      ${renderDpsChartSection(h.similarTarget)}
+
+      ${renderDamageDone(r.damageDone)}
+
       ${r.summary ? `<p class="summary">${esc(r.summary.text)}</p>` : ''}
 
       <details><summary>Per-ability casts (mine vs cohort median)</summary>
@@ -515,6 +630,10 @@ function renderReport(encounterID, level, compareTo, r) {
   );
   $('#compare-to').addEventListener('change', (e) => loadReport(encounterID, level, e.target.value));
   $('#refresh-report').addEventListener('click', () => loadReport(encounterID, level, compareTo, true));
+
+  // Lazy: the report is on screen; now fetch the heavy DPS-over-time series
+  // and inject the chart. Fire-and-forget so it never blocks the render.
+  loadDpsChart(encounterID, level, compareTo);
 }
 
 loadOverview();

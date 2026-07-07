@@ -1,5 +1,5 @@
 // High-level API helpers combining queries + parsing.
-import { gql, dumpDebug } from './client.js';
+import { gql, dumpDebug, readDerivedCache, writeDerivedCache } from './client.js';
 import {
   ZONE_RANKINGS,
   ENCOUNTER_RANKINGS,
@@ -10,6 +10,7 @@ import {
   REPORT_CAST_EVENTS,
   REPORT_RESOURCE_EVENTS,
   REPORT_BUFF_SOURCE_EVENTS,
+  REPORT_DAMAGE_EVENTS,
 } from './queries.js';
 import { buildOverview } from '../parse/zoneRankings.js';
 import { parseEncounterRankings, summarizeBestLevel } from '../parse/encounterRankings.js';
@@ -22,6 +23,7 @@ import {
   parseCastEvents,
   parseResourceEvents,
   classifyBuffSources,
+  binDamageEvents,
 } from '../parse/tables.js';
 
 async function fetchZoneRankings({ name, serverSlug, serverRegion, zoneID, metric, byBracket, role, refresh }) {
@@ -239,12 +241,55 @@ function rdTable(resp) {
   return resp?.reportData?.report?.table;
 }
 
+/**
+ * DPS-over-time series for one player's run (the DPS line chart).
+ * Fetches DamageDone events (sourceID = the player, which already folds in
+ * their pets), bins into `binMs` buckets, and returns the compact series.
+ *
+ * The raw event stream is huge (~tens of thousands of events, ~15MB), so it
+ * is fetched with noCache (never persisted) and only the small binned series
+ * is cached, keyed by report+fight+bin.
+ *
+ * @returns {{ label, durationMs, binMs, points:{tSec,dps}[], totalDamage }}
+ */
+export async function fetchDamageSeries({ code, fightID, playerName, binMs = 5000 }) {
+  const cacheKey = `dps-${code}-${fightID}-${binMs}`;
+  const cached = readDerivedCache(cacheKey);
+  if (cached) return cached;
+
+  const rd = await gql(REPORT_FIGHTS_ACTORS, { code, fightIDs: [fightID] });
+  const report = rd?.reportData?.report;
+  const fight = report?.fights?.[0];
+  const actor = resolveActor(report?.masterData?.actors ?? [], playerName);
+  if (!fight || !actor) {
+    dumpDebug('dps-series-unresolved', { code, fightID, playerName });
+    throw new Error(`Cannot build DPS series: run ${code}#${fightID} / ${playerName} not resolved`);
+  }
+
+  // noCache: don't persist the multi-MB raw event blob — we cache the series below
+  const pages = await paginateEvents(REPORT_DAMAGE_EVENTS, {
+    code,
+    fightID,
+    sourceID: actor.id,
+    fight,
+    noCache: true,
+  });
+  const binned = binDamageEvents(pages, fight, binMs);
+  const series = {
+    label: actor.name,
+    durationMs: fight.endTime - fight.startTime,
+    ...binned,
+  };
+  writeDerivedCache(cacheKey, series);
+  return series;
+}
+
 /** Page through an events(...) query via nextPageTimestamp. */
-async function paginateEvents(query, { code, fightID, sourceID, fight }) {
+async function paginateEvents(query, { code, fightID, sourceID, fight, noCache = false }) {
   const pages = [];
   let startTime = fight.startTime;
   for (let i = 0; i < 20; i++) {
-    const resp = await gql(query, { code, fightIDs: [fightID], sourceID, startTime, endTime: fight.endTime });
+    const resp = await gql(query, { code, fightIDs: [fightID], sourceID, startTime, endTime: fight.endTime }, { noCache });
     const pageData = resp?.reportData?.report?.events;
     if (!pageData) break;
     pages.push(pageData);

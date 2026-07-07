@@ -1,9 +1,9 @@
 import express from 'express';
 import path from 'node:path';
 import { loadEnv, PROJECT_ROOT } from './env.js';
-import { fetchOverview } from './wcl/api.js';
+import { fetchOverview, fetchDamageSeries } from './wcl/api.js';
 import { buildComparison, DEFAULT_LEVEL } from './wcl/comparison.js';
-import { buildReport } from './analysis/compare.js';
+import { buildReport, pickSimilarIndex } from './analysis/compare.js';
 import { getGuideReference } from './guide/unholyDkGuide.js';
 
 loadEnv();
@@ -54,6 +54,43 @@ app.get('/api/report', async (req, res) => {
       refresh: wantsRefresh(req.query),
     });
     res.json(buildReport(bundle));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DPS-over-time series (mine vs one comparison run) for the line chart.
+// Lazy/separate from /api/report because the damage-event fetch is heavy;
+// the report renders first, this loads after. Cohort + report codes come
+// from the (cached) buildComparison, so this only adds the two damage-series
+// fetches on top.
+app.get('/api/dps-series', async (req, res) => {
+  try {
+    const encounterID = Number(req.query.encounter);
+    if (!encounterID) return res.status(400).json({ error: 'encounter query param required' });
+    const level = Math.max(2, Math.min(30, Number(req.query.level || DEFAULT_LEVEL)));
+    const compareTo = req.query.compareTo ? String(req.query.compareTo) : null;
+
+    const bundle = await buildComparison({ ...charParams(req.query), encounterID, level, compareTo });
+
+    const mineFight = bundle.mine.detail.fight;
+    const myDurationMs = mineFight.keystoneTime ?? mineFight.endTime - mineFight.startTime;
+    const targetIndex = pickSimilarIndex(bundle.cohort, myDurationMs, bundle.targetLevel);
+    const target = bundle.cohort[targetIndex];
+    if (!target) return res.status(404).json({ error: 'no comparison run available' });
+
+    // sequential — gql() has a shared rate-limiter that parallel calls would race
+    const mine = await fetchDamageSeries({
+      code: bundle.mine.detail.code,
+      fightID: bundle.mine.detail.fightID,
+      playerName: bundle.params.name,
+    });
+    const other = await fetchDamageSeries({
+      code: target.detail.code,
+      fightID: target.detail.fightID,
+      playerName: target.meta.name,
+    });
+    res.json({ mine, other, otherLabel: target.label ?? null });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

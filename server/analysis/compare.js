@@ -15,6 +15,40 @@ const MIN_DAMAGE_SHARE = 0.01;
 const MIN_UPTIME_DIFF_PP = 8;
 const MIN_COHORT_UPTIME = 25;
 
+/** Fight duration in ms from a run detail (keystone time, else span). */
+function fightDurationMs(detail) {
+  const f = detail?.fight ?? {};
+  if (typeof f.keystoneTime === 'number' && f.keystoneTime > 0) return f.keystoneTime;
+  if (typeof f.endTime === 'number' && typeof f.startTime === 'number') return f.endTime - f.startTime;
+  return null;
+}
+
+/**
+ * Index of the cohort run most SIMILAR to mine — closest fight duration
+ * (≈ similar route/pull count → the DPS gap is more purely execution),
+ * preferring the same key level. This is the default single-run target for
+ * the 1:1 views (timeline, damage table, DPS chart). Returns 0 when there's
+ * nothing to compare.
+ */
+export function pickSimilarIndex(cohort, myDurationMs, targetLevel) {
+  if (!cohort?.length) return 0;
+  if (myDurationMs == null) return 0;
+  let bestIdx = 0;
+  let bestScore = Infinity;
+  cohort.forEach((c, i) => {
+    const dur = fightDurationMs(c.detail);
+    if (dur == null) return;
+    const sameLevel = c.detail?.fight?.keystoneLevel === targetLevel ? 0 : 1;
+    // same-level runs strongly preferred, then closest duration
+    const score = sameLevel * 1e12 + Math.abs(dur - myDurationMs);
+    if (score < bestScore) {
+      bestScore = score;
+      bestIdx = i;
+    }
+  });
+  return bestIdx;
+}
+
 export function buildReport(bundle) {
   const mine = computeRunMetrics(bundle.mine.detail);
   const cohortMetrics = bundle.cohort.map((c) => computeRunMetrics(c.detail));
@@ -196,9 +230,20 @@ export function buildReport(bundle) {
     })),
     compareTo: bundle.compareTo ?? null,
   };
-  const timeline = bundle.cohort[0] ? buildTimeline(bundle.mine.detail, bundle.cohort[0].detail) : null;
-  if (timeline) timeline.otherRoleLabel = bundle.cohort[0].label ?? null;
+  // Single-run target for the 1:1 views (timeline, damage table, DPS chart):
+  // the most-similar cohort run by fight duration. When compareTo already
+  // filtered the cohort to one player, that's the only entry (index 0).
+  const myDurationMs = fightDurationMs(bundle.mine.detail);
+  const targetIndex = pickSimilarIndex(bundle.cohort, myDurationMs, bundle.targetLevel);
+  const target = bundle.cohort[targetIndex] ?? null;
+  headline.similarTarget = target?.meta?.name ?? null;
+  headline.similarTargetLabel = target?.label ?? null;
+
+  const timeline = target ? buildTimeline(bundle.mine.detail, target.detail) : null;
+  if (timeline) timeline.otherRoleLabel = target.label ?? null;
   const timelineInfo = buildTimelineInfo(timeline);
+
+  const damageDone = target ? buildDamageDoneTable(bundle.mine.detail, target.detail) : null;
 
   const parsePlan = buildParsePlan({
     myBestPercent: bundle.mine.meta.bestPercent,
@@ -219,6 +264,7 @@ export function buildReport(bundle) {
     timeline,
     timelineInfo,
     parsePlan,
+    damageDone,
     summary: buildSummary({ headline, gaps, honesty }),
     tables: {
       cpm: abilityRows.map((r) => ({
@@ -377,6 +423,60 @@ function cohortAuraMedians(cohortMetrics) {
     });
   }
   return out;
+}
+
+/**
+ * Side-by-side damage-done table (mine vs one target run): per ability,
+ * Amount / Casts / Hits / DPS for each side, sorted by my damage. Mirrors
+ * WCL's Compare > Damage Done two-column view. Uses the DamageDone table
+ * (amount, hits — pets folded in) joined with the Casts table (casts).
+ */
+export function buildDamageDoneTable(mineDetail, otherDetail) {
+  const side = (detail) => {
+    const durSec = (fightDurationMs(detail) ?? 0) / 1000;
+    const casts = new Map((detail.casts?.abilities ?? []).map((a) => [a.name, a.casts]));
+    const byName = new Map();
+    for (const a of detail.damage?.abilities ?? []) {
+      byName.set(a.name, {
+        amount: a.total,
+        hits: a.hits ?? 0,
+        casts: casts.get(a.name) ?? 0,
+        dps: durSec > 0 ? a.total / durSec : 0,
+      });
+    }
+    return { byName, totalDamage: detail.damage?.totalDamage ?? 0, totalDps: durSec > 0 ? (detail.damage?.totalDamage ?? 0) / durSec : 0 };
+  };
+  const mine = side(mineDetail);
+  const other = side(otherDetail);
+
+  const names = new Set([...mine.byName.keys(), ...other.byName.keys()]);
+  const rows = [];
+  for (const name of names) {
+    const m = mine.byName.get(name);
+    const o = other.byName.get(name);
+    rows.push({
+      name,
+      myAmount: m?.amount ?? 0,
+      myCasts: m?.casts ?? 0,
+      myHits: m?.hits ?? 0,
+      myDps: Math.round(m?.dps ?? 0),
+      theirAmount: o?.amount ?? 0,
+      theirCasts: o?.casts ?? 0,
+      theirHits: o?.hits ?? 0,
+      theirDps: Math.round(o?.dps ?? 0),
+    });
+  }
+  rows.sort((a, b) => b.myAmount - a.myAmount);
+  return {
+    otherLabel: otherDetail.player?.name ?? '?',
+    rows,
+    totals: {
+      myDamage: mine.totalDamage,
+      myDps: Math.round(mine.totalDps),
+      theirDamage: other.totalDamage,
+      theirDps: Math.round(other.totalDps),
+    },
+  };
 }
 
 function gap(category, title, mine, cohort, unit, severity, extra = {}) {

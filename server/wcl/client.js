@@ -71,6 +71,25 @@ export async function gql(query, variables = {}, opts = {}) {
 }
 
 /**
+ * Small keyed disk cache for computed/derived values (e.g. a binned DPS
+ * series) — distinct from the raw GraphQL cache. Use this when the raw
+ * upstream payload is huge but the derived result is tiny, so we never
+ * persist the multi-MB event blob, only the compact output.
+ */
+export function readDerivedCache(key) {
+  try {
+    return JSON.parse(readFileSync(path.join(CACHE_DIR, `derived-${key}.json`), 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+export function writeDerivedCache(key, value) {
+  mkdirSync(CACHE_DIR, { recursive: true });
+  writeFileSync(path.join(CACHE_DIR, `derived-${key}.json`), JSON.stringify(value));
+}
+
+/**
  * Write an unexpected payload to debug/ so it can be inspected instead of crashing.
  * Returns the file path.
  */

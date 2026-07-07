@@ -57,6 +57,7 @@ export function parseDamageTable(table) {
       name: e.name ?? '(unknown)',
       guid: e.guid ?? null,
       total: numOr0(e.total),
+      hits: numOr0(e.hitCount),
       composite: Boolean(e.composite),
     }))
     .sort((a, b) => b.total - a.total);
@@ -65,6 +66,43 @@ export function parseDamageTable(table) {
     abilities,
     totalDamage: abilities.reduce((acc, a) => acc + a.total, 0),
   };
+}
+
+/**
+ * Bin DamageDone events into a compact DPS-over-time series.
+ *
+ * `events(dataType: DamageDone, sourceID: <player>)` already folds in the
+ * player's pets (verified: Magus/ghoul abilities appear under the player's
+ * sourceID), so a single fetch covers total output. `amount` is effective
+ * (post-mitigation) damage; the absolute level differs slightly from the
+ * DamageDone *table* total (different overkill/cap accounting), so this is
+ * used for the curve SHAPE, not to restate the parse number.
+ *
+ * @returns {{ binMs:number, points:{tSec:number,dps:number}[], totalDamage:number }}
+ */
+export function binDamageEvents(eventPages, fight, binMs = 5000) {
+  const start = fight?.startTime ?? null;
+  const end = fight?.endTime ?? null;
+  if (start == null || end == null || end <= start) {
+    return { binMs, points: [], totalDamage: 0 };
+  }
+  const nBins = Math.max(1, Math.ceil((end - start) / binMs));
+  const buckets = new Array(nBins).fill(0);
+  let totalDamage = 0;
+  for (const page of eventPages) {
+    const data = Array.isArray(page?.data) ? page.data : [];
+    for (const ev of data) {
+      if (ev?.type !== 'damage' || typeof ev.timestamp !== 'number') continue;
+      const amount = numOr0(ev.amount);
+      if (amount <= 0) continue;
+      const i = Math.min(nBins - 1, Math.max(0, Math.floor((ev.timestamp - start) / binMs)));
+      buckets[i] += amount;
+      totalDamage += amount;
+    }
+  }
+  const binSec = binMs / 1000;
+  const points = buckets.map((dmg, i) => ({ tSec: i * binSec, dps: dmg / binSec }));
+  return { binMs, points, totalDamage };
 }
 
 /** Deaths table -> death timestamps (report-relative ms) + killing blows. */

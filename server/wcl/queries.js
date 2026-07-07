@@ -101,6 +101,25 @@ query ReportResourceEvents($code: String!, $fightIDs: [Int!], $sourceID: Int!, $
   }
 }`;
 
+// DamageDone events for one player. sourceID = the player's actor id already
+// folds in that player's pets (verified: Magus/ghoul abilities come back
+// under the player's sourceID), so a single query covers total output. Used
+// to build the DPS-over-time line; pages are large (a full run can be tens
+// of thousands of events in one page), so this is a couple of requests, not
+// hundreds. Bin immediately and cache only the small binned series — never
+// the raw event blob (it can be ~15MB).
+export const REPORT_DAMAGE_EVENTS = `
+query ReportDamageEvents($code: String!, $fightIDs: [Int!], $sourceID: Int!, $startTime: Float, $endTime: Float) {
+  reportData {
+    report(code: $code) {
+      events(fightIDs: $fightIDs, dataType: DamageDone, sourceID: $sourceID, startTime: $startTime, endTime: $endTime) {
+        data
+        nextPageTimestamp
+      }
+    }
+  }
+}`;
+
 // Buff apply/remove/refresh events, sourceID here means "whose aura uptime
 // we're viewing" (matches table(dataType:Buffs, sourceID) semantics) — each
 // returned event ALSO carries its own sourceID, the actor who cast/applied

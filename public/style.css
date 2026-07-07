@@ -154,6 +154,12 @@ summary:hover { color: var(--text); }
 .timeline-tick { cursor: default; }
 .timeline-tick:hover { opacity: 0.7; }
 .timeline-swatch { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 0.35rem; vertical-align: middle; }
+.dps-chart-svg { width: 100%; height: auto; display: block; margin: 0.3rem 0; }
+.dps-chart-loading { color: var(--muted); font-size: 0.85rem; padding: 0.6rem 0; }
+.dmg-table th.grp { text-align: center; color: var(--text); border-bottom: 1px solid var(--border); }
+.dmg-table td.sep, .dmg-table th.sep { border-left: 2px solid var(--border); }
+.dmg-table tfoot td { border-top: 1px solid var(--border); font-weight: 600; }
+
 .timeline-info {
   background: var(--panel2);
   border: 1px solid var(--border);

@@ -59,9 +59,11 @@ test('a real cooldown (Dark Transformation) resolves to actual cast timestamps, 
   }
 });
 
-test('buildReport attaches a timeline built from the mine vs top-1 cohort run', () => {
+test('buildReport builds the timeline against the most-similar cohort run (headline.similarTarget)', () => {
   const report = buildReport(bundle);
   assert.ok(report.timeline);
-  assert.equal(report.timeline.other.label, bundle.cohort[0].meta.name);
   assert.equal(report.timeline.mine.label, 'Unreally');
+  // 1:1 views now compare against the most-similar run, not always rank 1
+  assert.equal(report.timeline.other.label, report.headline.similarTarget);
+  assert.ok(bundle.cohort.some((c) => c.meta.name === report.headline.similarTarget));
 });
