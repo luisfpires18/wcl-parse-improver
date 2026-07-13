@@ -3,7 +3,13 @@ import path from 'node:path';
 import { loadEnv, PROJECT_ROOT } from './env.js';
 import { fetchOverview, fetchDamageSeries, fetchGameClasses, detectCharacter } from './wcl/api.js';
 import { buildComparison, DEFAULT_LEVEL } from './wcl/comparison.js';
-import { buildRaidReport, buildRaidPull, buildRaidBossReport, DEFAULT_RAID_DIFFICULTY } from './wcl/raid.js';
+import {
+  buildRaidReport,
+  buildRaidPull,
+  buildRaidBossReport,
+  buildBossRotations,
+  DEFAULT_RAID_DIFFICULTY,
+} from './wcl/raid.js';
 import { fetchRaidOverview } from './wcl/raidZones.js';
 import { buildReport } from './analysis/compare.js';
 import { loadCharacters, upsertCharacter, removeCharacter, setCharacterHidden } from './characters.js';
@@ -134,6 +140,28 @@ app.get('/api/raid/overview', async (req, res) => {
       refresh: wantsRefresh(req.query),
     });
     res.json({ zones: overview });
+  } catch (err) {
+    res.status(err.status ?? 500).json({ error: err.message });
+  }
+});
+
+// How the top N ranked players of a class+spec play one boss — rotation only.
+// Note there is no charParams here: this is not about you, so it needs no
+// character, no log and no kill of your own. It's the "learn the fight before you
+// pull it" view.
+app.get('/api/raid/rotations', async (req, res) => {
+  try {
+    const encounterID = Number(req.query.encounter);
+    if (!encounterID) return res.status(400).json({ error: 'encounter query param required' });
+    const topN = Math.max(2, Math.min(10, Number(req.query.top) || 10)); // each player costs ~5 API calls
+    const rotations = await buildBossRotations({
+      ...specParams(req.query),
+      encounterID,
+      difficulty: req.query.difficulty ? Number(req.query.difficulty) : DEFAULT_RAID_DIFFICULTY,
+      topN,
+      refresh: wantsRefresh(req.query),
+    });
+    res.json(rotations);
   } catch (err) {
     res.status(err.status ?? 500).json({ error: err.message });
   }

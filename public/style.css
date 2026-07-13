@@ -197,6 +197,13 @@ summary:hover { color: var(--text); }
 /* --- raid progression --- */
 .raid-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.6rem 0; }
 .raid-form input#raid-code { flex: 1 1 22rem; min-width: 16rem; }
+/* "Learn a boss": one player's rotation at a time, so the column is full width */
+.learn-tabs { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.5rem 0; }
+.learn-tab small { color: var(--muted); font-weight: 400; margin-left: 0.25rem; }
+.learn-tab.accent small { color: #14141c; }
+.ord-wrap.learn-ord { grid-template-columns: 1fr; }
+.ord-wrap.learn-ord .ord-list { max-height: 460px; }
+
 .raid-boss-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.6rem 0; }
 .raid-boss { text-align: left; border-color: var(--border); }
 .raid-boss:hover { border-color: var(--accent); }

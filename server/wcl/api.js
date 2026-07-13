@@ -406,7 +406,7 @@ export async function fetchRaidBenchmark({ encounterID, className, specName, dif
  * property of the ability itself (can a DK ever self-cast it), not of one
  * specific run, so fetching it once is enough.
  */
-export async function fetchRunDetail({ code, fightID, playerName, server = null, className = null, includeBuffSources = false, lite = false }) {
+export async function fetchRunDetail({ code, fightID, playerName, server = null, className = null, includeBuffSources = false, lite = false, castsOnly = false }) {
   const rd = await gql(REPORT_FIGHTS_ACTORS, { code, fightIDs: [fightID] });
   const report = rd?.reportData?.report;
   const fight = report?.fights?.[0];
@@ -427,13 +427,22 @@ export async function fetchRunDetail({ code, fightID, playerName, server = null,
   // need. It cuts a full run's ~7 requests (with multi-page event streams) down
   // to 3 table calls, so every pull of a raid night can be analysed, not just a
   // sample. The full fetch is reserved for the one pull compared to a top parser.
+  //
+  // `castsOnly` is the opposite trade: keep everything castOrder() reads (the Casts
+  // table names the presses, DamageDone separates fillers from cooldowns, Buffs
+  // recovers potions with no cast event, and the event stream gives the order) and
+  // drop the rest. It's what makes fetching TEN top players' rotations affordable:
+  // ~5 requests each instead of ~7, with no death or resource data pulled that a
+  // rotation-only view would never show.
   const castsT = await gql(REPORT_TABLE, { ...tableVars, dataType: 'Casts' });
   const damageT = await gql(REPORT_TABLE, { ...tableVars, dataType: 'DamageDone' });
-  const deathsT = await gql(REPORT_TABLE, { ...tableVars, dataType: 'Deaths' });
+  // NB: `lite` still fetches Deaths — per-pull death timing is the whole point of it.
+  const deathsT = castsOnly ? null : await gql(REPORT_TABLE, { ...tableVars, dataType: 'Deaths' });
   const buffsT = lite ? null : await gql(REPORT_TABLE, { ...tableVars, dataType: 'Buffs' });
 
   const castPages = lite ? [] : await paginateEvents(REPORT_CAST_EVENTS, { code, fightID, sourceID: actor.id, fight });
-  const resourcePages = lite ? [] : await paginateEvents(REPORT_RESOURCE_EVENTS, { code, fightID, sourceID: actor.id, fight });
+  const resourcePages =
+    lite || castsOnly ? [] : await paginateEvents(REPORT_RESOURCE_EVENTS, { code, fightID, sourceID: actor.id, fight });
 
   let buffSources = null;
   if (includeBuffSources && !lite) {
@@ -463,7 +472,7 @@ export async function fetchRunDetail({ code, fightID, playerName, server = null,
     casts: parseCastsTable(rdTable(castsT)),
     buffs: buffsT ? parseBuffsTable(rdTable(buffsT)) : { totalTimeMs: null, auras: [] },
     damage: parseDamageTable(rdTable(damageT)),
-    deaths: parseDeathsTable(rdTable(deathsT)),
+    deaths: deathsT ? parseDeathsTable(rdTable(deathsT)) : { deaths: [] },
     castEvents: parseCastEvents(castPages),
     resourceEvents: parseResourceEvents(resourcePages),
     buffSources,

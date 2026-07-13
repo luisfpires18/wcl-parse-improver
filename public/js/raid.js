@@ -8,9 +8,14 @@
 import { $, esc, fmtK, fmtPct, fmtSec, fmtTime, pctClass } from './util.js';
 import { state, charQuery } from './state.js';
 import { renderReport } from './report.js';
-import { dpsChartSvg, wireDpsBrush, setCastWindow, castOrderSlot } from './chart.js';
+import { dpsChartSvg, wireDpsBrush, setCastWindow, castOrderSlot, castOrderColumn } from './chart.js';
 
 let raidState = { code: null, difficulty: '5', bosses: [] };
+// every boss of the live tier, harvested from the overview — the "learn a boss"
+// picker needs bosses you have NOT killed (that's the point of it), so it can't
+// be built from your own kills
+let tierBosses = [];
+let learn = { data: null, selected: 0 };
 
 /**
  * The raid view. Your RANKED PARSES are the default — every raid of the tier and
@@ -46,11 +51,35 @@ export function renderRaidCard() {
       <div id="raid-bosses"></div>
     </details>
 
+    <details class="card" id="raid-learn-card">
+      <summary><b>Learn a boss</b> — how the top 10 of your spec play it</summary>
+      <p><small>The rotations of the ten best-ranked <b>${esc(state.activeSpec || '')} ${esc(
+        state.activeChar.classLabel || state.activeChar.className || ''
+      )}</b> kills of a boss. No comparison, no log, no kill of your own needed — this is for
+        reading <b>before</b> you pull.</small></p>
+      <form id="learn-form" class="raid-form">
+        <label class="spec-pick">boss <select id="learn-boss"></select></label>
+        <label class="spec-pick">difficulty
+          <select id="learn-diff">
+            <option value="5" selected>Mythic</option>
+            <option value="4">Heroic</option>
+            <option value="3">Normal</option>
+          </select>
+        </label>
+        <button type="submit">Show top 10 rotations</button>
+      </form>
+      <div id="learn-result"></div>
+    </details>
+
     <div id="raid-result"></div>`;
 
   $('#raid-form').addEventListener('submit', (e) => {
     e.preventDefault();
     loadRaidBosses();
+  });
+  $('#learn-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    loadBossRotations();
   });
   loadRaidZones();
 }
@@ -113,6 +142,130 @@ function renderRaidZones(zones) {
     n.addEventListener('click', () => {
       const id = n.dataset.analyze ?? n.dataset.encounter;
       if (id) loadRaidBoss(Number(id));
+    })
+  );
+
+  // the "learn a boss" picker lists every boss of the tier, killed or not
+  tierBosses = zones.flatMap((z) => z.bosses.map((b) => ({ ...b, zoneName: z.zoneName })));
+  const sel = $('#learn-boss');
+  if (sel) {
+    sel.innerHTML = tierBosses
+      .map((b) => `<option value="${b.encounterID}">${esc(b.name)}${b.kills ? '' : ' (not killed)'}</option>`)
+      .join('');
+  }
+}
+
+// --- "Learn a boss": the top 10 rotations of your spec, and nothing else ---
+//
+// Not a comparison. There is no "you" in this view — no gaps, no parse, no DPS
+// chart. It answers one question: what does this spec actually press on this boss,
+// and when do they burn their cooldowns.
+
+async function loadBossRotations() {
+  const root = $('#learn-result');
+  const encounterID = Number($('#learn-boss').value);
+  if (!root || !encounterID) return;
+  const difficulty = $('#learn-diff').value;
+  root.innerHTML = `<p class="muted">Reading the top 10 ranked kills' casts (10 logs — ~30s the first time, cached after)…</p>`;
+  try {
+    const params = charQuery();
+    // the character is irrelevant here; only their class+spec is used
+    params.delete('name');
+    params.delete('server');
+    params.set('encounter', encounterID);
+    params.set('difficulty', difficulty);
+    const res = await fetch(`/api/raid/rotations?${params}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    learn = { data, selected: 0 };
+    renderBossRotations();
+  } catch (err) {
+    root.innerHTML = `<span class="error">${esc(err.message)}</span>`;
+  }
+}
+
+function renderBossRotations() {
+  const root = $('#learn-result');
+  const d = learn.data;
+  if (!root || !d) return;
+
+  // How consistent the field is, press by press. A slot where 9/10 agree is a
+  // rule you should copy; a 4/10 slot is a choice, and must not read like a rule.
+  const openerRows = d.opener
+    .map((s) => {
+      const cls = s.agreementPct >= 80 ? 'p-orange' : s.agreementPct >= 50 ? 'p-blue' : 'muted';
+      const alts = s.alts.length
+        ? `<small class="muted">others: ${s.alts.map((a) => `${esc(a.name)} ×${a.count}`).join(', ')}</small>`
+        : '';
+      return `<tr>
+        <td class="num">${s.slot}</td>
+        <td><b class="${s.kind === 'amp' ? 'p-orange' : ''}">${esc(s.name)}</b> ${alts}</td>
+        <td class="num"><b class="${cls}">${s.count}/${s.of}</b></td>
+      </tr>`;
+    })
+    .join('');
+
+  const cdRows = d.cooldowns
+    .map(
+      (c) => `<tr>
+        <td><b class="p-orange">${esc(c.name)}</b></td>
+        <td class="num ${c.usedByPct >= 80 ? 'p-orange' : c.usedByPct >= 50 ? '' : 'muted'}">${c.players}/${c.of}</td>
+        <td class="num">${fmtTime(c.medianFirstSec * 1000)}</td>
+        <td class="num">${c.medianUses}×</td>
+      </tr>`
+    )
+    .join('');
+
+  const tabs = d.players
+    .map(
+      (p, i) =>
+        `<button type="button" class="mini learn-tab ${i === learn.selected ? 'accent' : ''}" data-i="${i}">
+          #${p.rank} ${esc(p.name)} <small>${fmtK(p.dps)}</small></button>`
+    )
+    .join('');
+
+  const p = d.players[learn.selected];
+  const skipped = d.skipped.length
+    ? `<p class="table-note"><small class="muted">${d.skipped.length} ranked ${d.skipped.length === 1 ? 'kill' : 'kills'} couldn't be read
+        (${d.skipped.map((s) => esc(s.name)).join(', ')}) — the report is private or deleted. The rest are all shown.</small></p>`
+    : '';
+
+  root.innerHTML = `
+    <h3>${esc(d.boss ?? 'Boss')} <small>&middot; ${esc(d.difficultyName || '')} &middot; top ${d.players.length} ${esc(d.specName)} ${esc(
+      d.className
+    )}</small></h3>
+
+    <h4>The opener they agree on</h4>
+    <table class="rot-table">
+      <thead><tr><th>#</th><th>Cast</th><th>Agree</th></tr></thead>
+      <tbody>${openerRows}</tbody>
+    </table>
+    <p class="table-note"><small>Press by press, what most of the ten do — and how many. <b class="p-orange">Orange</b> agreement (8+/10) is a
+      <b>rule</b>: copy it. <b class="p-blue">Blue</b> (5–7) is the common line but not settled. Grey is a genuine <b>split</b> — the field
+      doesn't agree, so neither should you treat it as gospel. "others" names exactly who did what instead.</small></p>
+
+    <h4>Cooldowns — who presses what, and when</h4>
+    <table class="rot-table">
+      <thead><tr><th>Cooldown</th><th>Used by</th><th>First press (median)</th><th>Uses</th></tr></thead>
+      <tbody>${cdRows}</tbody>
+    </table>
+    <p class="table-note"><small>A cooldown used by <b>10/10</b> at the same time is a scripted part of the fight. One used by
+      <b>half</b> the field is a choice — and if the median first press is late, they're holding it for a phase, not opening with it.
+      Derived from the runs (every potion, plus any damaging ability pressed at cooldown frequency), not from a per-class list.</small></p>
+
+    <h4>Full rotation</h4>
+    <div class="learn-tabs">${tabs}</div>
+    <div class="ord-wrap learn-ord">
+      ${castOrderColumn(p.castOrder, `#${p.rank} ${p.name} — ${fmtK(p.dps)} DPS, ${fmtTime(p.durationSec * 1000)}, ${p.cpm} CPM`)}
+    </div>
+    ${skipped}
+    <p class="table-note"><small>One player's kill, top to bottom, with their burst cooldowns pinned. Pick another name above to see how a
+      different top parser played the same boss — where they <b>differ</b> is where the fight allows a choice.</small></p>`;
+
+  root.querySelectorAll('.learn-tab').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      learn.selected = Number(btn.dataset.i);
+      renderBossRotations();
     })
   );
 }

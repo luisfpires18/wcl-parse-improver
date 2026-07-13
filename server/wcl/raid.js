@@ -6,11 +6,13 @@ import {
   fetchReportFights,
   fetchRunDetail,
   fetchRaidBenchmark,
+  fetchRaidRankings,
   fetchFightDeaths,
   fetchBossHealth,
   fetchDamageSeries,
   fetchMyEncounterRuns,
 } from './api.js';
+import { openerConsensus, cooldownUsage } from '../analysis/rotationConsensus.js';
 import { buildProgression, attemptOutput } from '../analysis/raidProgress.js';
 import { buildRaidParse } from '../analysis/raidParse.js';
 import { rotationComposition, castOrder } from '../analysis/spikes.js';
@@ -260,6 +262,87 @@ export async function buildRaidBossReport({
     compareTo,
     refresh,
   });
+}
+
+/**
+ * "How is this boss played by this spec" — the rotations of the top N ranked
+ * players, and nothing else.
+ *
+ * Deliberately NOT a comparison: there is no "you" here, no gaps, no parse. You
+ * don't need a log, a kill, or even the character to have pulled the boss. It
+ * exists to be read before you go in.
+ *
+ * Cost: the ranked page is one cached call; each player is a castsOnly detail
+ * (~5 requests — no deaths, no resource stream). Ten players is roughly a
+ * comparison report's worth of API, and every one of them is cached afterwards.
+ */
+export async function buildBossRotations({
+  encounterID,
+  difficulty = DEFAULT_RAID_DIFFICULTY,
+  className,
+  specName,
+  topN = 10,
+  refresh = false,
+}) {
+  const entries = await fetchRaidRankings({ encounterID, className, specName, difficulty, refresh });
+
+  // One row per player: the same name can hold several ranked kills, and ten
+  // copies of one player's rotation is not ten players' rotations.
+  const seen = new Set();
+  const picked = [];
+  for (const e of entries) {
+    const key = String(e.name).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    picked.push(e);
+    if (picked.length >= topN) break;
+  }
+
+  const players = [];
+  const skipped = [];
+  for (const [i, e] of picked.entries()) {
+    try {
+      const detail = await fetchRunDetail({
+        code: e.report.code,
+        fightID: e.report.fightID,
+        playerName: e.name,
+        castsOnly: true,
+      });
+      const order = castOrder(detail);
+      const durationSec = Math.max(1, Math.round((detail.fight.endTime - detail.fight.startTime) / 1000));
+      players.push({
+        rank: i + 1,
+        name: e.name,
+        dps: Math.round(e.dps ?? 0),
+        durationSec,
+        cpm: Math.round((10 * 60 * order.length) / durationSec) / 10,
+        report: e.report,
+        boss: detail.fight.name ?? null,
+        castOrder: order,
+      });
+    } catch (err) {
+      // A ranked entry whose report was deleted or made private is a dead link.
+      // Say which player dropped out rather than quietly showing eight of ten.
+      dumpDebug('boss-rotation-skipped', { encounterID, name: e.name, error: String(err) });
+      skipped.push({ name: e.name, reason: err?.message ?? String(err) });
+    }
+  }
+  if (!players.length) {
+    throw new Error(`Could not read a rotation from any ranked ${specName} kill of that boss.`);
+  }
+
+  return {
+    encounterID,
+    difficulty,
+    difficultyName: difficultyName(difficulty),
+    className,
+    specName,
+    boss: players.find((p) => p.boss)?.boss ?? null,
+    players,
+    opener: openerConsensus(players.map((p) => p.castOrder)),
+    cooldowns: cooldownUsage(players),
+    skipped,
+  };
 }
 
 /** Extract a WCL report code from a raw code or a full report URL. */

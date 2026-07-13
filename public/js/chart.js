@@ -314,45 +314,48 @@ const ORD_DISPLAY_CAP = 150;
  * The pinned strip fixes both: every burst cooldown in the window, complete, in
  * order, always visible. The full sequence stays below for reading the flow.
  */
+/**
+ * One player's cast order as a column: burst cooldowns pinned at the top (never
+ * truncated — they're the reason you opened it), then the literal sequence.
+ * Shared by the 1v1 comparison and the "learn this boss" top-10 view.
+ */
+export function castOrderColumn(list, title) {
+  const amps = list.filter((c) => c.kind === 'amp');
+
+  // never truncated — the cooldowns are the whole reason you opened this
+  const pinned = amps.length
+    ? `<div class="ord-cds">
+         <div class="ord-cds-head">Burst cooldowns <small>(${amps.length})</small></div>
+         <ol class="ord-cds-list">${amps
+           .map((c) => `<li><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="p-orange">${esc(c.name)}</span></li>`)
+           .join('')}</ol>
+       </div>`
+    : `<div class="ord-cds"><div class="ord-cds-head muted">No burst cooldowns in this window</div></div>`;
+
+  const shown = list.slice(0, ORD_DISPLAY_CAP);
+  const items = shown
+    .map(
+      (c) =>
+        `<li class="${c.kind === 'amp' ? 'ord-amp' : ''}"><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="${castKindClass(c.kind)}">${esc(c.name)}</span></li>`
+    )
+    .join('');
+  // the truncation note now says what it actually drops — and the cooldowns
+  // among them are safe, because they're pinned above
+  const cut = list.length - shown.length;
+  const more = cut > 0 ? `<li class="ord-more">…and ${cut} more casts below (all burst cooldowns are pinned above) — brush a smaller window on the chart to read them</li>` : '';
+
+  return `<div class="ord-col">
+    <div class="ord-head">${esc(title)} <small>(${list.length})</small></div>
+    ${pinned}
+    <ol class="ord-list">${items}${more}</ol>
+  </div>`;
+}
+
 export function renderCastOrderCols(them, mine, otherLabel) {
-  const col = (list, title) => {
-    const amps = list.filter((c) => c.kind === 'amp');
-
-    // never truncated — the cooldowns are the whole reason you opened this
-    const pinned = amps.length
-      ? `<div class="ord-cds">
-           <div class="ord-cds-head">Burst cooldowns <small>(${amps.length})</small></div>
-           <ol class="ord-cds-list">${amps
-             .map(
-               (c) => `<li><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="p-orange">${esc(c.name)}</span></li>`
-             )
-             .join('')}</ol>
-         </div>`
-      : `<div class="ord-cds"><div class="ord-cds-head muted">No burst cooldowns in this window</div></div>`;
-
-    const shown = list.slice(0, ORD_DISPLAY_CAP);
-    const items = shown
-      .map(
-        (c) =>
-          `<li class="${c.kind === 'amp' ? 'ord-amp' : ''}"><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="${castKindClass(c.kind)}">${esc(c.name)}</span></li>`
-      )
-      .join('');
-    // the truncation note now says what it actually drops — and the cooldowns
-    // among them are safe, because they're pinned above
-    const cut = list.length - shown.length;
-    const more = cut > 0 ? `<li class="ord-more">…and ${cut} more casts below (all burst cooldowns are pinned above) — brush a smaller window on the chart to read them</li>` : '';
-
-    return `<div class="ord-col">
-      <div class="ord-head">${esc(title)} <small>(${list.length})</small></div>
-      ${pinned}
-      <ol class="ord-list">${items}${more}</ol>
-    </div>`;
-  };
-
   return `
     <div class="ord-wrap">
-      ${col(them, `${esc(otherLabel ?? 'Them')} — cast order`)}
-      ${col(mine, 'You — cast order')}
+      ${castOrderColumn(them, `${otherLabel ?? 'Them'} — cast order`)}
+      ${castOrderColumn(mine, 'You — cast order')}
     </div>
     <p class="table-note"><small><b>Burst cooldowns are pinned at the top of each column</b> so you never have to hunt for a potion in a
       150-row list. <span class="p-orange"><b>Orange</b> = burst cooldown</span> — every <b>potion</b>, plus any damaging ability pressed at
