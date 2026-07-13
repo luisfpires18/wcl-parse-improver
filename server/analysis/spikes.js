@@ -16,10 +16,11 @@
 // Windows align to EACH run's own burst peak (not the same clock time), so a
 // few seconds of routing offset never reads as "you did nothing".
 import { IGNORED_ABILITIES } from './metrics.js';
+import { distributionMatch, bigramMatch } from '../../shared/rotationMatch.js';
 
 // Known Unholy DK / general damage cooldowns + damage potions (spec-sanctioned
 // named list). Not a rotation guess — just "these are the burst amplifiers".
-const AMPLIFIERS = new Set([
+export const AMPLIFIERS = new Set([
   'Army of the Dead',
   'Raise Abomination',
   'Dark Transformation',
@@ -74,10 +75,18 @@ const isPeak = (pts, i) => pts[i].dps >= (pts[i - 1]?.dps ?? 0) && pts[i].dps >=
 
 /**
  * Confirm from cast data whether the two runs use the same rotation, and show
- * exactly where the composition differs. Cosine similarity of the whole-run
- * cast-count vectors (>= ~0.9 = same rotation) plus a per-ability table of
- * count + cast-share for each side. Damage-ability rows are marked so the UI
- * can separate "they press X more" from "you spend globals on defensives".
+ * exactly where the composition differs.
+ *
+ * Both numbers are total-variation MATCH of normalized cast distributions,
+ * NOT cosine. Cosine of raw cast-count vectors is magnitude-dominated and
+ * scale-invariant, so any two runs of the same spec pin near 99% (the shared
+ * core buttons swamp everything) — a useless, dishonestly-high number. TV
+ * match = 100·(1 − ½Σ|pᵢ−qᵢ|) reads instead as "the share of casts that land
+ * on the same button in the same proportion", so it drops honestly when the
+ * proportions differ even though the same buttons are pressed. Plus a
+ * per-ability table of count + cast-share for each side; damage-ability rows
+ * are marked so the UI can separate "they press X more" from "you spend
+ * globals on defensives".
  */
 export function rotationComposition(mineDetail, otherDetail) {
   const my = castCountsByName(mineDetail);
@@ -87,24 +96,14 @@ export function rotationComposition(mineDetail, otherDetail) {
   const myTotal = [...my.values()].reduce((a, b) => a + b, 0) || 1;
   const theirTotal = [...their.values()].reduce((a, b) => a + b, 0) || 1;
 
-  let dot = 0;
-  let nm = 0;
-  let nt = 0;
-  for (const n of names) {
-    const a = my.get(n) ?? 0;
-    const b = their.get(n) ?? 0;
-    dot += a * b;
-    nm += a * a;
-    nt += b * b;
-  }
-  const cos = nm && nt ? dot / (Math.sqrt(nm) * Math.sqrt(nt)) : 0;
-  const similarityPct = Math.round(cos * 100); // composition (spell mix) — order-blind
+  // composition (spell mix) — order-blind, proportion-aware
+  const similarityPct = Math.round(distributionMatch(my, their));
 
-  // ORDER matters: cosine of cast-transition (bigram) vectors. Two runs with
-  // the same spell mix but different sequencing score high above and low here.
+  // ORDER matters: TV match of cast-transition (bigram) distributions. Two runs
+  // with the same spell mix but different sequencing score high above, low here.
   const mySeq = orderedCastNames(mineDetail);
   const theirSeq = orderedCastNames(otherDetail);
-  const sequencePct = Math.round(bigramCosine(mySeq, theirSeq) * 100);
+  const sequencePct = Math.round(bigramMatch(mySeq, theirSeq));
   const myTopTrans = topTransition(mySeq);
   const theirTopTrans = topTransition(theirSeq);
 
@@ -147,16 +146,20 @@ export function rotationComposition(mineDetail, otherDetail) {
       ? ` Their most common sequence is ${theirTopTrans}; yours is ${myTopTrans}.`
       : '';
   const summary =
-    `Same spell mix — ${similarityPct}% composition match — but cast-order (sequence) only ${sequencePct}%: ` +
-    `you use the same abilities in different order.` +
+    `Rotation match: ${similarityPct}% spell mix (which buttons, in what proportion) and ` +
+    `${sequencePct}% cast order (the sequence you press them in).` +
+    (similarityPct - sequencePct >= 10 ? ' You press the same buttons but sequence them differently.' : '') +
     orderBit +
     (bits.length ? ` On counts: ${listOf(bits)}.` : '');
 
   return {
     similarityPct,
     sequencePct,
-    // "same rotation" now needs both: same spells AND similar sequencing
-    sameRotation: similarityPct >= 88 && sequencePct >= 85,
+    // "same rotation" needs both: same spell mix AND similar sequencing.
+    // Thresholds are on the TV-match scale (top players vs a competent player
+    // of the same spec land ~84-93 mix, ~64-75 order), not the old cosine
+    // scale where everything sat at 97-100.
+    sameRotation: similarityPct >= 80 && sequencePct >= 65,
     summary,
     rows,
     myTopTransition: myTopTrans,
@@ -186,30 +189,10 @@ function orderedCastNames(detail) {
   return out;
 }
 
-/** Cosine similarity of consecutive-cast (bigram) vectors — order-sensitive. */
-export function bigramCosine(seqA, seqB) {
-  const bg = (seq) => {
-    const m = new Map();
-    for (let i = 0; i + 1 < seq.length; i++) {
-      const k = `${seq[i]}>${seq[i + 1]}`;
-      m.set(k, (m.get(k) ?? 0) + 1);
-    }
-    return m;
-  };
-  const a = bg(seqA);
-  const b = bg(seqB);
-  let dot = 0;
-  let na = 0;
-  let nb = 0;
-  for (const k of new Set([...a.keys(), ...b.keys()])) {
-    const x = a.get(k) ?? 0;
-    const y = b.get(k) ?? 0;
-    dot += x * y;
-    na += x * x;
-    nb += y * y;
-  }
-  return na && nb ? dot / (Math.sqrt(na) * Math.sqrt(nb)) : 0;
-}
+// distributionMatch / bigramMatch live in shared/ because the browser computes
+// the same two numbers for a brushed chart window — re-exported so existing
+// importers (and tests) keep their entry point.
+export { distributionMatch, bigramMatch } from '../../shared/rotationMatch.js';
 
 /** The most common "A → B" transition in a cast sequence, phrased. */
 function topTransition(seq) {
@@ -343,7 +326,9 @@ export function analyzeSpikes({ mineDetail, otherDetail, mineSeries, otherSeries
 
   // rotation similarity — proven from cast composition, not assumed
   const rotation = rotationComposition(mineDetail, otherDetail);
-  // literal cast-order sequences from the pull start (learn their flow)
+  // literal cast-order sequences from the pull start (learn their flow). Buff
+  // context lives on the rotation timeline's bar lanes, not here — per-cast badges
+  // were unreadable (a DK had 5 buffs up on nearly every global).
   rotation.order = { mine: castOrder(mineDetail), them: castOrder(otherDetail) };
 
   // headline builds on the confirmed similarity + measured gaps

@@ -120,6 +120,25 @@ export function parseDeathsTable(table) {
   };
 }
 
+/**
+ * Whole-raid Deaths table (no sourceID) -> one row per death, keeping the
+ * player, actor id, absolute timestamp and which fight it belongs to. Used to
+ * reconstruct each pull's death cascade so a player's death can be placed
+ * relative to the raid's (died early vs went down with everyone).
+ */
+export function parseFightDeaths(table) {
+  const d = dataOf(table, 'deaths');
+  const entries = Array.isArray(d?.entries) ? d.entries : [];
+  return entries
+    .filter((e) => e && typeof e === 'object' && typeof e.timestamp === 'number')
+    .map((e) => ({
+      name: e.name ?? null,
+      id: numOrNull(e.id),
+      timestamp: e.timestamp,
+      fight: numOrNull(e.fight),
+    }));
+}
+
 /** Cast events stream -> ordered cast timestamps (type "cast" only). */
 export function parseCastEvents(eventPages) {
   const casts = [];

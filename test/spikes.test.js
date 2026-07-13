@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzeSpikes, rotationComposition, castOrder, bigramCosine } from '../server/analysis/spikes.js';
+import { analyzeSpikes, rotationComposition, castOrder, bigramMatch } from '../server/analysis/spikes.js';
 
 function makeSeries(spikeBins, high, low, nBins = 12, binMs = 5000) {
   const points = [];
@@ -91,7 +91,7 @@ test('rotationComposition: near-identical casts score high similarity (same rota
   // near-identical sequence too (both spam Scourge then Army) -> same rotation
   assert.ok(rc.sequencePct >= 85, `expected high sequence similarity, got ${rc.sequencePct}`);
   assert.equal(rc.sameRotation, true);
-  assert.ok(rc.summary.includes('composition') && rc.summary.includes('sequence'));
+  assert.ok(rc.summary.includes('spell mix') && rc.summary.includes('cast order'));
   const ss = rc.rows.find((r) => r.name === 'Scourge Strike');
   assert.equal(ss.mine, 10);
   assert.equal(ss.them, 11);
@@ -120,14 +120,14 @@ test('castOrder respects the limit', () => {
   assert.equal(castOrder(makeDetail(many), 25).length, 25);
 });
 
-test('bigramCosine: order matters — same counts, different order scores below 1', () => {
+test('bigramMatch: order matters — same counts, different order scores well below 100', () => {
   // identical multiset {A,A,B,B} but opposite sequencing
   const a = ['A', 'B', 'A', 'B', 'A', 'B']; // alternating
   const b = ['A', 'A', 'A', 'B', 'B', 'B']; // clumped
-  const sim = bigramCosine(a, b);
-  assert.ok(sim < 0.6, `expected low order similarity, got ${sim}`);
-  // identical sequence = 1
-  assert.equal(Math.round(bigramCosine(a, a) * 100), 100);
+  const sim = bigramMatch(a, b);
+  assert.ok(sim < 60, `expected low order similarity, got ${sim}`);
+  // identical sequence = 100
+  assert.equal(Math.round(bigramMatch(a, a)), 100);
 });
 
 test('rotationComposition: reports BOTH spell-mix and cast-order similarity; same mix + different order is not "same rotation"', () => {
@@ -143,7 +143,7 @@ test('rotationComposition: reports BOTH spell-mix and cast-order similarity; sam
   assert.ok(rc.similarityPct >= 90, `composition should be high, got ${rc.similarityPct}`);
   assert.ok(rc.sequencePct < rc.similarityPct, 'cast-order similarity should be lower than composition');
   assert.equal(rc.sameRotation, false); // different sequencing => not the same rotation
-  assert.ok(rc.summary.includes('composition') && rc.summary.includes('sequence'));
+  assert.ok(rc.summary.includes('spell mix') && rc.summary.includes('cast order'));
 });
 
 test('rotationComposition: divergent casts score low similarity (different rotation)', () => {

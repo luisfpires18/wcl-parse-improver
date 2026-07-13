@@ -9,8 +9,7 @@
 // not guessed: the Forbidden Knowledge talent transforms Epidemic/Death Coil
 // into these for 30s after Army of the Dead. Necrotic Coil genuinely cleaves
 // (up to 3 targets at full damage, unlike single-target Death Coil), so
-// these are real distinct abilities with their own breakpoints — see
-// server/guide/unholyDkGuide.js for the full detail and sources.
+// these are real distinct abilities with their own breakpoints.
 const ABILITY_MECHANIC_NOTE = {
   Graveyard: 'Epidemic transformed by Forbidden Knowledge during a 30s Army of the Dead window, used at 5+ targets',
   'Necrotic Coil': 'Death Coil transformed by Forbidden Knowledge during a 30s Army of the Dead window, cleaves up to 3 targets',
