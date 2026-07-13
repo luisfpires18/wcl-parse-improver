@@ -297,24 +297,66 @@ export function setCastWindow(root, view, loSec, hiSec) {
 
 const ORD_DISPLAY_CAP = 150;
 
+/**
+ * The two cast-order columns, each with its burst cooldowns PINNED above the
+ * scrolling list.
+ *
+ * Two things made a cooldown impossible to find, and both are display bugs — the
+ * data was always there:
+ *
+ *   1. A potion is usually the FIRST thing pressed, so it sits at the top of a
+ *      140-row scrolling list. The moment you scroll to compare mid-fight play,
+ *      it's gone. (Reported as "I can't find the potion, only shows mine" — theirs
+ *      was at 0.1s, scrolled out of view.)
+ *   2. The list is capped at 150 rows. A cooldown past that was silently DROPPED,
+ *      so on a long window it genuinely wasn't rendered at all.
+ *
+ * The pinned strip fixes both: every burst cooldown in the window, complete, in
+ * order, always visible. The full sequence stays below for reading the flow.
+ */
 export function renderCastOrderCols(them, mine, otherLabel) {
   const col = (list, title) => {
+    const amps = list.filter((c) => c.kind === 'amp');
+
+    // never truncated — the cooldowns are the whole reason you opened this
+    const pinned = amps.length
+      ? `<div class="ord-cds">
+           <div class="ord-cds-head">Burst cooldowns <small>(${amps.length})</small></div>
+           <ol class="ord-cds-list">${amps
+             .map(
+               (c) => `<li><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="p-orange">${esc(c.name)}</span></li>`
+             )
+             .join('')}</ol>
+         </div>`
+      : `<div class="ord-cds"><div class="ord-cds-head muted">No burst cooldowns in this window</div></div>`;
+
     const shown = list.slice(0, ORD_DISPLAY_CAP);
     const items = shown
-      .map((c) => `<li><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="${castKindClass(c.kind)}">${esc(c.name)}</span></li>`)
+      .map(
+        (c) =>
+          `<li class="${c.kind === 'amp' ? 'ord-amp' : ''}"><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="${castKindClass(c.kind)}">${esc(c.name)}</span></li>`
+      )
       .join('');
-    const more = list.length > ORD_DISPLAY_CAP ? `<li class="ord-more">…and ${list.length - ORD_DISPLAY_CAP} more — select a smaller window on the chart</li>` : '';
-    return `<div class="ord-col"><div class="ord-head">${esc(title)} <small>(${list.length})</small></div><ol class="ord-list">${items}${more}</ol></div>`;
+    // the truncation note now says what it actually drops — and the cooldowns
+    // among them are safe, because they're pinned above
+    const cut = list.length - shown.length;
+    const more = cut > 0 ? `<li class="ord-more">…and ${cut} more casts below (all burst cooldowns are pinned above) — brush a smaller window on the chart to read them</li>` : '';
+
+    return `<div class="ord-col">
+      <div class="ord-head">${esc(title)} <small>(${list.length})</small></div>
+      ${pinned}
+      <ol class="ord-list">${items}${more}</ol>
+    </div>`;
   };
+
   return `
     <div class="ord-wrap">
       ${col(them, `${esc(otherLabel ?? 'Them')} — cast order`)}
       ${col(mine, 'You — cast order')}
     </div>
-    <p class="table-note"><small>Literal spell-cast sequence for the selected window.
-      <span class="p-orange"><b>Orange</b> = burst cooldown</span> — every <b>potion</b>, plus any damaging ability pressed at cooldown
-      frequency (worked out from the run, not a per-class list, so it lights up The Hunt for a DH exactly as it does Army for a DK).
-      <span class="p-blue">Blue</span> = ordinary damage, grey = utility.
-      Read their column top-down to see their flow, then check the <b>buff bars on the rotation timeline</b> to see which buffs were up
-      while they were pressing them.</small></p>`;
+    <p class="table-note"><small><b>Burst cooldowns are pinned at the top of each column</b> so you never have to hunt for a potion in a
+      150-row list. <span class="p-orange"><b>Orange</b> = burst cooldown</span> — every <b>potion</b>, plus any damaging ability pressed at
+      cooldown frequency (worked out from the run, not a per-class list, so it lights up The Hunt for a DH exactly as it does Army for a DK).
+      <span class="p-blue">Blue</span> = ordinary damage, grey = utility. Below the pin is the literal cast sequence — read their column
+      top-down for the flow, then check the <b>buff bars on the rotation timeline</b> to see which buffs were up while they pressed them.</small></p>`;
 }

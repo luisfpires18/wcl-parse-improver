@@ -300,3 +300,28 @@ summary:hover { color: var(--text); }
   color: var(--muted);
   vertical-align: middle;
 }
+
+/* Burst cooldowns, pinned above the cast list. A potion is usually the first
+   thing pressed, so it sat at the top of a 140-row scroller and vanished the
+   moment you scrolled — and anything past the 150-row cap was dropped outright. */
+.ord-cds {
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.ord-cds-head {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+.ord-cds-head.muted { color: var(--muted); font-weight: 400; }
+.ord-cds-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.35rem;
+  max-height: 9rem;
+  overflow-y: auto;
+}
+.ord-cds-list li { padding: 0.1rem 0.6rem; font-size: 0.82rem; white-space: nowrap; }
+/* the same cast, highlighted where it sits in the full sequence below */
+.ord-list li.ord-amp { background: color-mix(in srgb, var(--accent) 10%, transparent); }
