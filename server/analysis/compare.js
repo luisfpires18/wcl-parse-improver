@@ -45,7 +45,7 @@ export function buildReport(bundle) {
   const theirDps = bundle.other.meta.dps ?? null;
   const dpsGapPct = myDps != null && theirDps ? (100 * (theirDps - myDps)) / theirDps : null;
 
-  const gaps = buildGaps(mine, them, buffSources);
+  const gaps = gapsFrom(mine, them, buffSources);
   for (const g of gaps) g.advice = adviceFor(g);
 
   const timeline = buildTimeline(mineDetail, otherDetail, buffSources);
@@ -102,7 +102,17 @@ export function buildReport(bundle) {
 
 // --- section 6: what stands out ---------------------------------------------
 
-function buildGaps(mine, them, buffSources) {
+/**
+ * Section 6 for either view. Takes run details (not metrics) so the raid path can
+ * call it directly — a raid pull previously had no "biggest gaps" section at all.
+ */
+export function buildGaps(mineDetail, otherDetail, buffSources = {}) {
+  const gaps = gapsFrom(computeRunMetrics(mineDetail), computeRunMetrics(otherDetail), buffSources);
+  for (const g of gaps) g.advice = adviceFor(g);
+  return gaps;
+}
+
+function gapsFrom(mine, them, buffSources) {
   const gaps = [];
 
   if (mine.deaths.length > them.deaths.length) {

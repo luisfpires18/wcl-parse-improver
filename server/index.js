@@ -5,7 +5,7 @@ import { fetchOverview, fetchDamageSeries, fetchGameClasses, detectCharacter } f
 import { buildComparison, DEFAULT_LEVEL } from './wcl/comparison.js';
 import { buildRaidReport, buildRaidPull, DEFAULT_RAID_DIFFICULTY } from './wcl/raid.js';
 import { buildReport } from './analysis/compare.js';
-import { loadCharacters, upsertCharacter, removeCharacter } from './characters.js';
+import { loadCharacters, upsertCharacter, removeCharacter, setCharacterHidden } from './characters.js';
 
 loadEnv();
 
@@ -18,21 +18,25 @@ app.use(express.static(path.join(PROJECT_ROOT, 'public')));
 // rotation-match maths). Serving it means there is exactly one copy.
 app.use('/shared', express.static(path.join(PROJECT_ROOT, 'shared')));
 
+// No defaults: these used to fall back to the author's own character, so a request
+// with missing params silently analysed someone else's toon.
 function charParams(query) {
+  const name = String(query.name || '').trim();
+  const serverSlug = String(query.server || '').trim();
+  if (!name || !serverSlug) throw new Error('name and server query params are required');
   return {
-    name: String(query.name || 'Unreally'),
-    serverSlug: String(query.server || 'aggra-portugues'),
-    serverRegion: String(query.region || 'EU'),
-    zoneID: Number(query.zone || 47),
+    name,
+    serverSlug,
+    serverRegion: String(query.region || 'EU').trim(),
+    zoneID: Number(query.zone || 0) || undefined,
   };
 }
 
-// class/spec drive the comparison cohort; default to the original DK/Unholy
 function specParams(query) {
-  return {
-    className: query.className ? String(query.className) : 'DeathKnight',
-    specName: query.specName ? String(query.specName) : 'Unholy',
-  };
+  const className = String(query.className || '').trim();
+  const specName = String(query.specName || '').trim();
+  if (!className || !specName) throw new Error('className and specName query params are required');
+  return { className, specName };
 }
 
 // `refresh=1` bypasses the disk cache for ranking queries (use after logging
@@ -164,6 +168,7 @@ app.get('/api/raid/pull', async (req, res) => {
       encounterID,
       fightID,
       difficulty,
+      compareTo: req.query.compareTo ? String(req.query.compareTo) : null,
       refresh: wantsRefresh(req.query),
     });
     res.json(pull);
@@ -203,6 +208,15 @@ app.post('/api/characters', async (req, res) => {
     res.json(upsertCharacter(req.body, classes));
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// Hide a character from the analysis views without forgetting it.
+app.patch('/api/characters/:id', (req, res) => {
+  try {
+    res.json(setCharacterHidden(req.params.id, Boolean(req.body?.hidden)));
+  } catch (err) {
+    res.status(404).json({ error: err.message });
   }
 });
 

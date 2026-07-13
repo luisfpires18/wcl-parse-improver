@@ -89,7 +89,11 @@ export function validateCharacter(input, classes) {
     return { name: spec.name, slug: spec.slug };
   });
 
-  const character = { name, server, region, zone, className: klass.slug, classLabel: klass.name, specs };
+  // `hidden` keeps a character on the roster but out of the analysis views — for
+  // alts you track but don't want cluttering the picker. Preserved across an
+  // upsert so re-adding a character doesn't silently unhide it.
+  const hidden = Boolean(input?.hidden);
+  const character = { name, server, region, zone, className: klass.slug, classLabel: klass.name, specs, hidden };
   return { id: characterId(character), ...character };
 }
 
@@ -121,6 +125,16 @@ export function upsertCharacter(input, classes, file = CHARACTERS_FILE) {
   else list.push(character);
   saveCharacters(list, file);
   return character;
+}
+
+/** Show/hide one character without removing it. */
+export function setCharacterHidden(id, hidden, file = CHARACTERS_FILE) {
+  const list = loadCharacters(file);
+  const c = list.find((x) => x.id === id);
+  if (!c) throw new Error(`No character with id "${id}"`);
+  c.hidden = Boolean(hidden);
+  saveCharacters(list, file);
+  return c;
 }
 
 export function removeCharacter(id, file = CHARACTERS_FILE) {

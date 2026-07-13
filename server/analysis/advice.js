@@ -46,17 +46,15 @@ export function adviceFor(gapItem) {
         `(measured only while actively playing, idle/death windows excluded) — a genuine buff-management ` +
         `gap, not a downtime artifact; keep it rolling.`
       );
-    case 'waste':
+    case 'waste': {
+      // the resource is whatever the log said this spec generates — no class here
+      const res = gapItem.resource ?? 'resource';
       return (
-        `You lost ${gapItem.mine} of your potential Runic Power to overcapping (~${gapItem.wastedAmount} RP over the run) ` +
-        `vs their ${gapItem.cohort} — spend Runic Power before it caps rather than holding it for a "better" moment; ` +
-        `every point wasted is a Death Coil or Epidemic you didn't get to cast.`
+        `You lost ${gapItem.mine} of your potential ${res} to overcapping (~${gapItem.wastedAmount} over the run) ` +
+        `vs their ${gapItem.cohort} — spend it before it caps rather than holding it for a "better" moment. ` +
+        `Every point wasted is a cast you never got to make.`
       );
-    case 'spender':
-      return (
-        `Your RP-spender mix differs notably from the cohort (${gapItem.mine} Epidemic share vs their ${gapItem.cohort}) — ` +
-        `check whether you are choosing the right spender for the pull sizes in this dungeon.`
-      );
+    }
     default:
       return '';
   }

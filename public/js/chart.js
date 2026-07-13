@@ -114,7 +114,7 @@ export function renderTimelineSection(timeline, timelineInfo) {
     : '';
   return `
     <h3>Rotation timeline</h3>
-    <p class="timeline-sub"><small>Ticks = individual casts. Only cooldown-gated abilities get a lane (fillers like Scourge Strike/Death Coil are already in the CPM table below).${buffHelp} The two runs have different durations — each has its own time axis.</small></p>
+    <p class="timeline-sub"><small>Ticks = individual casts. Only cooldown-gated abilities get a lane — fillers are in the per-ability table further down.${buffHelp} The two runs have different durations, so each has its own time axis.</small></p>
     <div class="timeline-wrap">
       <div class="timeline-sub">You &middot; duration ${fmtTime(mine.durationMs)}</div>
       ${timelineSvg(mine, laneNames, buffLaneNames)}
@@ -314,34 +314,4 @@ export function renderCastOrderCols(them, mine, otherLabel) {
     <p class="table-note"><small>Literal spell-cast sequence for the selected window.
       <span class="p-blue">Blue</span> = damage, <span class="p-orange">orange</span> = amplifier (Army/Dark Transformation/pot), grey = utility. Read their column top-down to see their flow —
       then check the <b>buff bars on the rotation timeline</b> to see which buffs were up while they were pressing them.</small></p>`;
-}
-
-/** Side-by-side per-ability damage table. Used by the M+ report and the raid comparison. */
-export function renderDamageDone(dd) {
-  if (!dd || !dd.rows.length) return '';
-  const fmtM = (v) => (v / 1e6).toFixed(1) + 'm';
-  const rows = dd.rows
-    .slice(0, 30)
-    .map(
-      (a) => `<tr>
-        <td>${esc(a.name)}</td>
-        <td class="num">${fmtM(a.myAmount)}</td><td class="num">${a.myCasts || '—'}</td><td class="num">${a.myHits || '—'}</td><td class="num">${fmtK(a.myDps)}</td>
-        <td class="num sep">${a.theirAmount ? fmtM(a.theirAmount) : '—'}</td><td class="num">${a.theirCasts || '—'}</td><td class="num">${a.theirHits || '—'}</td><td class="num">${a.theirDps ? fmtK(a.theirDps) : '—'}</td>
-      </tr>`
-    )
-    .join('');
-  const t = dd.totals;
-  return `
-    <details open><summary>Damage done — you vs ${esc(dd.otherLabel)} (per ability)</summary>
-      <table class="dmg-table">
-        <thead>
-          <tr><th rowspan="2">Ability</th><th colspan="4" class="grp">You</th><th colspan="4" class="grp sep">${esc(dd.otherLabel)}</th></tr>
-          <tr><th>Amount</th><th>Casts</th><th>Hits</th><th>DPS</th><th class="sep">Amount</th><th>Casts</th><th>Hits</th><th>DPS</th></tr>
-        </thead>
-        <tbody>${rows}</tbody>
-        <tfoot><tr><td>Total</td>
-          <td class="num">${fmtM(t.myDamage)}</td><td></td><td></td><td class="num">${fmtK(t.myDps)}</td>
-          <td class="num sep">${fmtM(t.theirDamage)}</td><td></td><td></td><td class="num">${fmtK(t.theirDps)}</td></tr></tfoot>
-      </table>
-    </details>`;
 }

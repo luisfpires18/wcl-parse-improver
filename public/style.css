@@ -56,7 +56,6 @@ input, button, select {
 }
 .spec-pick { display: flex; align-items: center; gap: 0.35rem; color: var(--muted); font-size: 0.85rem; }
 
-.nav-add { border-style: dashed; }
 button.danger { border-color: var(--viz-critical); color: var(--viz-critical); }
 
 /* character header bar */
@@ -103,8 +102,6 @@ tr.clickable:hover td { background: var(--panel2); }
 .p-orange { color: #ff8000; }
 .p-pink   { color: #e268a8; }
 
-.consumables { margin: 0.8rem 0; }
-.consumables table { max-width: 640px; }
 .parse-plan { margin: 0.8rem 0; }
 .tier-chips { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.4rem 0 0.6rem; }
 .tier-chip {
@@ -144,21 +141,10 @@ ol.gaps { list-style: none; padding: 0; margin: 0.4rem 0; }
 .gap-advice { color: var(--text); font-size: 0.88rem; margin-top: 0.3rem; }
 
 .table-note { margin: 0.2rem 0 0.4rem; }
-.comp-notes { margin: 0.4rem 0 0; padding-left: 1.1rem; color: var(--muted); }
-.comp-notes li { margin-bottom: 0.3rem; }
 
 details { margin: 0.5rem 0; }
 summary { cursor: pointer; color: var(--muted); font-size: 0.9rem; padding: 0.2rem 0; }
 summary:hover { color: var(--text); }
-
-.honesty { border-top: 1px solid var(--border); padding-top: 0.7rem; margin-top: 1.2rem; }
-.summary { background: var(--panel2); border: 1px solid var(--border); border-radius: 6px; padding: 0.7rem 0.9rem; margin: 0.8rem 0; line-height: 1.5; }
-
-.next-steps { border-top: 2px solid var(--accent); margin-top: 1.2rem; padding-top: 0.8rem; }
-.next-steps h3 { color: var(--accent); }
-.next-steps-recap { color: var(--muted); font-size: 0.85rem; margin: 0 0 0.5rem; }
-.next-steps ol { margin: 0; padding-left: 1.3rem; }
-.next-steps li { margin-bottom: 0.5rem; line-height: 1.45; }
 
 .timeline-wrap { margin: 0.6rem 0 1rem; }
 .timeline-sub { color: var(--muted); font-size: 0.82rem; margin: 0.6rem 0 0.2rem; }
@@ -167,19 +153,6 @@ summary:hover { color: var(--text); }
 .timeline-tick:hover { opacity: 0.7; }
 .timeline-swatch { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 0.35rem; vertical-align: middle; }
 .dps-chart-svg { width: 100%; height: auto; display: block; margin: 0.3rem 0; }
-.spike-analysis { margin: 0.6rem 0 0.4rem; }
-.spike-analysis h4 { margin: 0.4rem 0 0.3rem; font-size: 0.95rem; }
-.spike-headline { font-size: 0.9rem; line-height: 1.5; margin: 0 0 0.5rem; }
-ol.spikes { list-style: none; padding: 0; margin: 0; }
-.spike-row { border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: 0.5rem 0.7rem; margin-bottom: 0.4rem; background: var(--panel2); }
-.spike-head { font-size: 0.88rem; }
-.spike-head .vals { color: var(--muted); font-size: 0.82rem; }
-.spike-opener { font-size: 0.88rem; line-height: 1.5; margin: 0 0 0.5rem; }
-.spike-amps { color: var(--muted); margin: 0.2rem 0; }
-.spike-casts { margin: 0.2rem 0; }
-.spike-casts .cd { display: inline-block; margin-right: 0.5rem; color: var(--muted); white-space: nowrap; }
-.spike-casts .cd.behind b { color: var(--viz-warning); }
-.spike-note { font-size: 0.86rem; margin-top: 0.25rem; line-height: 1.45; }
 .ord-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin: 0.4rem 0; }
 @media (max-width: 640px) { .ord-wrap { grid-template-columns: 1fr; } }
 .ord-col { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
@@ -266,3 +239,25 @@ ol.spikes { list-style: none; padding: 0; margin: 0; }
   background: var(--panel2);
   box-shadow: inset 3px 0 0 var(--accent);
 }
+
+/* --- the eight-section report --- */
+/* One card, eight sections, same for M+ and raid. */
+.card-section {
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--border);
+}
+.card-section:first-child { border-top: 0; padding-top: 0.2rem; }
+.card-section > h3 { margin: 0 0 0.6rem; }
+.card-section > h4 { margin: 0.9rem 0 0.4rem; font-size: 0.92rem; }
+
+.section-note {
+  background: var(--panel2);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 5px 5px 0;
+  padding: 0.5rem 0.7rem;
+  margin: 0.5rem 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.vs-line { font-size: 1.05rem; margin: 0.3rem 0 0.7rem; }

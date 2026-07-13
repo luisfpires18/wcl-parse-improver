@@ -9,6 +9,7 @@ import {
   loadCharacters,
   upsertCharacter,
   removeCharacter,
+  setCharacterHidden,
   DEFAULT_CHARACTERS,
 } from '../server/characters.js';
 
@@ -126,5 +127,32 @@ test('saved file is valid JSON an operator can hand-edit', () => {
     const parsed = JSON.parse(readFileSync(file, 'utf8'));
     assert.ok(Array.isArray(parsed));
     assert.ok(parsed.every((c) => c.id && c.className && Array.isArray(c.specs)));
+  });
+});
+
+// `hidden` keeps a character on the roster but out of the M+/Raid pickers.
+test('a character can be hidden and shown again without being forgotten', () => {
+  withTempFile((file) => {
+    const c = upsertCharacter(
+      { name: 'Alt', server: 'grim-batol', region: 'EU', zone: 47, className: 'DeathKnight', specs: ['Unholy'] },
+      CLASSES,
+      file
+    );
+    assert.equal(c.hidden, false, 'characters are visible by default');
+
+    const before = loadCharacters(file).length;
+
+    assert.equal(setCharacterHidden(c.id, true, file).hidden, true);
+    const reloaded = loadCharacters(file);
+    assert.equal(reloaded.find((x) => x.id === c.id).hidden, true, 'persisted');
+    assert.equal(reloaded.length, before, 'hiding is not removing');
+
+    assert.equal(setCharacterHidden(c.id, false, file).hidden, false);
+  });
+});
+
+test('hiding an unknown character is an error, not a silent no-op', () => {
+  withTempFile((file) => {
+    assert.throws(() => setCharacterHidden('nope', true, file), /No character with id/);
   });
 });

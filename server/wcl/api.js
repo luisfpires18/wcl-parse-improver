@@ -345,23 +345,36 @@ const firstNum = (...vs) => {
 };
 
 /**
- * Top ranked KILL of a raid boss at a difficulty — the benchmark a wipe is
- * measured against. Returns the #1 spec parse with its full run detail, or
- * throws if the boss has no ranked kills for that spec/difficulty yet.
+ * Ranked KILLS of a raid boss at a difficulty. One cheap, cached call — it fills
+ * the opponent dropdown. This used to fetch the whole page and then throw away
+ * every entry but the first, so the raid view had no picker at all.
+ *
+ * Kills only: a wipe appears in no ranking anywhere.
  */
-export async function fetchRaidBenchmark({ encounterID, className, specName, difficulty, page = 1, refresh = false }) {
+export async function fetchRaidRankings({ encounterID, className, specName, difficulty, page = 1, refresh = false }) {
   const data = await gql(
     RAID_CHARACTER_RANKINGS,
     { encounterID, className, specName, difficulty, page, metric: 'dps' },
     { noCache: refresh }
   );
   const parsed = parseCharacterRankings(data?.worldData?.encounter?.characterRankings);
-  const top = parsed.entries.find((e) => e.name && e.report?.code && e.report?.fightID != null);
-  if (!top) {
+  const entries = parsed.entries.filter((e) => e.name && e.report?.code && e.report?.fightID != null);
+  if (!entries.length) {
     throw new Error(`No ranked ${difficultyName(difficulty) ?? ''} kill for encounter ${encounterID} / ${specName}`);
   }
-  const detail = await fetchRunDetail({ code: top.report.code, fightID: top.report.fightID, playerName: top.name });
-  return { name: top.name, difficultyName: difficultyName(difficulty), dps: top.dps, detail };
+  return entries;
+}
+
+/**
+ * One ranked opponent + their full run detail. Defaults to the #1 parse; pass
+ * `compareTo` to pick anyone else off the ranked page.
+ */
+export async function fetchRaidBenchmark({ encounterID, className, specName, difficulty, compareTo = null, refresh = false }) {
+  const entries = await fetchRaidRankings({ encounterID, className, specName, difficulty, refresh });
+  const norm = (s) => String(s ?? '').trim().toLowerCase();
+  const pick = (compareTo && entries.find((e) => norm(e.name) === norm(compareTo))) || entries[0];
+  const detail = await fetchRunDetail({ code: pick.report.code, fightID: pick.report.fightID, playerName: pick.name });
+  return { name: pick.name, difficultyName: difficultyName(difficulty), dps: pick.dps, detail, entries };
 }
 
 /**

@@ -14,7 +14,9 @@ import {
 import { buildProgression, attemptOutput } from '../analysis/raidProgress.js';
 import { buildRaidParse } from '../analysis/raidParse.js';
 import { rotationComposition, castOrder } from '../analysis/spikes.js';
-import { buildAbilityTable } from '../analysis/compare.js';
+import { buildAbilityTable, buildGaps } from '../analysis/compare.js';
+import { buildConsumables } from '../analysis/consumables.js';
+import { compareResource } from '../analysis/resources.js';
 import { buildTimeline } from '../analysis/timeline.js';
 import { truncateDetail, truncateSeries, truncatePoints } from '../analysis/truncate.js';
 import { groupByEncounter, difficultyName } from '../parse/reportFights.js';
@@ -43,6 +45,7 @@ export async function buildRaidPull({
   serverRegion,
   className = 'DeathKnight',
   specName = 'Unholy',
+  compareTo = null,
   refresh = false,
 }) {
   code = reportCode(code);
@@ -65,7 +68,31 @@ export async function buildRaidPull({
   const mineSeries = await fetchDamageSeries({ code, fightID, playerName: name, server: serverSlug, className });
   const myHealth = await fetchBossHealth({ code, fightID, refresh });
 
-  const bench = await fetchRaidBenchmark({ encounterID, className, specName, difficulty, refresh });
+  const bench = await fetchRaidBenchmark({ encounterID, className, specName, difficulty, compareTo, refresh });
+
+  // The opponent picker: top 10 of the spec on this boss, plus the 5 kills whose
+  // LENGTH most resembles this pull (a similar-length fight means a similar number
+  // of cooldown cycles, so the comparison is more purely execution). Costs nothing
+  // extra — the ranked page was already fetched to find the benchmark.
+  const myDurMs = fight.durationMs ?? 0;
+  const matchPct = (d) => (typeof d === 'number' && myDurMs > 0 ? Math.round(100 * Math.max(0, 1 - Math.abs(d - myDurMs) / myDurMs)) : 0);
+  const ranked = (bench.entries ?? []).map((e, i) => ({
+    name: e.name,
+    dps: e.dps,
+    durationMs: e.durationMs,
+    rank: i + 1,
+    matchPct: matchPct(e.durationMs),
+  }));
+  const top = ranked.slice(0, 10);
+  const topNames = new Set(top.map((p) => p.name.toLowerCase()));
+  const players = {
+    top,
+    similar: ranked
+      .filter((p) => !topNames.has(p.name.toLowerCase()))
+      .sort((a, b) => b.matchPct - a.matchPct)
+      .slice(0, 5),
+    selected: bench.name,
+  };
   const otherSeriesFull = await fetchDamageSeries({
     code: bench.detail.code,
     fightID: bench.detail.fightID,
@@ -127,38 +154,47 @@ export async function buildRaidPull({
     dumpDebug('raid-parse-failed', { code, fightID, encounterID, error: String(err) });
   }
 
-  // Rotation vs the top parser FOR THIS PULL, over the fair boss-health window.
-  // Cast counts, spell mix and cast order are all rebuilt from the cast events
-  // inside the window, so they're correct on a truncated benchmark.
   const rotation = rotationComposition(mineDetail, otherDetail);
-  // each cast carries the buffs that were up when it landed — so the cast-order
-  // columns can show "The Hunt [Inertia]" for them and a bare "The Hunt" for you
-  rotation.order = { mine: castOrder(mineDetail), them: castOrder(otherDetail) };
-  const comparison = {
-    against: bench.name,
-    difficultyName: bench.difficultyName,
-    myPullId: fight.id,
-    myPullKill: fight.kill,
-    rotation,
-    // The DamageDone TABLE is a whole-fight aggregate — WCL gives no per-window
-    // per-ability damage without replaying the event stream. So on a truncated
-    // (wipe) comparison it would silently pit your partial pull against their
-    // FULL kill's damage. Omitted there rather than shown wrong; cast counts
-    // above carry the same signal and are window-correct.
-    damageDone: cutoffSec == null ? buildAbilityTable(mineDetail, otherDetail, bench.name) : null,
-    damageDoneOmittedReason:
-      cutoffSec == null ? null : 'Per-ability damage totals only exist for the whole fight, so they cannot be cut to this window without comparing your partial pull against their full kill. Cast counts below are window-correct.',
-  };
+  const myDps = output.fightDps;
+  const theirDps = benchOutput.fightDps;
 
+  // The SAME eight sections the M+ report has, from the same builders — a raid
+  // pull was previously missing consumables, gaps and resource management
+  // entirely, and had no opponent picker at all.
   return {
+    // shared eight-section view model (see analysis/compare.js buildReport)
+    headline: {
+      title: fight.name,
+      subtitle: `${difficultyName(difficulty)} · pull #${fight.id}${fight.kill ? ' (kill)' : ` (wipe at ${fight.pctRemaining}%)`}`,
+      myDps: Math.round(myDps),
+      theirDps: Math.round(theirDps),
+      dpsGapPct: theirDps ? Math.round((1000 * (theirDps - myDps)) / theirDps) / 10 : null,
+      otherLabel: bench.name,
+    },
+    compare: { ...players, level: difficulty },
+    castOrder: { mine: castOrder(mineDetail), them: castOrder(otherDetail) },
+    timeline,
+    rotationMatch: { spellMixPct: rotation.similarityPct, castOrderPct: rotation.sequencePct },
+    consumables: buildConsumables(mineDetail, otherDetail, bench.name, buffSources),
+    parse,
+    gaps: buildGaps(mineDetail, otherDetail, buffSources),
+    resources: compareResource(mineDetail.resourceEvents ?? [], otherDetail.resourceEvents ?? []),
+    // The per-ability DAMAGE half is a whole-fight aggregate — WCL gives no
+    // per-window per-ability damage without replaying the event stream. On a
+    // truncated (wipe) comparison it would pit your partial pull against their
+    // FULL kill's damage, so it is omitted there rather than shown wrong. Cast
+    // counts carry the same signal and ARE window-correct.
+    abilities: cutoffSec == null ? buildAbilityTable(mineDetail, otherDetail, bench.name) : null,
+    abilitiesOmittedReason:
+      cutoffSec == null
+        ? null
+        : "Per-ability damage totals only exist for the whole fight, so they can't be cut to this window without comparing your partial pull against their full kill.",
+
+    // --- raid-only extras ---
     code,
     fightID,
-    boss: fight.name,
-    difficultyName: difficultyName(difficulty),
-    comparison,
     pull: { id: fight.id, kill: fight.kill, pctRemaining: fight.pctRemaining, durationMs: fight.durationMs },
     output, // this pull's active DPS / CPM / deaths / death timing
-    parse, // this pull's colour + what the next colours cost
     benchmarkOutput: { name: bench.name, activeDps: benchOutput.activeDps },
     mine: mineSeries,
     other: otherSeries,
@@ -171,7 +207,6 @@ export async function buildRaidPull({
       truncated: cutoffSec != null,
     },
     bossHealth: { mine: myHealth, them: theirHealth ? { ...theirHealth, points: truncatePoints(theirHealth.points, cutoffSec) } : null },
-    timeline,
   };
 }
 

@@ -1,20 +1,14 @@
-// The raid side: paste a log -> pick a boss -> per-pull output, death timing,
-// rotation vs a top parser, and a per-pull DPS + rotation timeline.
+// The raid side: paste a log -> pick a boss -> pick a pull -> the same
+// eight-section report the M+ view shows.
 //
 // Raid data comes straight from a report rather than from rankings, because
 // rankings only ever contain KILLS — a wipe appears in no ranking anywhere, and
-// wipes are the whole point on progress.
+// wipes are the whole point on progress. The per-pull consistency table and the
+// death-timing read are raid-only; everything below them is the shared report.
 import { $, esc, fmtK, fmtSec, fmtTime } from './util.js';
 import { state, charQuery } from './state.js';
-import {
-  dpsChartSvg,
-  wireDpsBrush,
-  setCastWindow,
-  castOrderSlot,
-  renderTimelineSection,
-  renderCastOrderCols,
-  renderDamageDone,
-} from './chart.js';
+import { renderReport } from './report.js';
+import { dpsChartSvg, wireDpsBrush, setCastWindow, castOrderSlot } from './chart.js';
 
 let raidState = { code: null, difficulty: '5', bosses: [] };
 
@@ -264,135 +258,78 @@ function deathCell(r) {
   return '<span class="muted">with raid</span>';
 }
 
-// --- one pull, charted vs the top parser ---
+// --- one pull: the SAME eight sections the M+ report shows ---
+//
+// The raid view used to have its own bespoke render — and was missing consumables,
+// biggest gaps, resource management and an opponent picker entirely. It now feeds
+// the shared renderer, so a section exists in one place and both views get it.
 
-async function loadRaidPullChart(fightID, encounterID, difficulty) {
+async function loadRaidPullChart(fightID, encounterID, difficulty, compareTo = '') {
   const root = $('#raid-pull-chart');
   if (!root) return;
   root.innerHTML = `<p class="muted">Loading pull #${fightID} — damage events for both runs (~15s first time, cached after)…</p>`;
-  const cur = $('#raid-current');
-  if (cur) cur.innerHTML = `<p class="raid-current-line muted">Analysing pull #${fightID}…</p>`;
+  const cur0 = $('#raid-current');
+  if (cur0) cur0.innerHTML = `<p class="raid-current-line muted">Analysing pull #${fightID}…</p>`;
   try {
     const params = charQuery();
     params.set('code', raidState.code);
     params.set('encounter', encounterID);
     params.set('difficulty', difficulty);
     params.set('fight', fightID);
+    if (compareTo) params.set('compareTo', compareTo);
     const res = await fetch(`/api/raid/pull?${params}`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    const view = await res.json();
+    if (!res.ok) throw new Error(view.error || `HTTP ${res.status}`);
     const cur = $('#raid-pull-chart');
-    if (!cur) return; // user switched pulls while loading
-    renderRaidPullChart(data, cur);
-    renderCurrentPull(data); // re-anchor the night's verdict to this pull
+    if (!cur) return; // the user switched pulls while this was loading
+    renderRaidPull(view, cur, { encounterID, difficulty });
+    renderCurrentPull(view); // re-anchor the night's verdict to this pull
   } catch (err) {
     const cur = $('#raid-pull-chart');
-    if (cur) cur.innerHTML = `<span class="error">Pull chart failed: ${esc(err.message)}</span>`;
+    if (cur) cur.innerHTML = `<span class="error">Pull analysis failed: ${esc(err.message)}</span>`;
   }
 }
 
-function renderRaidPullChart(data, root) {
-  const sa = data.spikeAnalysis;
-  const w = data.window || {};
-  const view = {
-    state: {
-      order: sa?.rotation?.order ?? { mine: [], them: [] },
-      otherLabel: data.otherLabel,
-      durationSec: Math.max(data.mine.durationMs, data.other.durationMs) / 1000,
-    },
-  };
-  // The honesty banner: a wipe is only ever compared to the slice of the kill
-  // that covers the same chunk of boss health.
+function renderRaidPull(view, root, ctx) {
+  const w = view.window || {};
+
+  // The honesty banner: a wipe is only ever compared against the slice of the kill
+  // covering the same chunk of boss health. Raid-only — M+ has no such thing.
   const banner = w.truncated
-    ? `<p class="raid-verdict"><b>Fair-window comparison.</b> Your pull took the boss from <b>100% → ${w.cutoffPct}%</b> and then wiped.
-        So it's compared against only the matching slice of ${esc(data.otherLabel)}'s kill — the first <b>${fmtSec(w.theirCutoffSec)}</b>,
-        which is where their boss also hit ${w.cutoffPct}% (their full kill ran ${fmtSec(w.theirFullSec)}). Same chunk of boss, same phases —
-        everything below is measured over that window on both sides.</p>`
-    : `<p class="raid-verdict"><b>Full-fight comparison.</b> Your pull was a <b>kill</b> (100% → 0%), so it's measured against ${esc(data.otherLabel)}'s
-        entire kill — no truncation needed.</p>`;
+    ? `<p class="raid-verdict"><b>Fair-window comparison.</b> Your pull took the boss from <b>100% → ${w.cutoffPct}%</b> and then wiped,
+        so it's compared against only the matching slice of ${esc(view.otherLabel)}'s kill — the first <b>${fmtSec(w.theirCutoffSec)}</b>,
+        where their boss also hit ${w.cutoffPct}% (their full kill ran ${fmtSec(w.theirFullSec)}). Same chunk of boss, same phases.</p>`
+    : `<p class="raid-verdict"><b>Full-fight comparison.</b> Your pull was a <b>kill</b> (100% → 0%), so it's measured against
+        ${esc(view.otherLabel)}'s entire kill — no truncation needed.</p>`;
 
-  root.innerHTML = `
-    <h3>Pull #${data.pull.id} <small>&middot; ${data.pull.kill ? 'kill' : `wipe at ${data.pull.pctRemaining}% boss health`} &middot; vs ${esc(data.otherLabel)}</small></h3>
-    ${renderParse(data.parse)}
-    ${banner}
-    ${dpsChartSvg(data.mine, data.other, view, { bossHealth: data.bossHealth })}
-    <p class="table-note"><small>5-second bins of effective damage (includes your pets). The <b>dashed lines</b> are boss health on the right axis —
-      yours ends where you wiped, theirs at the same % — so you can see exactly where in the boss's health your output landed.
-      Drag across the chart to inspect any window's rotation below.</small></p>
-    ${castOrderSlot()}
-    ${renderTimelineSection(data.timeline, data.timelineInfo)}
-    ${renderRaidComparison(data.comparison)}`;
+  root.innerHTML = `<div class="card">${banner}${renderReport(view)}</div>`;
 
-  wireDpsBrush(root, view);
-  setCastWindow(root, view, 0, view.state.durationSec); // default: whole window
+  // Section 1's chart: the raid version overlays boss health on a right-hand axis,
+  // and the series are already in the payload (no second fetch, unlike M+).
+  const chartEl = root.querySelector('#dps-chart');
+  if (chartEl) {
+    const chart = {
+      state: {
+        order: view.castOrder ?? { mine: [], them: [] },
+        otherLabel: view.otherLabel,
+        durationSec: Math.max(view.mine.durationMs, view.other.durationMs) / 1000,
+      },
+    };
+    chartEl.classList.remove('dps-chart-loading');
+    chartEl.innerHTML =
+      dpsChartSvg(view.mine, view.other, chart, { bossHealth: view.bossHealth }) +
+      `<p class="table-note"><small>5-second bins of effective damage (includes your pets). The <b>dashed lines</b> are boss health on the
+        right axis — yours ends where you wiped, theirs at the same % — so you can see where in the boss's health your output landed.
+        <b>Drag across the chart</b> to see only the casts from that window.</small></p>` +
+      castOrderSlot();
+    wireDpsBrush(chartEl, chart);
+    setCastWindow(chartEl, chart, 0, chart.state.durationSec);
+  }
+
+  const picker = root.querySelector('#compare-to');
+  if (picker) {
+    picker.addEventListener('change', (e) => loadRaidPullChart(view.pull.id, ctx.encounterID, ctx.difficulty, e.target.value));
+  }
+
   root.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// --- this pull's parse colour, and what the next colours cost ---
-
-// **bold** -> <b>, so the server can emphasise the numbers that matter without
-// shipping HTML (everything is escaped first).
-const md = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
-
-function renderParse(p) {
-  if (!p) return '';
-  const cur = p.currentPercent;
-  const chips = (p.tiers ?? [])
-    .map((t) => {
-      const sign = t.dpsDelta >= 0 ? '+' : '';
-      return `<span class="tier-chip p-${t.tier}">${t.tier} ${t.threshold}%+<br>
-        <small>${fmtK(t.needDps)} DPS &middot; ${sign}${t.pctDeltaNeeded}%</small></span>`;
-    })
-    .join('');
-
-  const head = p.insufficientData
-    ? `<b>Parse</b> ${cur != null ? `<b class="p-${p.currentTier}">${cur}%</b>` : '<span class="muted">unavailable</span>'}`
-    : `<b>This pull:</b> <b class="p-${p.currentTier}">${cur}% ${esc(p.currentTier)}</b>
-       <small>${p.projected ? '(projected — a wipe is never ranked)' : '(Warcraft Logs’ own number)'}</small>`;
-
-  return `
-    <div class="parse-plan">
-      <h3>Parse &amp; next colour</h3>
-      <p>${head}</p>
-      ${chips ? `<div class="tier-chips">${chips}</div>` : ''}
-      <p class="parse-plan-text">${md(p.text)}</p>
-    </div>`;
-}
-
-// --- rotation vs the top parser, for the pull you picked ---
-
-function renderRaidComparison(cmp) {
-  if (!cmp?.rotation) return '';
-  const rot = cmp.rotation;
-  const rows = (rot.rows || [])
-    .slice(0, 24)
-    .map((r) => {
-      const tag = r.kind === 'amp' ? ' <small class="util">amp</small>' : r.kind === 'util' ? ' <small class="util">util</small>' : '';
-      const diff = `${r.diffPp > 0 ? '+' : ''}${r.diffPp}pp`;
-      return `<tr class="${Math.abs(r.diffPp) >= 2 ? 'rot-big' : ''}"><td>${esc(r.name)}${tag}</td>
-        <td class="num">${r.mine}</td><td class="num">${r.them}</td><td class="num">${diff}</td></tr>`;
-    })
-    .join('');
-  const order = rot.order || { mine: [], them: [] };
-
-  return `
-    <h3>Rotation vs top parser <small>— pull #${cmp.myPullId}${cmp.myPullKill ? ' (a kill)' : ''} vs ${esc(cmp.against)}'s ${esc(cmp.difficultyName || '')} kill</small></h3>
-    <p class="raid-verdict">${esc(rot.summary)}</p>
-    <div class="raid-stats">
-      <span>Spell mix <b>${rot.similarityPct}%</b></span>
-      <span>Cast order <b>${rot.sequencePct}%</b></span>
-      <span>Same rotation <b>${rot.sameRotation ? 'yes' : 'no'}</b></span>
-    </div>
-    <details open><summary>Per-ability cast counts — you vs ${esc(cmp.against)}</summary>
-      <p class="table-note"><small>Counts over this pull's window on both sides. <b>+pp</b> = you cast a larger share of your total on this button than they do; <b>−pp</b> = they lean on it more than you. Rows with a big gap are highlighted.</small></p>
-      <table class="rot-table"><thead><tr><th>Ability</th><th>You</th><th>${esc(cmp.against)}</th><th>Diff</th></tr></thead><tbody>${rows}</tbody></table>
-    </details>
-    ${
-      cmp.damageDone
-        ? renderDamageDone(cmp.damageDone)
-        : `<p class="table-note"><small><b>Per-ability damage table omitted for this pull.</b> ${esc(cmp.damageDoneOmittedReason || '')}</small></p>`
-    }
-    <details><summary>Cast-order flow — read their column top-down to learn the sequence</summary>
-      ${renderCastOrderCols(order.them, order.mine, cmp.against)}
-    </details>`;
 }
