@@ -312,6 +312,9 @@ export function renderCastOrderCols(them, mine, otherLabel) {
       ${col(mine, 'You — cast order')}
     </div>
     <p class="table-note"><small>Literal spell-cast sequence for the selected window.
-      <span class="p-blue">Blue</span> = damage, <span class="p-orange">orange</span> = amplifier (Army/Dark Transformation/pot), grey = utility. Read their column top-down to see their flow —
-      then check the <b>buff bars on the rotation timeline</b> to see which buffs were up while they were pressing them.</small></p>`;
+      <span class="p-orange"><b>Orange</b> = burst cooldown</span> — every <b>potion</b>, plus any damaging ability pressed at cooldown
+      frequency (worked out from the run, not a per-class list, so it lights up The Hunt for a DH exactly as it does Army for a DK).
+      <span class="p-blue">Blue</span> = ordinary damage, grey = utility.
+      Read their column top-down to see their flow, then check the <b>buff bars on the rotation timeline</b> to see which buffs were up
+      while they were pressing them.</small></p>`;
 }

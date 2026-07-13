@@ -1,25 +1,22 @@
-// Explain WHY the comparison run out-damages mine in its burst windows when
-// we run the SAME rotation. Two honest signals:
+// Rotation similarity + the literal cast sequence, and how each cast is
+// classified for the reader.
 //
-//   1. Engagement start — the first DAMAGE cast of each run. Starting a pull
-//      late is pure lost uptime.
-//   2. Burst cast density — inside each burst window, the count of DAMAGE
-//      casts (Scourge Strike, Graveyard, Putrefy, …, from the DamageDone
-//      table) and which AMPLIFIERS fired. Same cooldowns but fewer damage
-//      casts = the real gap.
-//
-// A DAMAGE ability = one that appears in the DamageDone table (deals damage)
-// → its casts are the "dmg count". AMPLIFIERS use the named damage-cooldown
-// list the project spec sanctioned (Army of the Dead, Dark Transformation,
-// Apocalypse, …, + damage potions) — a fixed, reliable set, so utility
-// (Mind Freeze, Icebound, Death Charge, Blinding Sleet) never leaks in.
-// Windows align to EACH run's own burst peak (not the same clock time), so a
-// few seconds of routing offset never reads as "you did nothing".
+// Every cast is one of three kinds:
+//   damage — it appears in the DamageDone table
+//   amp    — a burst cooldown: any combat potion, or a DAMAGING ability pressed
+//            at cooldown frequency (see amplifierNamesOf). Derived from the run,
+//            never from a per-class list, so it works for a spec nobody wrote one
+//            for. `amp` beats `damage`: a potion and a big cooldown ARE damage,
+//            but reading them as ordinary damage casts buries the thing you are
+//            actually scanning the list for.
+//   util   — everything else (interrupts, defensives, movement)
 import { IGNORED_ABILITIES } from './metrics.js';
 import { distributionMatch, bigramMatch } from '../../shared/rotationMatch.js';
 
-// Known Unholy DK / general damage cooldowns + damage potions (spec-sanctioned
-// named list). Not a rotation guess — just "these are the burst amplifiers".
+// A named list of Death Knight cooldowns. Kept only because raidProgress.js uses
+// it as the EVIDENCE for burst inflation on that spec — it is not how the cast
+// views decide what's an amplifier any more (see amplifierNamesOf below), because
+// a hardcoded DK list means a Demon Hunter sees nothing highlighted at all.
 export const AMPLIFIERS = new Set([
   'Army of the Dead',
   'Raise Abomination',
@@ -32,6 +29,43 @@ export const AMPLIFIERS = new Set([
   'Potion of Recklessness',
   'Potion of Unwavering Focus',
 ]);
+
+// Any class's combat potion. Naming is a stable convention ("Potion of …"), the
+// same one consumables.js already keys off — and a potion is unambiguously a burst
+// cooldown, so it should read as one in the cast list whatever class pressed it.
+const POTION_RE = /^potion of|^elixir/i;
+
+// A DAMAGING ability you press rarely is a cooldown — that is what "rarely" means.
+// This is the same frequency rule timeline.js already uses to pick its cooldown
+// lanes (never a name), so The Hunt and Eye Beam light up for a Havoc DH exactly
+// as Army and Apocalypse do for an Unholy DK, with no per-class list.
+const AMP_CPM_CEILING = 1.5;
+
+/**
+ * The abilities that count as burst amplifiers in THIS run: every combat potion,
+ * plus every damaging ability cast at cooldown frequency. Derived from the run, so
+ * it works for a class nobody has written a list for.
+ */
+export function amplifierNamesOf(detail) {
+  const out = new Set();
+  const dmg = damageNamesOf(detail);
+  const activeMin = (detail?.casts?.totalTimeMs ?? 0) / 60000;
+
+  for (const a of detail?.casts?.abilities ?? []) {
+    if (!a?.name || !a.casts) continue;
+    if (POTION_RE.test(a.name)) {
+      out.add(a.name); // a potion is a cooldown by definition
+      continue;
+    }
+    if (AMPLIFIERS.has(a.name)) {
+      out.add(a.name); // the sanctioned list, for the spec it was written for
+      continue;
+    }
+    const cpm = activeMin > 0 ? a.casts / activeMin : 0;
+    if (dmg.has(a.name) && cpm <= AMP_CPM_CEILING) out.add(a.name);
+  }
+  return out;
+}
 
 const BURST_LEAD_SEC = 20; // burst ramps over ~this long before the peak
 const BURST_TAIL_SEC = 6;
@@ -92,6 +126,7 @@ export function rotationComposition(mineDetail, otherDetail) {
   const my = castCountsByName(mineDetail);
   const their = castCountsByName(otherDetail);
   const dmg = new Set([...damageNamesOf(mineDetail), ...damageNamesOf(otherDetail)]);
+  const amps = new Set([...amplifierNamesOf(mineDetail), ...amplifierNamesOf(otherDetail)]);
   const names = [...new Set([...my.keys(), ...their.keys()])];
   const myTotal = [...my.values()].reduce((a, b) => a + b, 0) || 1;
   const theirTotal = [...their.values()].reduce((a, b) => a + b, 0) || 1;
@@ -118,7 +153,7 @@ export function rotationComposition(mineDetail, otherDetail) {
         minePct: Math.round((1000 * mine) / myTotal) / 10,
         themPct: Math.round((1000 * them) / theirTotal) / 10,
         diffPp: Math.round((1000 * (mine / myTotal - them / theirTotal))) / 10,
-        kind: dmg.has(name) ? 'damage' : AMPLIFIERS.has(name) ? 'amp' : 'util',
+        kind: amps.has(name) ? 'amp' : dmg.has(name) ? 'damage' : 'util',
       };
     })
     .sort((a, b) => b.them - a.them);
@@ -214,6 +249,7 @@ function topTransition(seq) {
 export function castOrder(detail, limit = 4000) {
   const nameOf = new Map((detail.casts?.abilities ?? []).map((a) => [a.guid, a.name]));
   const dmg = damageNamesOf(detail);
+  const amps = amplifierNamesOf(detail);
   const start = detail.fight?.startTime ?? 0;
   const out = [];
   for (const ev of detail.castEvents ?? []) {
@@ -221,8 +257,10 @@ export function castOrder(detail, limit = 4000) {
     if (!name || IGNORED_ABILITIES.has(name)) continue;
     out.push({
       tSec: Math.round(((ev.timestamp - start) / 1000) * 10) / 10,
+      // amp wins over damage: a potion and a big cooldown ARE damage, but reading
+      // them as ordinary damage casts buries the thing you actually want to find
+      kind: amps.has(name) ? 'amp' : dmg.has(name) ? 'damage' : 'util',
       name,
-      kind: dmg.has(name) ? 'damage' : AMPLIFIERS.has(name) ? 'amp' : 'util',
     });
     if (out.length >= limit) break;
   }

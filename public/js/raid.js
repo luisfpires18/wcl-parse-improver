@@ -91,7 +91,7 @@ function renderRaidZones(zones) {
       .join('');
     return `
       <h3>${esc(z.zoneName)}
-        <small>— ${z.killedCount}/${z.bossCount} killed${
+        <small>${z.patch ? `<span class="patch-tag">${esc(z.patch)}</span> ` : ''}— ${z.killedCount}/${z.bossCount} killed${
           z.bestAverage != null ? ` · best avg <b class="${pctClass(z.bestAverage)}">${fmtPct(z.bestAverage)}%</b>` : ''
         }</small>
       </h3>
@@ -105,7 +105,9 @@ function renderRaidZones(zones) {
     <h2>${esc(state.activeChar.name)} <small>— Raids</small></h2>
     ${zones.map(zoneBlock).join('')}
     <p class="table-note"><small>Click a boss to analyse your best ranked kill on it — no log needed.
-      For a <b>wipe</b>, use "Analyse a specific log" below: wipes appear in no ranking.</small></p>`;
+      For a <b>wipe</b>, use "Analyse a specific log" below: wipes appear in no ranking.
+      Only raids live on the current patch are shown — Warcraft Logs lists next-patch raids months early, and they're filtered out
+      by their PTR partition.</small></p>`;
 
   el.querySelectorAll('[data-encounter], [data-analyze]').forEach((n) =>
     n.addEventListener('click', () => {

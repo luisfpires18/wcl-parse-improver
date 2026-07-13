@@ -14,12 +14,29 @@ import { withSpec } from './api.js';
 const AGGREGATE_ZONE_MIN = 500;
 const NOT_A_REAL_RAID = /\bPTR\b|\bBeta\b|Dummy/i;
 
+// A zone's PARTITIONS are its patch history: a live raid carries real patch
+// numbers ("12.0", "12.0.5", "12.0.7"), while content for the NEXT patch carries
+// a "PTR"/"Beta" partition instead. That is the honest signal for "is this raid
+// actually out" — the WCL API happily lists 12.1 raids months early, and matching
+// on the zone NAME can't tell them apart ("The Venomous Abyss" looks like any
+// other raid; only its PTR partition gives it away).
+const UNRELEASED_PARTITION = /PTR|Beta|Alpha/i;
+
+/** The patch a zone is currently on, e.g. "12.0.7". Null when it has no partitions. */
+function currentPatchOf(zone) {
+  const parts = zone?.partitions ?? [];
+  if (!parts.length) return null;
+  const def = parts.find((p) => p.default) ?? parts[parts.length - 1];
+  return def?.compactName ?? def?.name ?? null;
+}
+
 /**
- * Raid zones of the current expansion, newest first.
+ * LIVE raid zones of the current expansion, newest first.
  *
- * A zone is a raid because it HAS Mythic difficulty — dungeons come back with a
- * "Dungeon" difficulty instead. Derived from the API rather than a hardcoded id
- * list, so a new tier needs no code change.
+ * A zone is a raid because it HAS Mythic difficulty — a dungeon zone reports
+ * "Dungeon" instead. It is LIVE because its default partition is a real patch
+ * rather than a PTR one. Both derived from the API, so a new tier needs no code
+ * change and next-patch content never leaks in.
  */
 export async function fetchRaidZones({ refresh = false } = {}) {
   const data = await gql(RAID_ZONES, {}, { noCache: refresh });
@@ -34,17 +51,23 @@ export async function fetchRaidZones({ refresh = false } = {}) {
     if (!z?.id || z.id >= AGGREGATE_ZONE_MIN) return false;
     if (NOT_A_REAL_RAID.test(z.name ?? '')) return false;
     const diffs = (z.difficulties ?? []).map((d) => d.name);
-    return diffs.includes('Mythic'); // a dungeon zone has "Dungeon" instead
+    if (!diffs.includes('Mythic')) return false; // a dungeon zone has "Dungeon"
+
+    // Not out yet: no patch history at all, or its live partition is a PTR.
+    const patch = currentPatchOf(z);
+    if (!patch || UNRELEASED_PARTITION.test(patch)) return false;
+    return true;
   });
 
   // The same raid can appear twice (a frozen past partition + the live one).
-  // Keep the live/newest one.
+  // Keep the newest.
   const byName = new Map();
   for (const z of zones.sort((a, b) => b.id - a.id)) {
     if (!byName.has(z.name)) {
       byName.set(z.name, {
         id: z.id,
         name: z.name,
+        patch: currentPatchOf(z),
         encounters: (z.encounters ?? []).map((e) => ({ id: e.id, name: e.name })),
       });
     }
@@ -99,6 +122,7 @@ export async function fetchRaidOverview({ name, serverSlug, serverRegion, specNa
       out.push({
         zoneID: zone.id,
         zoneName: zone.name,
+        patch: zone.patch,
         bestAverage: num(zr?.bestPerformanceAverage),
         bosses,
         killedCount: bosses.filter((b) => b.kills > 0).length,

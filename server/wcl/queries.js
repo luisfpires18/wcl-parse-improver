@@ -85,6 +85,10 @@ query RaidZones {
         id
         name
         frozen
+        # a zone's partitions are its patch history ("12.0", "12.0.5", "12.0.7").
+        # Next-patch content carries a "PTR"/"Beta" partition instead — that is
+        # how a live raid is told apart from one that isn't out yet.
+        partitions { id name compactName default }
         difficulties { id name }
         encounters { id name }
       }

@@ -288,3 +288,15 @@ summary:hover { color: var(--text); }
 .disc-behind .disc-dot, .disc-none .disc-dot { color: var(--accent); }
 .disc-ahead .disc-dot, .disc-extra .disc-dot { color: var(--series-1); }
 .disc-dot { font-size: 0.6rem; vertical-align: middle; }
+
+/* The live patch a raid zone is on. WCL lists next-patch raids months early;
+   showing the patch makes it obvious which tier you're looking at. */
+.patch-tag {
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0 0.3rem;
+  font-size: 0.7rem;
+  color: var(--muted);
+  vertical-align: middle;
+}
