@@ -204,6 +204,19 @@ query ReportDamageTakenGraph($code: String!, $fightIDs: [Int!], $targetID: Int, 
   }
 }`;
 
+// The fight's player roster WITH SPEC. masterData.actors only carries the class
+// (subType), never the spec — but a pasted log analysed against the wrong spec is
+// worthless, so we need both. `playerDetails` in the Summary table has each
+// player's class (`type`) and `specs`.
+export const REPORT_SUMMARY = `
+query ReportSummary($code: String!, $fightIDs: [Int!]) {
+  reportData {
+    report(code: $code) {
+      table(fightIDs: $fightIDs, dataType: Summary)
+    }
+  }
+}`;
+
 // Deaths for the WHOLE raid across one or more fights (no sourceID → every
 // player's deaths). Each entry carries a `fight` field, so one call over all
 // analysed fightIDs returns the full death cascade per pull — used to tell "you

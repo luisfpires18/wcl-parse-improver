@@ -21,6 +21,7 @@ import { buildTimeline } from '../analysis/timeline.js';
 import { truncateDetail, truncateSeries, truncatePoints } from '../analysis/truncate.js';
 import { groupByEncounter, difficultyName } from '../parse/reportFights.js';
 import { timeAtHealthPct } from '../parse/bossHealth.js';
+import { assertCharacterInLog } from './logIdentity.js';
 import { dumpDebug } from './client.js';
 
 export const DEFAULT_RAID_DIFFICULTY = 5; // Mythic
@@ -45,6 +46,7 @@ export async function buildRaidPull({
   serverRegion,
   className = 'DeathKnight',
   specName = 'Unholy',
+  classLabel = null,
   compareTo = null,
   refresh = false,
 }) {
@@ -52,6 +54,11 @@ export async function buildRaidPull({
   const report = await fetchReportFights({ code, encounterID, refresh });
   const fight = report.fights.find((f) => f.id === fightID);
   if (!fight) throw new Error(`Report ${code} has no fight ${fightID} on that boss`);
+
+  // Before spending a single heavy call: is this log even the right character?
+  // Analysing a Havoc log against an Unholy benchmark produces a full report in
+  // which every number is meaningless, and nothing would say so.
+  await assertCharacterInLog({ code, fightID, name, className, specName, classLabel, refresh });
 
   // includeBuffSources: classifies each aura as self-applied or external. Needed
   // to draw YOUR buff windows (procs, cooldowns) without dragging in raid buffs.
@@ -226,6 +233,7 @@ export async function buildRaidBossReport({
   serverRegion,
   className,
   specName,
+  classLabel = null,
   compareTo = null,
   refresh = false,
 }) {
@@ -248,6 +256,7 @@ export async function buildRaidBossReport({
     serverRegion,
     className,
     specName,
+    classLabel,
     compareTo,
     refresh,
   });
@@ -285,12 +294,21 @@ export async function buildRaidReport({
   serverSlug,
   className = 'DeathKnight',
   specName = 'Unholy',
+  classLabel = null,
   benchmark = true,
   refresh = false,
   maxAttempts = 24,
 }) {
   code = reportCode(code);
   const report = await fetchReportFights({ code, encounterID, refresh });
+
+  // Reject the wrong log at the FIRST step — when the boss menu is built — rather
+  // than letting someone pick a boss and a pull before finding out. Checked on any
+  // fight in the report; the roster is the same throughout.
+  const anyFight = report.fights[0];
+  if (anyFight) {
+    await assertCharacterInLog({ code, fightID: anyFight.id, name, className, specName, classLabel, refresh });
+  }
 
   // Boss menu for the whole report (so the UI can offer a picker even before a
   // boss is chosen). Difficulty is NOT filtered here — the menu shows every mode

@@ -37,7 +37,9 @@ function specParams(query) {
   const className = String(query.className || '').trim();
   const specName = String(query.specName || '').trim();
   if (!className || !specName) throw new Error('className and specName query params are required');
-  return { className, specName };
+  // display-only; used so a "wrong class" error reads "Death Knight", not "DeathKnight"
+  const classLabel = String(query.classLabel || '').trim() || null;
+  return { className, specName, classLabel };
 }
 
 // `refresh=1` bypasses the disk cache for ranking queries (use after logging
@@ -60,7 +62,7 @@ app.get('/api/overview', async (req, res) => {
     const { raw, ...rest } = overview; // raw payload not needed by the UI
     res.json(rest);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
@@ -81,7 +83,7 @@ app.get('/api/report', async (req, res) => {
     });
     res.json(buildReport(bundle));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
@@ -114,7 +116,7 @@ app.get('/api/dps-series', async (req, res) => {
     });
     res.json({ mine: mineSeries, other: otherSeries, otherLabel: other.meta.name });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
@@ -133,7 +135,7 @@ app.get('/api/raid/overview', async (req, res) => {
     });
     res.json({ zones: overview });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
@@ -152,7 +154,7 @@ app.get('/api/raid/boss', async (req, res) => {
     });
     res.json(report);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
@@ -181,7 +183,7 @@ app.get('/api/raid/report', async (req, res) => {
     });
     res.json(report);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
@@ -212,7 +214,7 @@ app.get('/api/raid/pull', async (req, res) => {
     });
     res.json(pull);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
@@ -237,7 +239,7 @@ app.get('/api/characters', (req, res) => {
   try {
     res.json(loadCharacters());
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
