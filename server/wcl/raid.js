@@ -12,7 +12,6 @@ import {
   fetchDamageSeries,
   fetchMyEncounterRuns,
 } from './api.js';
-import { openerConsensus, cooldownUsage } from '../analysis/rotationConsensus.js';
 import { buildProgression, attemptOutput } from '../analysis/raidProgress.js';
 import { buildRaidParse } from '../analysis/raidParse.js';
 import { rotationComposition, castOrder } from '../analysis/spikes.js';
@@ -265,22 +264,26 @@ export async function buildRaidBossReport({
 }
 
 /**
- * "How is this boss played by this spec" — the rotations of the top N ranked
- * players, and nothing else.
+ * "How is this boss played by this spec" — ONE top-ranked player's rotation, and
+ * the names of the other nine to switch to.
  *
  * Deliberately NOT a comparison: there is no "you" here, no gaps, no parse. You
  * don't need a log, a kill, or even the character to have pulled the boss. It
  * exists to be read before you go in.
  *
- * Cost: the ranked page is one cached call; each player is a castsOnly detail
- * (~5 requests — no deaths, no resource stream). Ten players is roughly a
- * comparison report's worth of API, and every one of them is cached afterwards.
+ * Cost: the roster is the ranked page — one cached call, no run detail at all.
+ * Exactly one player's run is fetched: whichever you picked (`player`), or the
+ * #1 parse by default. Pulling all ten up front cost ten times the API for a view
+ * that shows one column at a time.
+ *
+ * @param {string} [p.player] name from the roster; omit for the #1 parse
  */
 export async function buildBossRotations({
   encounterID,
   difficulty = DEFAULT_RAID_DIFFICULTY,
   className,
   specName,
+  player = null,
   topN = 10,
   refresh = false,
 }) {
@@ -298,50 +301,53 @@ export async function buildBossRotations({
     if (picked.length >= topN) break;
   }
 
-  const players = [];
-  const skipped = [];
-  for (const [i, e] of picked.entries()) {
-    try {
-      const detail = await fetchRunDetail({
-        code: e.report.code,
-        fightID: e.report.fightID,
-        playerName: e.name,
-        castsOnly: true,
-      });
-      const order = castOrder(detail);
-      const durationSec = Math.max(1, Math.round((detail.fight.endTime - detail.fight.startTime) / 1000));
-      players.push({
-        rank: i + 1,
-        name: e.name,
-        dps: Math.round(e.dps ?? 0),
-        durationSec,
-        cpm: Math.round((10 * 60 * order.length) / durationSec) / 10,
-        report: e.report,
-        boss: detail.fight.name ?? null,
-        castOrder: order,
-      });
-    } catch (err) {
-      // A ranked entry whose report was deleted or made private is a dead link.
-      // Say which player dropped out rather than quietly showing eight of ten.
-      dumpDebug('boss-rotation-skipped', { encounterID, name: e.name, error: String(err) });
-      skipped.push({ name: e.name, reason: err?.message ?? String(err) });
-    }
-  }
-  if (!players.length) {
-    throw new Error(`Could not read a rotation from any ranked ${specName} kill of that boss.`);
-  }
+  // The dropdown is FREE — it's the ranked page, one cached call. Only the player
+  // you actually select costs anything.
+  const roster = picked.map((e, i) => ({
+    rank: i + 1,
+    name: e.name,
+    dps: Math.round(e.dps ?? 0),
+    durationSec: e.durationMs ? Math.round(e.durationMs / 1000) : null,
+  }));
 
-  return {
+  const base = {
     encounterID,
     difficulty,
     difficultyName: difficultyName(difficulty),
     className,
     specName,
-    boss: players.find((p) => p.boss)?.boss ?? null,
-    players,
-    opener: openerConsensus(players.map((p) => p.castOrder)),
-    cooldowns: cooldownUsage(players),
-    skipped,
+    players: roster,
+  };
+
+  // No player chosen yet: hand back the roster and fetch nothing. Fetching all ten
+  // to show one column was ten times the API cost of what gets read.
+  const wanted = player ? roster.find((p) => p.name.toLowerCase() === String(player).toLowerCase()) : roster[0];
+  if (!wanted) {
+    const err = new Error(`${player} is not in the top ${roster.length} ${specName} kills of that boss.`);
+    err.status = 400;
+    throw err;
+  }
+
+  const entry = picked[wanted.rank - 1];
+  const detail = await fetchRunDetail({
+    code: entry.report.code,
+    fightID: entry.report.fightID,
+    playerName: entry.name,
+    castsOnly: true,
+  });
+  const order = castOrder(detail);
+  const durationSec = Math.max(1, Math.round((detail.fight.endTime - detail.fight.startTime) / 1000));
+
+  return {
+    ...base,
+    boss: detail.fight.name ?? null,
+    selected: {
+      ...wanted,
+      durationSec,
+      cpm: Math.round((10 * 60 * order.length) / durationSec) / 10,
+      report: entry.report,
+      castOrder: order,
+    },
   };
 }
 

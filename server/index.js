@@ -145,7 +145,10 @@ app.get('/api/raid/overview', async (req, res) => {
   }
 });
 
-// How the top N ranked players of a class+spec play one boss — rotation only.
+// How ONE top-ranked player of a class+spec plays a boss — rotation only, plus the
+// roster of the other nine to switch to (`player` picks one; default is the #1
+// parse). Only the selected player's run is ever fetched.
+//
 // Note there is no charParams here: this is not about you, so it needs no
 // character, no log and no kill of your own. It's the "learn the fight before you
 // pull it" view.
@@ -153,12 +156,12 @@ app.get('/api/raid/rotations', async (req, res) => {
   try {
     const encounterID = Number(req.query.encounter);
     if (!encounterID) return res.status(400).json({ error: 'encounter query param required' });
-    const topN = Math.max(2, Math.min(10, Number(req.query.top) || 10)); // each player costs ~5 API calls
     const rotations = await buildBossRotations({
       ...specParams(req.query),
       encounterID,
       difficulty: req.query.difficulty ? Number(req.query.difficulty) : DEFAULT_RAID_DIFFICULTY,
-      topN,
+      player: req.query.player ? String(req.query.player) : null,
+      topN: Math.max(2, Math.min(25, Number(req.query.top) || 10)), // roster size — costs nothing
       refresh: wantsRefresh(req.query),
     });
     res.json(rotations);
