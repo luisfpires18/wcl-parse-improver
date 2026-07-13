@@ -372,7 +372,26 @@ export async function fetchRaidRankings({ encounterID, className, specName, diff
 export async function fetchRaidBenchmark({ encounterID, className, specName, difficulty, compareTo = null, refresh = false }) {
   const entries = await fetchRaidRankings({ encounterID, className, specName, difficulty, refresh });
   const norm = (s) => String(s ?? '').trim().toLowerCase();
-  const pick = (compareTo && entries.find((e) => norm(e.name) === norm(compareTo))) || entries[0];
+
+  let pick = entries[0];
+  if (compareTo) {
+    // Never substitute silently. This used to fall back to entries[0] when the
+    // requested player wasn't on the ranked page, so you could pick one player
+    // from the dropdown and be shown a DIFFERENT player's casts and cooldowns —
+    // then reasonably conclude "their potion isn't showing" when in fact you were
+    // looking at someone else entirely.
+    const found = entries.find((e) => norm(e.name) === norm(compareTo));
+    if (!found) {
+      const err = new Error(
+        `${compareTo} isn't among the ranked ${difficultyName(difficulty) ?? ''} kills for this boss, so there's nothing to compare against. ` +
+          `Pick someone from the list.`
+      );
+      err.status = 400;
+      throw err;
+    }
+    pick = found;
+  }
+
   const detail = await fetchRunDetail({ code: pick.report.code, fightID: pick.report.fightID, playerName: pick.name });
   return { name: pick.name, difficultyName: difficultyName(difficulty), dps: pick.dps, detail, entries };
 }

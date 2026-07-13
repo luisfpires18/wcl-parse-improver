@@ -162,3 +162,62 @@ test('castOrder: amp beats damage — a cooldown is not buried as an ordinary da
   const d = havoc([{ timestamp: 1000, abilityGameID: 11 }]);
   assert.equal(castOrder(d)[0].kind, 'amp');
 });
+
+// A potion you cannot see is the whole complaint. Even if the cast event is
+// missing or unnameable, the BUFF it applies is in the Buffs table with a band per
+// use — that is proof it was drunk, and when. Works for the opponent exactly as
+// for you: same tables, their log.
+test('a potion with no cast event is still recovered, from the buff it applies', () => {
+  const d = havoc([{ timestamp: 5000, abilityGameID: 10 }]); // only a Chaos Strike cast
+  d.buffs = {
+    totalTimeMs: 300000,
+    auras: [
+      { name: 'Potion of Recklessness', uptimeMs: 60000, uses: 2, bands: [{ startTime: 1000, endTime: 31000 }, { startTime: 200000, endTime: 230000 }] },
+    ],
+  };
+  const order = castOrder(d);
+  const pots = order.filter((c) => /^potion/i.test(c.name));
+  assert.equal(pots.length, 2, 'both uses recovered from the buff bands');
+  assert.deepEqual(pots.map((p) => p.tSec), [1, 200]);
+  for (const p of pots) {
+    assert.equal(p.kind, 'amp');
+    assert.equal(p.fromBuff, true, 'flagged as derived, not invented');
+  }
+  // and it lands in chronological order alongside the real casts
+  assert.deepEqual(order.map((c) => c.tSec), [1, 5, 200]);
+});
+
+test('a potion that DOES have a cast event is not counted twice', () => {
+  // guid 13 is Potion of Unwavering Focus — the buff must be the SAME potion, or
+  // they are genuinely two different drinks
+  const d = havoc([{ timestamp: 1200, abilityGameID: 13 }]); // the potion cast
+  d.buffs = {
+    totalTimeMs: 300000,
+    auras: [{ name: 'Potion of Unwavering Focus', uptimeMs: 30000, uses: 1, bands: [{ startTime: 1000, endTime: 31000 }] }],
+  };
+  const pots = castOrder(d).filter((c) => /^potion/i.test(c.name));
+  assert.equal(pots.length, 1, 'the buff band and the cast are the same use');
+  assert.ok(!pots[0].fromBuff, 'the real cast wins; the buff is only a backstop');
+});
+
+test('two DIFFERENT potions at the same moment are both kept', () => {
+  const d = havoc([{ timestamp: 1200, abilityGameID: 13 }]); // Unwavering Focus cast
+  d.buffs = {
+    totalTimeMs: 300000,
+    auras: [{ name: 'Potion of Recklessness', uptimeMs: 30000, uses: 1, bands: [{ startTime: 1000, endTime: 31000 }] }],
+  };
+  const pots = castOrder(d).filter((c) => /^potion/i.test(c.name));
+  assert.equal(pots.length, 2, 'different potions are different uses, not a duplicate');
+});
+
+// The cast EVENT stream carries more events than there were presses: the same cast
+// is often logged under a second ability id. Naming those off masterData would look
+// like a fix and silently double the count.
+test('an event whose ability is not in the Casts table is NOT invented into a cast', () => {
+  const d = havoc([
+    { timestamp: 1000, abilityGameID: 11 }, // The Hunt — in the table
+    { timestamp: 1000, abilityGameID: 999 }, // the same press, second id — not in the table
+  ]);
+  const hunts = castOrder(d).filter((c) => c.name === 'The Hunt');
+  assert.equal(hunts.length, 1, 'one press, not two');
+});

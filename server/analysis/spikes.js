@@ -247,10 +247,18 @@ function topTransition(seq) {
  * Capped at `limit` only as a payload safety bound (a run is ~1300 casts).
  */
 export function castOrder(detail, limit = 4000) {
+  // Only abilities in the Casts TABLE count. The cast EVENT stream carries more
+  // events than there were presses (2575 events against a table total of 1489 on a
+  // real log) because the same press is often logged twice under a second ability
+  // id — The Hunt appears as both 370965 and 370966, 24 casts each, for 24 actual
+  // presses. Naming those extra events off masterData would look like a fix and
+  // silently double the count. The table is the authority on what was pressed.
   const nameOf = new Map((detail.casts?.abilities ?? []).map((a) => [a.guid, a.name]));
+
   const dmg = damageNamesOf(detail);
   const amps = amplifierNamesOf(detail);
   const start = detail.fight?.startTime ?? 0;
+
   const out = [];
   for (const ev of detail.castEvents ?? []) {
     const name = nameOf.get(ev.abilityGameID);
@@ -263,6 +271,36 @@ export function castOrder(detail, limit = 4000) {
       name,
     });
     if (out.length >= limit) break;
+  }
+
+  // BACKSTOP: a potion you cannot see is the whole complaint. Even if its cast
+  // event is missing or unnameable, the BUFF it applies is in the Buffs table with
+  // a band per use — that is proof it was drunk, and when. Merge any potion use
+  // that the cast stream didn't already account for, so a potion can never be lost
+  // to a gap in the cast data. Works for the opponent exactly as for you: it is
+  // their log, same tables.
+  for (const use of potionUsesFromBuffs(detail)) {
+    const already = out.some((c) => c.name === use.name && Math.abs(c.tSec - use.tSec) <= 2);
+    if (!already) out.push({ ...use, kind: 'amp', fromBuff: true });
+  }
+
+  return out.sort((a, b) => a.tSec - b.tSec);
+}
+
+/**
+ * When each potion was drunk, read from the aura it applies rather than from a
+ * cast. The band start IS the moment it was used.
+ */
+function potionUsesFromBuffs(detail) {
+  const start = detail.fight?.startTime ?? 0;
+  const end = detail.fight?.endTime ?? Infinity;
+  const out = [];
+  for (const aura of detail.buffs?.auras ?? []) {
+    if (!aura?.name || !POTION_RE.test(aura.name)) continue;
+    for (const b of aura.bands ?? []) {
+      if (b.startTime < start || b.startTime > end) continue;
+      out.push({ name: aura.name, tSec: Math.round(((b.startTime - start) / 1000) * 10) / 10 });
+    }
   }
   return out;
 }

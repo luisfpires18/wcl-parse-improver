@@ -94,12 +94,24 @@ export async function buildComparison({
     .slice(0, SIMILAR_N);
 
   // Default opponent: the closest route to mine, out of everyone ranked.
-  const selected =
-    (compareTo && withMatch.find((p) => norm(p.name) === norm(compareTo))) ||
-    [...withMatch].sort((a, b) => b.matchPct - a.matchPct)[0];
+  let selected = [...withMatch].sort((a, b) => b.matchPct - a.matchPct)[0];
 
-  if (compareTo && norm(selected.name) !== norm(compareTo)) {
-    dumpDebug('compareTo-not-ranked', { compareTo, encounterID, targetLevel });
+  if (compareTo) {
+    // Never substitute silently. This used to fall back to the closest-route
+    // player when the requested one wasn't on the ranked page for this key level,
+    // so you could pick one player and be shown another's casts — and then
+    // reasonably conclude their cooldowns "weren't showing".
+    const found = withMatch.find((p) => norm(p.name) === norm(compareTo));
+    if (!found) {
+      dumpDebug('compareTo-not-ranked', { compareTo, encounterID, targetLevel });
+      const err = new Error(
+        `${compareTo} has no ranked +${targetLevel} run on this dungeon, so there's nothing to compare against. ` +
+          `Pick someone from the list.`
+      );
+      err.status = 400;
+      throw err;
+    }
+    selected = found;
   }
 
   const otherDetail = await fetchRunDetail({
