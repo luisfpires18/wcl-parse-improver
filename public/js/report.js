@@ -1,0 +1,275 @@
+// The eight-section report, rendered identically for Mythic+ and for a raid pull.
+//
+// Both analysis paths converge on one view model and one renderer, so a section
+// exists in exactly one place instead of being reimplemented per view.
+import { esc, fmtK, fmtPct, pctClass } from './util.js';
+import { renderTimelineSection } from './chart.js';
+
+// The eight sections, in the order they appear. Each is a pure function of the
+// view model, so M+ and a raid pull produce identical markup from identical data.
+export function renderReport(view) {
+  return [
+    renderCompare(view),        // 1 — opponent picker + DPS chart mount
+    // 2 — cast order lives inside the chart block (the brush writes into it)
+    renderRotation(view),       // 3 — rotation timeline
+    renderConsumables(view.consumables), // 4
+    renderParse(view.parse),    // 5
+    renderGaps(view.gaps),      // 6
+    renderResources(view.resources), // 7
+    renderAbilities(view.abilities), // 8
+  ].join('');
+}
+
+/**
+ * Section 1 — who you're being measured against, and the DPS-over-time chart.
+ *
+ * Top 10 of the spec plus the 5 parses whose ROUTE most resembles yours (similar
+ * duration => similar pull count, so the DPS gap is more purely execution and less
+ * "they skipped half the dungeon"). Everything below compares against whoever is
+ * selected here — there is no cohort median any more.
+ */
+function renderCompare(view) {
+  const { top = [], similar = [], selected } = view.compare ?? {};
+  const opt = (p, label) =>
+    `<option value="${esc(p.name)}" ${p.name === selected ? 'selected' : ''}>${esc(label)}</option>`;
+
+  const picker = `
+    <select id="compare-to" class="mini">
+      <optgroup label="Top ${top.length}">
+        ${top.map((p) => opt(p, `#${p.rank} ${p.name} — ${fmtK(p.dps)}`)).join('')}
+      </optgroup>
+      ${
+        similar.length
+          ? `<optgroup label="Parses most like your run">
+               ${similar.map((p) => opt(p, `${p.name} — ${p.matchPct}% route match, ${fmtK(p.dps)}`)).join('')}
+             </optgroup>`
+          : ''
+      }
+    </select>`;
+
+  const h = view.headline;
+  const gap = h.dpsGapPct == null ? '' : h.dpsGapPct > 0
+    ? `<b class="p-gray">${h.dpsGapPct}% behind</b>`
+    : `<b class="p-green">${Math.abs(h.dpsGapPct)}% ahead</b>`;
+
+  return `
+    <section class="card-section">
+      <h3>You vs <span id="vs-name">${esc(h.otherLabel ?? '—')}</span></h3>
+      <p class="vs-line">
+        <b>${fmtK(h.myDps)}</b> you &nbsp;vs&nbsp; <b>${fmtK(h.theirDps)}</b> them &nbsp;${gap}
+      </p>
+      <p>Compare against: ${picker} ${view.levelPicker ?? ''}</p>
+      <div id="dps-chart" class="dps-chart-loading">Loading DPS over time…</div>
+    </section>`;
+}
+
+/** Section 3 — rotation timeline, with the two honest rotation-match numbers. */
+function renderRotation(view) {
+  if (!view.timeline) return '';
+  const m = view.rotationMatch;
+  const match = m
+    ? `<p class="section-note">Rotation match: <b>${m.spellMixPct}%</b> spell mix (which buttons, in what proportion) ·
+       <b>${m.castOrderPct}%</b> cast order (the sequence you press them in).</p>`
+    : '';
+  return `<section class="card-section">${renderTimelineSection(view.timeline, null)}${match}</section>`;
+}
+
+/** Section 5 — current parse colour and the DPS each next colour costs. */
+function renderParse(p) {
+  if (!p) return '';
+  const chips = (p.tiers ?? [])
+    .map((t) => {
+      const need = t.needDps ?? t.estDps;
+      const sign = t.dpsDelta >= 0 ? '+' : '';
+      return `<span class="tier-chip p-${t.tier}">${t.tier} ${t.threshold}%+<br>
+        <small>${sign}${t.pctDeltaNeeded}% DPS${need ? ` · ${fmtK(need)}` : ''}</small></span>`;
+    })
+    .join('');
+  const cur = p.currentPercent ?? p.currentTier;
+  return `
+    <section class="card-section">
+      <h3>Parse &amp; next colour</h3>
+      ${
+        p.currentPercent != null
+          ? `<p>This run: <b class="${pctClass(p.currentPercent)}">${fmtPct(p.currentPercent)}% ${esc(p.currentTier ?? '')}</b></p>`
+          : p.currentTier
+            ? `<p>Current tier: <b class="p-${p.currentTier}">${esc(p.currentTier)}</b></p>`
+            : ''
+      }
+      ${chips ? `<div class="tier-chips">${chips}</div>` : ''}
+      ${p.text ? `<p class="section-note">${esc(p.text)}</p>` : ''}
+    </section>`;
+}
+
+/** Section 6 — biggest gaps: what stands out, ordered by estimated DPS impact. */
+function renderGaps(gaps) {
+  if (!gaps?.length) {
+    return `<section class="card-section"><h3>Biggest gaps</h3>
+      <p class="muted">Nothing stands out against this player — no significant gaps found.</p></section>`;
+  }
+  const items = gaps
+    .map(
+      (g) => `<li class="gap">
+        <div class="gap-head">
+          <span class="sev">${g.severity}</span>
+          <b>${esc(g.title)}</b>
+          <span class="vals">you <b>${esc(String(g.mine))}</b>${g.unit ? ' ' + esc(g.unit) : ''}
+            · them <b>${esc(String(g.cohort))}</b>${g.unit ? ' ' + esc(g.unit) : ''}</span>
+        </div>
+        <div class="gap-advice">${esc(g.advice ?? '')}</div>
+      </li>`
+    )
+    .join('');
+  return `
+    <section class="card-section">
+      <h3>Biggest gaps <small>— what stands out</small></h3>
+      <ol class="gaps">${items}</ol>
+      <p class="table-note"><small>Ordered by a rough estimate of DPS impact, used only to rank them.</small></p>
+    </section>`;
+}
+
+/** Section 8 — per-ability casts AND damage, you vs them. One table, one baseline. */
+function renderAbilities(a) {
+  if (!a?.rows?.length) return '';
+  const fmtM = (v) => (v ? (v / 1e6).toFixed(1) + 'm' : '—');
+  const rows = a.rows
+    .slice(0, 30)
+    .map(
+      (r) => `<tr class="${Math.abs(r.castDiff) >= 5 ? 'rot-big' : ''}">
+        <td>${esc(r.name)}</td>
+        <td class="num">${r.myCasts || '—'}</td>
+        <td class="num">${r.theirCasts || '—'}</td>
+        <td class="num">${r.castDiff > 0 ? '+' : ''}${r.castDiff || ''}</td>
+        <td class="num sep">${fmtM(r.myAmount)}</td>
+        <td class="num">${fmtM(r.theirAmount)}</td>
+      </tr>`
+    )
+    .join('');
+  const t = a.totals;
+  return `
+    <section class="card-section">
+      <h3>Per-ability <small>— you vs ${esc(a.otherLabel)}</small></h3>
+      <table class="dmg-table">
+        <thead>
+          <tr><th rowspan="2">Ability</th><th colspan="3" class="grp">Casts</th><th colspan="2" class="grp sep">Damage</th></tr>
+          <tr><th>You</th><th>Them</th><th>Diff</th><th class="sep">You</th><th>Them</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td>Total</td><td></td><td></td><td></td>
+          <td class="num sep">${fmtM(t.myDamage)}</td><td class="num">${fmtM(t.theirDamage)}</td></tr></tfoot>
+      </table>
+      <p class="table-note"><small>Sorted by damage. A big cast <b>Diff</b> is where your globals went somewhere theirs didn't.</small></p>
+    </section>`;
+}
+
+/**
+ * Section 4 — Consumables & party buffs.
+ *
+ * Consumables (flask/food/oil/rune/potion) are yours to fix. Party buffs are not:
+ * they're what someone ELSE applied to you, identified from the log's own
+ * apply/remove events rather than a hardcoded list of raid buffs. Showing the ones
+ * their group had and yours didn't matters — it's a real slice of the DPS gap that
+ * is NOT a rotation mistake, and knowing that stops you hunting for one.
+ */
+export function renderConsumables(c) {
+  if (!c) return '';
+  const cell = (v) => (v ? `${esc(v.name)} <small class="muted">${v.pct}%</small>` : '<span class="p-gray">none</span>');
+
+  const rows = c.rows
+    .map(
+      (r) => `<tr class="${r.missing ? 'rot-big' : ''}">
+        <td>${esc(r.label)}</td>
+        <td>${cell(r.mine)}</td>
+        <td>${cell(r.them)}</td>
+      </tr>`
+    )
+    .join('');
+
+  const gave = c.partyBuffs?.theyHadIDidnt ?? [];
+  const partyRows = (c.partyBuffs?.them ?? [])
+    .map((b) => {
+      const mineHas = (c.partyBuffs.mine ?? []).find((m) => m.name === b.name);
+      return `<tr class="${mineHas ? '' : 'rot-big'}">
+        <td>${esc(b.name)}</td>
+        <td>${mineHas ? `${mineHas.pct}%` : '<span class="p-gray">none</span>'}</td>
+        <td>${b.pct}%</td>
+      </tr>`;
+    })
+    .join('');
+
+  return `
+    <section class="card-section">
+      <h3>Consumables &amp; party buffs <small>— you vs ${esc(c.otherLabel)}</small></h3>
+      <table class="rot-table">
+        <thead><tr><th>Consumable</th><th>You</th><th>${esc(c.otherLabel)}</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${c.notes?.length ? c.notes.map((n) => `<p class="section-note">${esc(n)}</p>`).join('') : ''}
+      ${
+        partyRows
+          ? `<h4>Party buffs <small>— applied to you by someone else</small></h4>
+             <table class="rot-table">
+               <thead><tr><th>Buff</th><th>You</th><th>${esc(c.otherLabel)}</th></tr></thead>
+               <tbody>${partyRows}</tbody>
+             </table>
+             ${
+               gave.length
+                 ? `<p class="section-note">Their group gave them ${gave
+                     .map((b) => esc(b.name))
+                     .join(', ')} and yours didn't. That's a real part of the DPS gap — and it is <b>not</b> your rotation.</p>`
+                 : ''
+             }
+             <p class="table-note"><small>Identified from the log's own apply/remove events (someone else's <code>sourceID</code>), not a hardcoded buff list.</small></p>`
+          : ''
+      }
+    </section>`;
+}
+
+/**
+ * Section 7 — resource management.
+ *
+ * Generic across classes: the server reads the spec's primary resource off the
+ * log (analysis/resources.js) rather than being told which one to expect, so this
+ * shows Runic Power for a DK and Fury for a Havoc DH with no per-class branch.
+ * The headline is the WASTE PERCENTAGE, which is scale-invariant — WCL reports
+ * some resources at 10x, and a percentage cancels that out, so no unverifiable
+ * per-resource divisor is ever applied to the numbers.
+ */
+export function renderResources(res) {
+  if (!res) return '';
+  const cell = (v, suffix = '') => (v == null ? '<span class="muted">—</span>' : `${v}${suffix}`);
+  const them = res.them;
+
+  // A power type we don't recognise by NAME is still fully usable — every number
+  // came from the log. Say so rather than silently labelling it wrong.
+  const unknownNote = res.known
+    ? ''
+    : `<p class="table-note"><small>This power type isn't one we recognise by name, so it's shown by its id. The numbers are the log's own.</small></p>`;
+
+  const others = res.others?.length
+    ? `<p class="table-note"><small>Also generated: ${res.others
+        .map((o) => `${esc(o.name)}${o.wastePct != null ? ` (${o.wastePct}% wasted)` : ''}`)
+        .join(', ')} — secondary pools, not your main resource.</small></p>`
+    : '';
+
+  return `
+    <section class="card-section">
+      <h3>${esc(res.name)} management</h3>
+      <table class="rot-table">
+        <thead><tr><th>Metric</th><th>You</th><th>Them</th></tr></thead>
+        <tbody>
+          <tr class="rot-big">
+            <td><b>Wasted to overcapping</b></td>
+            <td class="num">${cell(res.mine.wastePct, '%')}</td>
+            <td class="num">${cell(them?.wastePct, '%')}</td>
+          </tr>
+          <tr><td>Generated</td><td class="num">${cell(res.mine.gain)}</td><td class="num">${cell(them?.gain)}</td></tr>
+          <tr><td>Wasted</td><td class="num">${cell(res.mine.waste)}</td><td class="num">${cell(them?.waste)}</td></tr>
+        </tbody>
+      </table>
+      ${res.note ? `<p class="section-note">${esc(res.note)}</p>` : ''}
+      ${unknownNote}
+      ${others}
+      <p class="table-note"><small>Waste % = of everything you could have generated, how much the cap ate. Raw amounts are in the log's own units.</small></p>
+    </section>`;
+}

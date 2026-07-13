@@ -1,20 +1,25 @@
-// Compare my run metrics against the cohort (median across top-N runs) and
-// produce a ranked, human-readable gap report.
+// Build the eight-section report: my run vs ONE other player.
 //
-// Severity is a rough estimate of % DPS impact so gaps can be ordered.
-// The weights are documented heuristics, not truth — the honesty section
-// reports how much of the real DPS gap they explain.
-import { computeRunMetrics, median, IGNORED_ABILITIES } from './metrics.js';
+// This file used to compare against the MEDIAN of a 5-7 player cohort. That is
+// gone. Every section of the report is a 1:1 comparison, so the medians bought
+// nothing but cost six extra run fetches — and they lied: picking a player from
+// the dropdown narrowed the cohort to that one person, at which point every
+// "cohort median" was really just their number, still labelled as a median.
+//
+// Gap severity is a rough estimate of % DPS impact, used only to ORDER the gaps.
+// The weights are documented heuristics, not truth.
+import { computeRunMetrics, IGNORED_ABILITIES } from './metrics.js';
 import { adviceFor } from './advice.js';
-import { buildTimeline, buildTimelineInfo } from './timeline.js';
-import { buildSummary } from './summary.js';
+import { buildTimeline } from './timeline.js';
 import { buildParsePlan, describeParsePlan } from './parseTiers.js';
-import { usesRunicPower, usesEpidemicSpenderMix } from '../wcl/specs.js';
+import { compareResource } from './resources.js';
+import { buildConsumables } from './consumables.js';
+import { rotationComposition, castOrder } from './spikes.js';
 
 // Ability cast-count diffs below this share of damage are noise — skip.
 const MIN_DAMAGE_SHARE = 0.01;
 const MIN_UPTIME_DIFF_PP = 8;
-const MIN_COHORT_UPTIME = 25;
+const MIN_THEIR_UPTIME = 25;
 
 /** Fight duration in ms from a run detail (keystone time, else span). */
 function fightDurationMs(detail) {
@@ -24,444 +29,190 @@ function fightDurationMs(detail) {
   return null;
 }
 
-/**
- * Index of the cohort run most SIMILAR to mine — closest fight duration
- * (≈ similar route/pull count → the DPS gap is more purely execution),
- * preferring the same key level. This is the default single-run target for
- * the 1:1 views (timeline, damage table, DPS chart). Returns 0 when there's
- * nothing to compare.
- */
-export function pickSimilarIndex(cohort, myDurationMs, targetLevel) {
-  if (!cohort?.length) return 0;
-  if (myDurationMs == null) return 0;
-  let bestIdx = 0;
-  let bestScore = Infinity;
-  cohort.forEach((c, i) => {
-    const dur = fightDurationMs(c.detail);
-    if (dur == null) return;
-    const sameLevel = c.detail?.fight?.keystoneLevel === targetLevel ? 0 : 1;
-    // same-level runs strongly preferred, then closest duration
-    const score = sameLevel * 1e12 + Math.abs(dur - myDurationMs);
-    if (score < bestScore) {
-      bestScore = score;
-      bestIdx = i;
-    }
-  });
-  return bestIdx;
-}
-
 export function buildReport(bundle) {
-  // Which spec this report is for — gates the spec-specific panels/notes below.
-  // Tests build bundles without params, so default to the original DK/Unholy.
   const className = bundle.params?.className ?? 'DeathKnight';
   const specName = bundle.params?.specName ?? 'Unholy';
 
-  const mine = computeRunMetrics(bundle.mine.detail);
-  const cohortMetrics = bundle.cohort.map((c) => computeRunMetrics(c.detail));
+  const mineDetail = bundle.mine.detail;
+  const otherDetail = bundle.other.detail;
+  const otherName = bundle.other.meta.name;
+
+  const mine = computeRunMetrics(mineDetail);
+  const them = computeRunMetrics(otherDetail);
+  const buffSources = mineDetail.buffSources ?? {};
+
   const myDps = bundle.mine.meta.dps ?? null;
-  const cohortDps = bundle.cohort.map((c) => c.meta.dps).filter((v) => typeof v === 'number');
-  const cohortMedianDps = median(cohortDps);
-  // Negative gap = I'm ahead of the cohort (possible against a single weaker
-  // player via compareTo, or an easier-level cohort). That's a valid, honest
-  // number; downstream code must treat "no positive gap" specially rather
-  // than dividing by it (see honesty.explainedPct below).
-  const dpsGapPct =
-    myDps != null && cohortMedianDps != null && cohortMedianDps > 0
-      ? (100 * (cohortMedianDps - myDps)) / cohortMedianDps
-      : null;
+  const theirDps = bundle.other.meta.dps ?? null;
+  const dpsGapPct = myDps != null && theirDps ? (100 * (theirDps - myDps)) / theirDps : null;
 
-  const gaps = [];
-
-  // 1) deaths
-  const cohortDeaths = median(cohortMetrics.map((m) => m.deaths.length));
-  if (mine.deaths.length > cohortDeaths) {
-    const extra = mine.deaths.length - cohortDeaths;
-    gaps.push(gap('deaths', 'Deaths', mine.deaths.length, cohortDeaths, 'deaths', extra * 4));
-  }
-
-  // 2) downtime
-  const cohortIdle = median(cohortMetrics.map((m) => m.downtime.idlePct));
-  if (mine.downtime.idlePct != null && cohortIdle != null && mine.downtime.idlePct > cohortIdle + 1) {
-    gaps.push(
-      gap('downtime', 'Idle time (gaps > 5s with zero casts)', round1(mine.downtime.idlePct), round1(cohortIdle), '% of fight',
-        mine.downtime.idlePct - cohortIdle, { windows: mine.downtime.windows })
-    );
-  }
-
-  // 3) total CPM
-  const cohortCPM = median(cohortMetrics.map((m) => m.totalCPM));
-  if (cohortCPM && mine.totalCPM < cohortCPM * 0.97) {
-    const diffPct = (100 * (cohortCPM - mine.totalCPM)) / cohortCPM;
-    gaps.push(gap('cpm', 'Total casts per minute', round1(mine.totalCPM), round1(cohortCPM), 'CPM', diffPct * 0.8));
-  }
-
-  // 4) per-ability cast diffs, weighted by the cohort's damage share
-  const abilityRows = abilityDiffs(mine, cohortMetrics);
-  for (const row of abilityRows) {
-    if (Math.abs(row.severity) < 0.5) continue;
-    if (row.severity > 0) {
-      gaps.push(
-        gap('ability', `${row.name} usage`, `${round1(row.myCpm)} CPM`, `${round1(row.cohortCpm)} CPM`, null, row.severity, {
-          name: row.name,
-          damageSharePct: round1(100 * row.share),
-          myCasts: row.myCasts,
-        })
-      );
-    }
-  }
-
-  // 5) aura uptimes — measured over ENGAGED time (fight minus idle windows),
-  // so downtime/deaths don't double-count as buff-management failures.
-  // Only auras I actually have are actionable; auras I never gained at all
-  // are almost certainly group-comp buffs or talent differences.
-  const buffSources = bundle.mine.detail.buffSources ?? {};
-  const { actionable: uptimeRows, downtimeCaused, compOnly } = uptimeDiffs(mine, cohortMetrics, buffSources);
-  for (const row of uptimeRows) {
-    gaps.push(
-      gap('uptime', `${row.name} uptime (active time)`, `${round1(row.mineActive)}%`, `${round1(row.cohortActive)}%`, null, row.activeDiff * 0.15, {
-        name: row.name,
-        rawMine: round1(row.mineRaw),
-        rawCohort: round1(row.cohortRaw),
-      })
-    );
-  }
-  const compNotes = compOnly.map((row) => ({
-    name: row.name,
-    minePct: round1(row.mineRaw),
-    cohortPct: round1(row.cohortRaw),
-    external: row.external,
-    note: row.external
-      ? `${row.name} is applied by a groupmate, not cast by you (verified from the log's own apply/remove events)` +
-        (row.mineRaw > 0
-          ? ` — you had it at ${round1(row.mineRaw)}% because your own group's support gave it to you sometimes, ` +
-            `their ${round1(row.cohortRaw)}% reflects theirs doing it more; not your play.`
-          : `; cohort runs have it at ~${round1(row.cohortRaw)}% because their support classes provide it, yours didn't this run.`)
-      : `Cohort runs have ${row.name} at ~${round1(row.cohortRaw)}% uptime; you never had it — likely a group buff from their comp or a talent difference, not directly actionable.`,
-  }));
-  const downtimeNotes = downtimeCaused.map((row) => ({
-    name: row.name,
-    mineRaw: round1(row.mineRaw),
-    cohortRaw: round1(row.cohortRaw),
-    mineActive: round1(row.mineActive),
-    cohortActive: round1(row.cohortActive),
-    note: `${row.name}: raw uptime ${round1(row.mineRaw)}% vs their ${round1(row.cohortRaw)}%, but while actively playing you keep it at ${round1(row.mineActive)}% vs their ${round1(row.cohortActive)}% — the loss comes from deaths/downtime, already counted above. Fix those, not the buff.`,
-  }));
-
-  // 6) spender mix (informational severity)
-  const cohortEpidemicShare = median(cohortMetrics.map((m) => m.spender.epidemicShare));
-  const cohortDeathCoilCasts = median(cohortMetrics.map((m) => m.spender.deathCoil));
-  const cohortEpidemicCasts = median(cohortMetrics.map((m) => m.spender.epidemic));
-  if (mine.spender.epidemicShare != null && cohortEpidemicShare != null) {
-    const diff = Math.abs(mine.spender.epidemicShare - cohortEpidemicShare);
-    if (diff > 0.1) {
-      gaps.push(
-        gap('spender', 'Epidemic share of RP spenders (cast-count based)',
-          `${Math.round(100 * mine.spender.epidemicShare)}%`, `${Math.round(100 * cohortEpidemicShare)}%`, null, diff * 5)
-      );
-    }
-  }
-
-  // 7) Runic Power waste (overcapping) — WCL's own computed waste field,
-  // not derived/guessed. Only flagged if I actually wasted a meaningful
-  // share; the cohort's own waste (rarely zero even for top players) is the
-  // baseline, not zero.
-  const cohortWastePct = median(cohortMetrics.map((m) => m.rpWaste.wastePct).filter((v) => v != null));
-  const cohortNetGain = median(cohortMetrics.map((m) => m.rpWaste.netGain));
-  const cohortWasteAmount = median(cohortMetrics.map((m) => m.rpWaste.waste));
-  if (mine.rpWaste.wastePct != null && cohortWastePct != null && mine.rpWaste.wastePct > cohortWastePct + 3) {
-    const diff = mine.rpWaste.wastePct - cohortWastePct;
-    gaps.push(
-      gap('waste', 'Runic Power wasted to overcapping', `${round1(mine.rpWaste.wastePct)}%`, `${round1(cohortWastePct)}%`, null, diff * 0.5, {
-        wastedAmount: round1(mine.rpWaste.waste),
-      })
-    );
-  }
-
-  gaps.sort((a, b) => b.severity - a.severity);
+  const gaps = buildGaps(mine, them, buffSources);
   for (const g of gaps) g.advice = adviceFor(g);
 
-  // honesty: how much of the DPS gap do the rotational severities cover?
-  // Deaths, idle time and total CPM overlap (a death causes idle causes low
-  // CPM) — count only the largest of the throughput cluster, plus the rest
-  // discounted, and never claim more than 95%.
-  const sevOf = (cat) => gaps.filter((g) => g.category === cat).reduce((a, g) => a + g.severity, 0);
-  const throughput = Math.max(sevOf('cpm'), sevOf('downtime')) + sevOf('deaths');
-  const rest = (sevOf('ability') + sevOf('uptime') + sevOf('spender') + sevOf('waste')) * 0.6;
-  const explained = throughput + rest;
-  const offLevelCohort = bundle.cohort.filter((c) => c.detail.fight.keystoneLevel !== bundle.targetLevel);
-  const honesty = {
-    dpsGapPct: dpsGapPct != null ? round1(dpsGapPct) : null,
-    // only meaningful when there's a positive gap to attribute; when I match
-    // or beat the cohort (gap <= 0) there is nothing to "explain"
-    explainedPct: dpsGapPct != null && dpsGapPct > 0 ? round1(Math.min(95, (100 * explained) / dpsGapPct)) : null,
-    note:
-      'Severity values are heuristic %-DPS estimates; overlapping causes are only counted once. ' +
-      'The unexplained remainder is likely routing, pull size, group comp and funnel — ' +
-      'things a parse comparison cannot see.' +
-      (compNotes.length
-        ? ` Note: the cohort also had ${compNotes.slice(0, 3).map((n) => n.name).join(', ')} from their group comp — a real slice of the gap sits there, not in your play.`
-        : '') +
-      (offLevelCohort.length
-        ? ` Note: ${offLevelCohort.map((c) => `${c.meta.name} (+${c.detail.fight.keystoneLevel})`).join(', ')} ` +
-          `logged their best run at a different key level than your +${bundle.targetLevel} — part of the DPS gap ` +
-          `there is just higher key scaling, not skill.`
-        : '') +
-      (bundle.targetLevel !== bundle.params.level
-        ? ` Note: you don't have a +${bundle.params.level} logged for this dungeon — this compares your closest ` +
-          `available run instead, +${bundle.targetLevel}.`
-        : ''),
-  };
+  const timeline = buildTimeline(mineDetail, otherDetail, buffSources);
+  if (timeline) timeline.otherRoleLabel = null;
 
-  const headline = {
-    dungeon: bundle.mine.detail.fight.name,
-    myKeyLevel: bundle.mine.detail.fight.keystoneLevel,
-    cohortLevel: bundle.targetLevel,
-    requestedLevel: bundle.params.level,
-    myDps: myDps ? Math.round(myDps) : null,
-    cohortMedianDps: cohortMedianDps ? Math.round(cohortMedianDps) : null,
-    dpsGapPct: dpsGapPct != null ? round1(dpsGapPct) : null,
-    myBestPercent: bundle.mine.meta.bestPercent != null ? round1(bundle.mine.meta.bestPercent) : null,
-    cohortSize: bundle.cohort.length,
-    cohortNames: bundle.cohort.map((c) => {
-      const lvl = c.detail.fight.keystoneLevel;
-      const levelNote = lvl && lvl !== bundle.targetLevel ? `, +${lvl} not +${bundle.targetLevel}` : '';
-      return c.label ? `${c.meta.name} (${c.label}${levelNote})` : c.meta.name;
-    }),
-    // structured list for a UI dropdown — pick one to get a full 1:1 report
-    // against just that player instead of the aggregate median
-    cohortPlayers: bundle.cohort.map((c) => ({
-      name: c.meta.name,
-      label: c.label ?? null,
-      keyLevel: c.detail.fight.keystoneLevel,
-    })),
-    // "parses similar to yours" — a second dropdown group (WCL parse-search).
-    // Detail isn't fetched for these until one is selected.
-    similarPlayers: (bundle.similarCandidates ?? []).map((c) => ({
-      name: c.name,
-      matchPct: c.matchPct,
-      dps: c.dps != null ? Math.round(c.dps) : null,
-      keyLevel: c.keyLevel,
-    })),
-    compareTo: bundle.compareTo ?? null,
-  };
-  // Single-run target for the 1:1 views (timeline, damage table, DPS chart):
-  // the most-similar cohort run by fight duration. When compareTo already
-  // filtered the cohort to one player, that's the only entry (index 0).
-  const myDurationMs = fightDurationMs(bundle.mine.detail);
-  const targetIndex = pickSimilarIndex(bundle.cohort, myDurationMs, bundle.targetLevel);
-  const target = bundle.cohort[targetIndex] ?? null;
-  headline.similarTarget = target?.meta?.name ?? null;
-  headline.similarTargetLabel = target?.label ?? null;
+  const rotation = rotationComposition(mineDetail, otherDetail);
 
-  const timeline = target ? buildTimeline(bundle.mine.detail, target.detail, buffSources) : null;
-  if (timeline) timeline.otherRoleLabel = target.label ?? null;
-  const timelineInfo = buildTimelineInfo(timeline);
-
-  const damageDone = target ? buildDamageDoneTable(bundle.mine.detail, target.detail) : null;
-  // spec-specific flask stat-priority hint (only Unholy DK has one wired up so far)
   const statPriorityNote =
     className === 'DeathKnight' && specName === 'Unholy'
       ? "Unholy's stat priority is Mastery > Crit > Haste > Versatility, so match the flask to that."
       : null;
-  const consumables = target
-    ? buildConsumables(bundle.mine.detail, target.detail, target.meta.name, statPriorityNote)
-    : null;
 
-  const parsePlan = buildParsePlan({
+  const parse = buildParsePlan({
     myBestPercent: bundle.mine.meta.bestPercent,
     overallBestPercent: bundle.mine.meta.overallBestPercent,
     overallBestLevel: bundle.mine.meta.overallBestLevel,
     myDps,
     history: bundle.mine.historyAtLevel,
     gaps,
-    honestyExplainedPct: honesty.explainedPct,
   });
-  parsePlan.text = describeParsePlan(parsePlan);
+  parse.text = describeParsePlan(parse);
 
   return {
-    headline,
-    gaps,
-    compNotes,
-    downtimeNotes,
-    timeline,
-    timelineInfo,
-    parsePlan,
-    damageDone,
-    consumables,
-    summary: buildSummary({ headline, gaps, honesty }),
-    tables: {
-      cpm: abilityRows.map((r) => ({
-        name: r.name,
-        myCasts: r.myCasts,
-        myCpm: round1(r.myCpm),
-        cohortCasts: round1(r.cohortCasts),
-        cohortCpm: round1(r.cohortCpm),
-        damageSharePct: round1(100 * r.share),
-      })),
-      uptimes: allUptimes(mine, cohortMetrics),
-      downtime: {
-        ...mine.downtime,
-        idlePct: round1(mine.downtime.idlePct),
-        cohortIdlePct: cohortIdle != null ? round1(cohortIdle) : null,
-      },
-      deaths: {
-        mine: mine.deaths,
-        cohortMedian: cohortDeaths,
-        // per-player breakdown, not just the median — "0 deaths" hides
-        // whether that's every single top run or a lucky one
-        cohortByPlayer: bundle.cohort.map((c, i) => ({ name: c.meta.name, deaths: cohortMetrics[i].deaths.length })),
-      },
-      // null (not an empty table) when the spec has no such resource/spender —
-      // a Shaman must never be shown a row labelled "Death Coil casts". The UI
-      // skips null panels entirely.
-      spender: usesEpidemicSpenderMix(className, specName)
-        ? {
-            mine: mine.spender,
-            cohortEpidemicShare,
-            cohortDeathCoilCasts: cohortDeathCoilCasts != null ? round1(cohortDeathCoilCasts) : null,
-            cohortEpidemicCasts: cohortEpidemicCasts != null ? round1(cohortEpidemicCasts) : null,
-          }
-        : null,
-      rpWaste: usesRunicPower(className)
-        ? {
-            mine: mine.rpWaste,
-            cohortWastePct: cohortWastePct != null ? round1(cohortWastePct) : null,
-            cohortNetGain: cohortNetGain != null ? round1(cohortNetGain) : null,
-            cohortWasteAmount: cohortWasteAmount != null ? round1(cohortWasteAmount) : null,
-          }
-        : null,
+    headline: {
+      title: mineDetail.fight.name,
+      subtitle: `+${mineDetail.fight.keystoneLevel}`,
+      myKeyLevel: mineDetail.fight.keystoneLevel,
+      requestedLevel: bundle.params.level,
+      targetLevel: bundle.targetLevel,
+      myDps: myDps ? Math.round(myDps) : null,
+      theirDps: theirDps ? Math.round(theirDps) : null,
+      dpsGapPct: round1(dpsGapPct),
+      myBestPercent: round1(bundle.mine.meta.bestPercent),
+      otherLabel: otherName,
     },
-    honesty,
+    // 1 — the picker
+    compare: { ...bundle.players, level: bundle.targetLevel },
+    // 2 + 3 — cast order and rotation timeline
+    castOrder: { mine: castOrder(mineDetail), them: castOrder(otherDetail) },
+    timeline,
+    rotationMatch: { spellMixPct: rotation.similarityPct, castOrderPct: rotation.sequencePct },
+    // 4
+    consumables: buildConsumables(mineDetail, otherDetail, otherName, buffSources, statPriorityNote),
+    // 5
+    parse,
+    // 6
+    gaps,
+    // 7
+    resources: compareResource(mineDetail.resourceEvents ?? [], otherDetail.resourceEvents ?? []),
+    // 8
+    abilities: buildAbilityTable(mineDetail, otherDetail, otherName),
   };
 }
 
-function abilityDiffs(mine, cohortMetrics) {
-  const names = new Set();
-  for (const m of [mine, ...cohortMetrics]) for (const n of m.abilities.keys()) names.add(n);
+// --- section 6: what stands out ---------------------------------------------
+
+function buildGaps(mine, them, buffSources) {
+  const gaps = [];
+
+  if (mine.deaths.length > them.deaths.length) {
+    const extra = mine.deaths.length - them.deaths.length;
+    gaps.push(gap('deaths', 'Deaths', mine.deaths.length, them.deaths.length, 'deaths', extra * 4));
+  }
+
+  if (mine.downtime.idlePct != null && them.downtime.idlePct != null && mine.downtime.idlePct > them.downtime.idlePct + 1) {
+    gaps.push(
+      gap('downtime', 'Idle time (gaps > 5s with zero casts)', round1(mine.downtime.idlePct), round1(them.downtime.idlePct), '% of fight',
+        mine.downtime.idlePct - them.downtime.idlePct, { windows: mine.downtime.windows })
+    );
+  }
+
+  if (them.totalCPM && mine.totalCPM < them.totalCPM * 0.97) {
+    const diffPct = (100 * (them.totalCPM - mine.totalCPM)) / them.totalCPM;
+    gaps.push(gap('cpm', 'Total casts per minute', round1(mine.totalCPM), round1(them.totalCPM), 'CPM', diffPct * 0.8));
+  }
+
+  for (const row of abilityDiffs(mine, them)) {
+    if (row.severity < 0.5) continue;
+    gaps.push(
+      gap('ability', `${row.name} usage`, `${round1(row.myCpm)} CPM`, `${round1(row.theirCpm)} CPM`, null, row.severity, {
+        name: row.name,
+        damageSharePct: round1(100 * row.share),
+        myCasts: row.myCasts,
+      })
+    );
+  }
+
+  // Aura uptimes I could actually control. Buffs a groupmate applied are NOT my
+  // play — they belong in the consumables/party-buffs section, and flagging them
+  // here would send the player hunting for a rotation mistake that never existed.
+  for (const row of uptimeDiffs(mine, them, buffSources)) {
+    gaps.push(
+      gap('uptime', `${row.name} uptime (active time)`, `${round1(row.mineActive)}%`, `${round1(row.theirActive)}%`, null, row.activeDiff * 0.15, {
+        name: row.name,
+      })
+    );
+  }
+
+  if (mine.resource?.wastePct != null && them.resource?.wastePct != null && mine.resource.wastePct > them.resource.wastePct + 3) {
+    const diff = mine.resource.wastePct - them.resource.wastePct;
+    gaps.push(
+      gap('waste', `${mine.resource.name} wasted to overcapping`, `${round1(mine.resource.wastePct)}%`, `${round1(them.resource.wastePct)}%`, null, diff * 0.5, {
+        resource: mine.resource.name,
+        wastedAmount: round1(mine.resource.waste),
+      })
+    );
+  }
+
+  return gaps.sort((a, b) => b.severity - a.severity);
+}
+
+function abilityDiffs(mine, them) {
+  const names = new Set([...mine.abilities.keys(), ...them.abilities.keys()]);
   const rows = [];
   for (const name of names) {
     if (IGNORED_ABILITIES.has(name)) continue;
     const myCpm = mine.abilities.get(name)?.cpm ?? 0;
-    const cohortCpm = median(cohortMetrics.map((m) => m.abilities.get(name)?.cpm ?? 0)) ?? 0;
-    const cohortCasts = median(cohortMetrics.map((m) => m.abilities.get(name)?.casts ?? 0)) ?? 0;
-    const share = median(cohortMetrics.map((m) => m.damageShare.get(name) ?? 0)) ?? 0;
-    if (share < MIN_DAMAGE_SHARE && cohortCpm < 0.5 && myCpm < 0.5) continue;
-    const relDiff = cohortCpm ? (cohortCpm - myCpm) / cohortCpm : myCpm ? -1 : 0;
-    // severity ≈ missing casts × how much of their damage this ability carries
-    const severity = relDiff * Math.max(share, 0.005) * 100;
+    const theirCpm = them.abilities.get(name)?.cpm ?? 0;
+    const share = them.damageShare.get(name) ?? 0;
+    if (share < MIN_DAMAGE_SHARE && theirCpm < 0.5 && myCpm < 0.5) continue;
+    const relDiff = theirCpm ? (theirCpm - myCpm) / theirCpm : 0;
     rows.push({
       name,
       myCasts: mine.abilities.get(name)?.casts ?? 0,
       myCpm,
-      cohortCasts,
-      cohortCpm,
+      theirCpm,
       share,
-      severity,
+      // severity ≈ missing casts × how much of their damage this ability carries
+      severity: relDiff * Math.max(share, 0.005) * 100,
     });
   }
-  rows.sort((a, b) => Math.abs(b.severity) - Math.abs(a.severity));
-  return rows;
+  return rows.sort((a, b) => b.severity - a.severity);
 }
 
-function uptimeDiffs(mine, cohortMetrics, buffSources = {}) {
-  const actionable = [];
-  const downtimeCaused = [];
-  const compOnly = [];
-  for (const [name, cohort] of cohortAuraMedians(cohortMetrics)) {
+function uptimeDiffs(mine, them, buffSources) {
+  const out = [];
+  for (const [name, theirAura] of them.auras) {
     if (IGNORED_ABILITIES.has(name)) continue;
-    if (cohort.raw < MIN_COHORT_UPTIME) continue;
-    const mineAura = mine.auras.get(name);
-    const mineRaw = mineAura?.uptimePct ?? 0;
-    const mineActive = mineAura?.activeUptimePct ?? mineRaw;
-    const rawDiff = cohort.raw - mineRaw;
-    const activeDiff = (cohort.active ?? cohort.raw) - mineActive;
-    if (rawDiff < MIN_UPTIME_DIFF_PP && activeDiff < MIN_UPTIME_DIFF_PP) continue;
+    if (theirAura.uptimePct < MIN_THEIR_UPTIME) continue;
 
-    const row = {
-      name,
-      mineRaw,
-      cohortRaw: cohort.raw,
-      mineActive,
-      cohortActive: cohort.active ?? cohort.raw,
-      rawDiff,
-      activeDiff,
-    };
-    // externally-applied (verified from real apply/remove events: someone
-    // else's sourceID, never mine) — a raid/party buff, not a personal habit,
-    // regardless of how much uptime I happened to get from it
+    // applied by a groupmate, never by me => their comp, not my rotation
     const src = buffSources[name];
-    const isExternal = src && src.foreign > 0 && src.self === 0;
-    // never gained the aura at all -> most likely also external (group buff
-    // or a talent difference); report separately, don't rank as an
-    // actionable gap
-    if (isExternal || !mineAura || (mineRaw === 0 && (mineAura.uses ?? 0) === 0)) {
-      compOnly.push({ ...row, external: Boolean(isExternal) });
-    } else if (activeDiff < MIN_UPTIME_DIFF_PP / 2) {
-      // big raw gap but fine while actively playing -> the loss is downtime/
-      // deaths, which are already ranked as their own gaps
-      downtimeCaused.push(row);
-    } else {
-      actionable.push(row);
-    }
-  }
-  actionable.sort((a, b) => b.activeDiff - a.activeDiff);
-  downtimeCaused.sort((a, b) => b.rawDiff - a.rawDiff);
-  compOnly.sort((a, b) => b.rawDiff - a.rawDiff);
-  return {
-    actionable: actionable.slice(0, 8),
-    downtimeCaused: downtimeCaused.slice(0, 8),
-    compOnly: compOnly.slice(0, 10),
-  };
-}
+    if (src && src.foreign > 0 && src.self === 0) continue;
 
-function allUptimes(mine, cohortMetrics) {
-  const rows = [];
-  for (const [name, cohort] of cohortAuraMedians(cohortMetrics)) {
-    if (IGNORED_ABILITIES.has(name)) continue;
     const mineAura = mine.auras.get(name);
-    const mineRaw = mineAura?.uptimePct ?? 0;
-    if (cohort.raw < 5 && mineRaw < 5) continue;
-    rows.push({
-      name,
-      minePct: round1(mineRaw),
-      mineActivePct: round1(mineAura?.activeUptimePct ?? mineRaw),
-      myUses: mineAura?.uses ?? 0,
-      cohortPct: round1(cohort.raw),
-      cohortActivePct: round1(cohort.active ?? cohort.raw),
-      cohortUses: round1(cohort.uses),
-      diffPp: round1(cohort.raw - mineRaw),
-    });
+    if (!mineAura) continue; // never had it at all — a talent difference, not a habit
+
+    const mineActive = mineAura.activeUptimePct ?? mineAura.uptimePct;
+    const theirActive = theirAura.activeUptimePct ?? theirAura.uptimePct;
+    const activeDiff = theirActive - mineActive;
+    // measured over ENGAGED time, so downtime and deaths don't masquerade as
+    // buff-management failures (those are already their own gaps above)
+    if (activeDiff < MIN_UPTIME_DIFF_PP) continue;
+
+    out.push({ name, mineActive, theirActive, activeDiff });
   }
-  rows.sort((a, b) => b.diffPp - a.diffPp);
-  return rows;
+  return out.sort((a, b) => b.activeDiff - a.activeDiff).slice(0, 8);
 }
 
-function cohortAuraMedians(cohortMetrics) {
-  const names = new Set();
-  for (const m of cohortMetrics) for (const n of m.auras.keys()) names.add(n);
-  const out = new Map();
-  for (const name of names) {
-    out.set(name, {
-      raw: median(cohortMetrics.map((m) => m.auras.get(name)?.uptimePct ?? 0)) ?? 0,
-      active: median(
-        cohortMetrics.map((m) => {
-          const a = m.auras.get(name);
-          return a ? (a.activeUptimePct ?? a.uptimePct) : 0;
-        })
-      ),
-      uses: median(cohortMetrics.map((m) => m.auras.get(name)?.uses ?? 0)) ?? 0,
-    });
-  }
-  return out;
-}
+// --- section 8: per-ability, mine vs them ------------------------------------
 
 /**
- * Side-by-side damage-done table (mine vs one target run): per ability,
- * Amount / Casts / Hits / DPS for each side, sorted by my damage. Mirrors
- * WCL's Compare > Damage Done two-column view. Uses the DamageDone table
- * (amount, hits — pets folded in) joined with the Casts table (casts).
+ * One table, casts AND damage, 1:1. Replaces two overlapping tables — a
+ * "per-ability casts vs cohort median" and a separate "damage done" — that showed
+ * the same abilities twice against two different baselines.
  */
-export function buildDamageDoneTable(mineDetail, otherDetail) {
+export function buildAbilityTable(mineDetail, otherDetail, otherName) {
   const side = (detail) => {
     const durSec = (fightDurationMs(detail) ?? 0) / 1000;
     const casts = new Map((detail.casts?.abilities ?? []).map((a) => [a.name, a.casts]));
@@ -474,94 +225,48 @@ export function buildDamageDoneTable(mineDetail, otherDetail) {
         dps: durSec > 0 ? a.total / durSec : 0,
       });
     }
+    // abilities that cost a global but deal no damage still matter — they're where
+    // the globals went
+    for (const [name, c] of casts) {
+      if (!byName.has(name)) byName.set(name, { amount: 0, hits: 0, casts: c, dps: 0 });
+    }
     return { byName, totalDamage: detail.damage?.totalDamage ?? 0, totalDps: durSec > 0 ? (detail.damage?.totalDamage ?? 0) / durSec : 0 };
   };
-  const mine = side(mineDetail);
-  const other = side(otherDetail);
+  const m = side(mineDetail);
+  const o = side(otherDetail);
 
-  const names = new Set([...mine.byName.keys(), ...other.byName.keys()]);
   const rows = [];
-  for (const name of names) {
-    const m = mine.byName.get(name);
-    const o = other.byName.get(name);
+  for (const name of new Set([...m.byName.keys(), ...o.byName.keys()])) {
+    if (IGNORED_ABILITIES.has(name)) continue;
+    const a = m.byName.get(name);
+    const b = o.byName.get(name);
     rows.push({
       name,
-      myAmount: m?.amount ?? 0,
-      myCasts: m?.casts ?? 0,
-      myHits: m?.hits ?? 0,
-      myDps: Math.round(m?.dps ?? 0),
-      theirAmount: o?.amount ?? 0,
-      theirCasts: o?.casts ?? 0,
-      theirHits: o?.hits ?? 0,
-      theirDps: Math.round(o?.dps ?? 0),
+      myCasts: a?.casts ?? 0,
+      theirCasts: b?.casts ?? 0,
+      castDiff: (a?.casts ?? 0) - (b?.casts ?? 0),
+      myAmount: a?.amount ?? 0,
+      theirAmount: b?.amount ?? 0,
+      myDps: Math.round(a?.dps ?? 0),
+      theirDps: Math.round(b?.dps ?? 0),
     });
   }
-  rows.sort((a, b) => b.myAmount - a.myAmount);
+  rows.sort((x, y) => Math.max(y.myAmount, y.theirAmount) - Math.max(x.myAmount, x.theirAmount));
+
   return {
-    otherLabel: otherDetail.player?.name ?? '?',
+    otherLabel: otherName,
     rows,
     totals: {
-      myDamage: mine.totalDamage,
-      myDps: Math.round(mine.totalDps),
-      theirDamage: other.totalDamage,
-      theirDps: Math.round(other.totalDps),
+      myDamage: m.totalDamage,
+      myDps: Math.round(m.totalDps),
+      theirDamage: o.totalDamage,
+      theirDps: Math.round(o.totalDps),
     },
   };
 }
 
-// Flask → the secondary stat it grants (Midnight S1). Only the ones confirmed
-// are mapped; an unmapped flask shows its name with no stat label.
-const FLASK_STAT = {
-  'Flask of the Shattered Sun': 'Crit',
-  'Flask of the Magisters': 'Mastery',
-  'Flask of Tempered Swiftness': 'Haste',
-  'Flask of Tempered Versatility': 'Versatility',
-  'Flask of Alchemical Chaos': 'Rotating stats',
-};
-
-function findAura(detail, re) {
-  const tt = detail.buffs?.totalTimeMs || 1;
-  const a = (detail.buffs?.auras ?? [])
-    .filter((x) => re.test(x.name))
-    .sort((p, q) => q.uptimeMs - p.uptimeMs)[0];
-  return a ? { name: a.name, pct: Math.round((100 * a.uptimeMs) / tt) } : null;
-}
-
-const consumablesOf = (detail) => ({
-  flask: findAura(detail, /flask|phial/i),
-  food: findAura(detail, /well fed/i),
-});
-
-/**
- * Flask + food comparison (mine vs one target). Surfaces which flask each
- * ran — with the stat it grants — so a suboptimal flask choice is visible.
- */
-export function buildConsumables(mineDetail, otherDetail, otherName, statPriorityNote = null) {
-  const mine = consumablesOf(mineDetail);
-  const them = consumablesOf(otherDetail);
-  const statOf = (f) => (f ? FLASK_STAT[f.name] ?? null : null);
-  const myStat = statOf(mine.flask);
-  const theirStat = statOf(them.flask);
-
-  let flaskNote = null;
-  if (mine.flask && them.flask && myStat && theirStat && myStat !== theirStat) {
-    flaskNote =
-      `You run the ${myStat} flask (${mine.flask.name}); they run the ${theirStat} flask (${them.flask.name}).` +
-      (statPriorityNote ? ` ${statPriorityNote}` : ' Match the flask to your spec\'s stat priority.');
-  } else if (!mine.flask && them.flask) {
-    flaskNote = `You had no flask up; they ran ${them.flask.name}${theirStat ? ` (${theirStat})` : ''}. Free stats you're missing.`;
-  }
-
-  return {
-    otherLabel: otherName,
-    flask: { mine: mine.flask, them: them.flask, myStat, theirStat },
-    food: { mine: mine.food, them: them.food },
-    flaskNote,
-  };
-}
-
-function gap(category, title, mine, cohort, unit, severity, extra = {}) {
-  return { category, title, mine, cohort, unit, severity: round1(Math.max(0, severity)), ...extra };
+function gap(category, title, mine, other, unit, severity, extra = {}) {
+  return { category, title, mine, cohort: other, unit, severity: round1(Math.max(0, severity)), ...extra };
 }
 
 function round1(v) {

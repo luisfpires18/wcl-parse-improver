@@ -10,7 +10,7 @@ import {
   dpsChartSvg,
   wireDpsBrush,
   setCastWindow,
-  renderSpikeAnalysis,
+  castOrderSlot,
   renderTimelineSection,
   renderCastOrderCols,
   renderDamageDone,
@@ -319,7 +319,7 @@ function renderRaidPullChart(data, root) {
     <p class="table-note"><small>5-second bins of effective damage (includes your pets). The <b>dashed lines</b> are boss health on the right axis —
       yours ends where you wiped, theirs at the same % — so you can see exactly where in the boss's health your output landed.
       Drag across the chart to inspect any window's rotation below.</small></p>
-    ${renderSpikeAnalysis(sa)}
+    ${castOrderSlot()}
     ${renderTimelineSection(data.timeline, data.timelineInfo)}
     ${renderRaidComparison(data.comparison)}`;
 

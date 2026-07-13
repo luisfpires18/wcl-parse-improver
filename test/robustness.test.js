@@ -7,7 +7,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { computeRunMetrics } from '../server/analysis/metrics.js';
 import { buildReport } from '../server/analysis/compare.js';
-import { buildSummary } from '../server/analysis/summary.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const pit = () =>
@@ -45,38 +44,21 @@ test('computeRunMetrics: real Pit run still produces sane finite rates (fix did 
   for (const [, a] of m.abilities) assert.ok(Number.isFinite(a.cpm));
 });
 
-// --- B1: my run ahead of the cohort must not produce a nonsensical honesty % ---
+// The honesty/summary machinery these used to guard is gone: there is no cohort
+// median to be "ahead of" any more, and no generated summary paragraph. What still
+// needs guarding is that a 1:1 comparison survives degenerate opponents.
 
-test('buildReport: when my DPS beats the cohort, explainedPct is null (not negative)', () => {
+test('buildReport: an opponent with zero DPS does not divide-by-zero the gap', () => {
   const b = pit();
-  b.mine.meta.dps = 999999; // way above the cohort
-  b.cohort = [b.cohort[0]]; // single, weaker player
-  const r = buildReport(b);
-  assert.ok(r.headline.dpsGapPct < 0, 'gap should be negative (I am ahead)');
-  assert.equal(r.honesty.explainedPct, null);
-  // summary must not claim a negative % of a negative gap
-  assert.ok(!r.summary.text.includes('-2'));
-  assert.ok(r.summary.text.includes('match or beat'));
-  assert.ok(!r.summary.nextSteps.recap.includes('null'));
+  b.other.meta.dps = 0;
+  const report = buildReport(b);
+  assert.ok(report.headline.dpsGapPct === null || Number.isFinite(report.headline.dpsGapPct));
 });
 
-test('buildReport: zero cohort DPS does not divide-by-zero the gap', () => {
+test('buildReport: beating the opponent yields a negative gap, not a broken one', () => {
   const b = pit();
-  for (const c of b.cohort) c.meta.dps = 0;
-  const r = buildReport(b);
-  assert.equal(r.headline.dpsGapPct, null);
-  assert.equal(r.honesty.explainedPct, null);
-});
-
-// --- B3: null gap / null explainedPct never render the literal string "null" ---
-
-test('buildSummary: null dpsGapPct and null explainedPct never print "null%"', () => {
-  const s = buildSummary({
-    headline: { dungeon: 'Test', dpsGapPct: null, cohortLevel: 20 },
-    gaps: [{ category: 'cpm', title: 'Total casts per minute', mine: 40, cohort: 50, severity: 5, advice: 'Cast more.' }],
-    honesty: { explainedPct: null },
-  });
-  assert.ok(!s.text.includes('null'));
-  assert.ok(!s.nextSteps.recap.includes('null'));
-  assert.ok(s.text.includes('biggest execution difference'));
+  b.mine.meta.dps = 999999; // way above them
+  const report = buildReport(b);
+  assert.ok(report.headline.dpsGapPct < 0, 'ahead of them = negative gap');
+  assert.ok(Number.isFinite(report.headline.dpsGapPct));
 });

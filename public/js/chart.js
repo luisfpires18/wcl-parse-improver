@@ -5,7 +5,6 @@
 // or duplicate element ids. Every helper here is scoped to a root element + its
 // view — never to `document`.
 import { esc, fmtK, fmtSec, fmtTime, castKindClass, seriesColor } from './util.js';
-import { distributionMatch, bigramMatch, countByName } from '/shared/rotationMatch.js';
 
 // ---- rotation timeline (cast lanes) ----
 // Lanes are picked server-side purely by cast frequency (see
@@ -262,34 +261,17 @@ export function clearBrush(root) {
   if (sel) sel.setAttribute('width', 0);
 }
 
-export function renderSpikeAnalysis(sa) {
-  if (!sa || !sa.windows?.length) return '';
-  const rows = sa.windows
-    .map((s) => {
-      const casts = (s.castDiffs ?? [])
-        .map((d) => `<span class="cd ${d.diff > 0 ? 'behind' : ''}">${esc(d.name)} <b>${d.them}</b>/${d.mine}</span>`)
-        .join(' ');
-      const amps = s.theirAmps?.length ? `<div class="spike-amps"><small>amplifiers — them: ${s.theirAmps.map(esc).join(', ')}${s.myAmps?.length ? ` · you: ${s.myAmps.map(esc).join(', ')}` : ' · you: none'}</small></div>` : '';
-      return `<li class="spike-row">
-        <div class="spike-head"><b>${esc(s.atLabel)}</b> — them <b class="p-purple">${fmtK(s.theirDps)}</b> vs you <b class="p-blue">${fmtK(s.myDps)}</b>
-          <span class="vals">(+${fmtK(s.gapDps)} their favor · ${s.theirCastTotal} vs your ${s.myCastTotal} damage casts)</span></div>
-        ${amps}
-        <div class="spike-casts"><small>damage casts (them/you): ${casts}</small></div>
-        <div class="spike-note">${esc(s.note)}</div>
-      </li>`;
-    })
-    .join('');
-  return `
-    <div class="spike-analysis">
-      <h4>Why their spikes are higher <small>— same rotation, where the damage goes</small></h4>
-      <p class="spike-headline">${esc(sa.headline)}</p>
-      ${sa.openerNote ? `<p class="spike-opener"><b>Opener:</b> ${esc(sa.openerNote)}</p>` : ''}
-      <div class="rotation-dyn"></div>
-      <ol class="spikes">${rows}</ol>
-    </div>`;
-}
+/**
+ * The mount point the chart brush writes cast order into.
+ *
+ * This slot used to be emitted by renderSpikeAnalysis, which coupled the
+ * cast-order view to a panel that has nothing to do with it — deleting the spike
+ * panel would have silently killed the brush. It stands on its own now: whoever
+ * renders the chart renders this next to it.
+ */
+export const castOrderSlot = () => '<div class="rotation-dyn"></div>';
 
-/** Filter the full cast-order lists to a time window and render columns + composition. */
+/** Filter the full cast-order lists to a time window and render the columns. */
 export function setCastWindow(root, view, loSec, hiSec) {
   const el = root?.querySelector('.rotation-dyn');
   if (!el || !view?.state) return;
@@ -303,8 +285,7 @@ export function setCastWindow(root, view, loSec, hiSec) {
     <div class="ord-bar">Rotation for <b>${label}</b> — drag on the chart above to inspect any window${
       whole ? '' : ` · <a href="#" class="ord-reset">reset to whole run</a>`
     }</div>
-    ${renderCastOrderCols(them, mine, st.otherLabel)}
-    ${renderWindowComposition(them, mine)}`;
+    ${renderCastOrderCols(them, mine, st.otherLabel)}`;
   const reset = el.querySelector('.ord-reset');
   if (reset)
     reset.addEventListener('click', (e) => {
@@ -333,43 +314,6 @@ export function renderCastOrderCols(them, mine, otherLabel) {
     <p class="table-note"><small>Literal spell-cast sequence for the selected window.
       <span class="p-blue">Blue</span> = damage, <span class="p-orange">orange</span> = amplifier (Army/Dark Transformation/pot), grey = utility. Read their column top-down to see their flow —
       then check the <b>buff bars on the rotation timeline</b> to see which buffs were up while they were pressing them.</small></p>`;
-}
-
-/**
- * Spell-mix + cast-order match for a brushed window, plus the per-ability counts
- * behind it. The two percentages come from shared/rotationMatch.js — the exact
- * code the server runs for the whole-run numbers, so a window and the full run
- * can never disagree about what "83% spell mix" means.
- */
-export function renderWindowComposition(them, mine) {
-  if (them.length + mine.length < 6) return '';
-  const kindOf = new Map([...them, ...mine].map((c) => [c.name, c.kind]));
-  const mc = countByName(mine.map((c) => c.name));
-  const tc = countByName(them.map((c) => c.name));
-  const names = [...new Set([...mc.keys(), ...tc.keys()])];
-  const mTot = mine.length || 1;
-  const tTot = them.length || 1;
-  const sim = Math.round(distributionMatch(mc, tc));
-  const orderSim = Math.round(bigramMatch(mine.map((c) => c.name), them.map((c) => c.name)));
-  const rows = names
-    .map((n) => {
-      const mine2 = mc.get(n) ?? 0;
-      const them2 = tc.get(n) ?? 0;
-      const diffPp = Math.round(1000 * (mine2 / mTot - them2 / tTot)) / 10;
-      return { n, mine: mine2, them: them2, diffPp, kind: kindOf.get(n) };
-    })
-    .sort((a, b) => b.them - a.them)
-    .map((r) => {
-      const tag = r.kind === 'amp' ? ' <small class="util">amp</small>' : r.kind === 'util' ? ' <small class="util">util</small>' : '';
-      return `<tr class="${Math.abs(r.diffPp) >= 2 ? 'rot-big' : ''}"><td>${esc(r.n)}${tag}</td>
-        <td class="num">${r.mine}</td><td class="num">${r.them}</td><td class="num">${r.diffPp > 0 ? '+' : ''}${r.diffPp}pp</td></tr>`;
-    })
-    .join('');
-  return `
-    <details><summary>Rotation match for this window — spell mix ${sim}% · cast order ${orderSim}%</summary>
-      <p class="table-note"><small><b>Spell mix</b> = the share of casts on the same button in the same proportion (ignores order). <b>Cast order</b> = the same measure on cast-to-cast transitions (order-sensitive) — lower means you sequence the same spells differently. Both are honest proportion matches, not cosine (which sits near 100% for any two runs of a spec).</small></p>
-      <table class="rot-table"><thead><tr><th>Ability</th><th>You</th><th>Them</th><th>Diff</th></tr></thead><tbody>${rows}</tbody></table>
-    </details>`;
 }
 
 /** Side-by-side per-ability damage table. Used by the M+ report and the raid comparison. */

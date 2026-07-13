@@ -36,14 +36,17 @@ test('engaged time = fight duration minus idle windows', () => {
   assert.ok(Math.abs(m.engagedMs - (fightSpan - idleTotal)) < 5, 'engaged + idle ≈ fight span');
 });
 
-test('report ranks uptime gaps by active-time diff and separates downtime-caused ones', () => {
+// Uptime gaps are measured over ENGAGED time (fight minus idle), so downtime and
+// deaths cannot masquerade as buff-management failures — those are already their own
+// gaps. A groupmate-applied buff is excluded entirely: it is not your rotation.
+test('uptime gaps are active-time based, and never a groupmate buff', () => {
   const report = buildReport(bundle);
-  for (const g of report.gaps.filter((g) => g.category === 'uptime')) {
+  const uptimeGaps = report.gaps.filter((g) => g.category === 'uptime');
+  for (const g of uptimeGaps) {
     assert.ok(g.title.includes('(active time)'));
-    assert.ok(g.rawMine != null && g.rawCohort != null);
+    assert.ok(g.name, 'carries the aura name');
   }
-  assert.ok(Array.isArray(report.downtimeNotes));
-  // comp buffs still segregated (exact count is fixture-dependent, just
-  // confirm the mechanism still finds at least one real external/never-had buff)
-  assert.ok(report.compNotes.length >= 1);
+  // anything a groupmate applied belongs in the party-buffs section instead
+  const partyNames = new Set(report.consumables.partyBuffs.mine.map((b) => b.name));
+  for (const g of uptimeGaps) assert.ok(!partyNames.has(g.name), `${g.name} is someone else's buff`);
 });

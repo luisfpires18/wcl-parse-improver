@@ -154,31 +154,34 @@ export function parseCastEvents(eventPages) {
   return casts;
 }
 
-// Runic Power's resourceChangeType id, verified against a real payload (see
-// server/wcl/queries.js REPORT_RESOURCE_EVENTS for how this was confirmed).
-const RUNIC_POWER_TYPE = 6;
-
 /**
- * Resource (Runic Power) generation events -> gain + waste per event.
- * Filters to the player's own resource only (sourceID === targetID) so a
- * pet's separate resource pool (seen under a different resourceChangeType)
- * never leaks in.
+ * Resource-generation events -> { type, gain, waste } per event.
+ *
+ * This used to hard-filter to resourceChangeType 6 (Runic Power), which made the
+ * whole resource feature Death-Knight-only. It now keeps EVERY resource type and
+ * lets the analysis layer work out which one is the spec's (see
+ * analysis/resources.js) — the log already says which resource a class uses, so
+ * nothing needs to be hardcoded per class.
+ *
+ * Still filtered to the player's OWN resource (sourceID === targetID): a pet has
+ * its own separate pool under a different type, and that is not the player's
+ * resource management.
+ *
+ * `resourceChange` is the net amount actually added (already clipped to the cap);
+ * `waste` is the extra that would have been added had the cap not stopped it.
  */
 export function parseResourceEvents(eventPages) {
   const events = [];
   for (const page of eventPages) {
     const data = Array.isArray(page?.data) ? page.data : [];
     for (const ev of data) {
-      if (
-        ev?.type === 'resourcechange' &&
-        ev.resourceChangeType === RUNIC_POWER_TYPE &&
-        ev.sourceID === ev.targetID &&
-        typeof ev.timestamp === 'number'
-      ) {
+      if (ev?.type === 'resourcechange' && ev.sourceID === ev.targetID && typeof ev.timestamp === 'number') {
         events.push({
           timestamp: ev.timestamp,
+          type: numOrNull(ev.resourceChangeType),
           gain: numOr0(ev.resourceChange),
           waste: numOr0(ev.waste),
+          maxAmount: numOrNull(ev.maxResourceAmount),
           abilityGameID: ev.abilityGameID ?? null,
         });
       }

@@ -129,20 +129,20 @@ test('describeParsePlan handles insufficientData and atTopTier text branches', (
 
 test('buildReport attaches a real parsePlan for the live-refetched Pit fixture (2 of my own +20 runs)', () => {
   const report = buildReport(pit);
-  assert.equal(report.parsePlan.historyCount, 2);
-  assert.ok(report.parsePlan.tiers.length > 0);
-  assert.ok(report.parsePlan.text.length > 0);
-  assert.ok(!report.parsePlan.text.includes('undefined'));
+  assert.equal(report.parse.historyCount, 2);
+  assert.ok(report.parse.tiers.length > 0);
+  assert.ok(report.parse.text.length > 0);
+  assert.ok(!report.parse.text.includes('undefined'));
 });
 
 test('a tier already reached at a harder key level is never re-shown as a target (real Pit data: 31.1% overall at +21 vs 22.5% at +20)', () => {
   const report = buildReport(pit);
-  assert.equal(report.parsePlan.overallBestPercent, 31.1);
-  assert.equal(report.parsePlan.overallBestLevel, 21);
-  assert.equal(report.parsePlan.outrankedByOverall, true);
+  assert.equal(report.parse.overallBestPercent, 31.1);
+  assert.equal(report.parse.overallBestLevel, 21);
+  assert.equal(report.parse.outrankedByOverall, true);
   // green (25%+) is already covered by the overall 31.1% -- must not appear
-  assert.ok(!report.parsePlan.tiers.some((t) => t.tier === 'green'));
-  assert.ok(report.parsePlan.text.startsWith('Your real Best % for this dungeon is already 31.1%'));
+  assert.ok(!report.parse.tiers.some((t) => t.tier === 'green'));
+  assert.ok(report.parse.text.startsWith('Your real Best % for this dungeon is already 31.1%'));
 });
 
 test('buildParsePlan: overallBestPercent below the level-locked percent does not affect anything (no false prefix)', () => {

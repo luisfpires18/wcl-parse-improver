@@ -4,8 +4,7 @@ import { loadEnv, PROJECT_ROOT } from './env.js';
 import { fetchOverview, fetchDamageSeries, fetchGameClasses, detectCharacter } from './wcl/api.js';
 import { buildComparison, DEFAULT_LEVEL } from './wcl/comparison.js';
 import { buildRaidReport, buildRaidPull, DEFAULT_RAID_DIFFICULTY } from './wcl/raid.js';
-import { buildReport, pickSimilarIndex } from './analysis/compare.js';
-import { analyzeSpikes } from './analysis/spikes.js';
+import { buildReport } from './analysis/compare.js';
 import { loadCharacters, upsertCharacter, removeCharacter } from './characters.js';
 
 loadEnv();
@@ -82,10 +81,9 @@ app.get('/api/report', async (req, res) => {
 });
 
 // DPS-over-time series (mine vs one comparison run) for the line chart.
-// Lazy/separate from /api/report because the damage-event fetch is heavy;
-// the report renders first, this loads after. Cohort + report codes come
-// from the (cached) buildComparison, so this only adds the two damage-series
-// fetches on top.
+// Lazy/separate from /api/report because the damage-event fetch is heavy: the
+// report renders first, the chart loads after. The opponent is already chosen by
+// the (cached) buildComparison, so this only adds the two damage-series fetches.
 app.get('/api/dps-series', async (req, res) => {
   try {
     const encounterID = Number(req.query.encounter);
@@ -94,33 +92,22 @@ app.get('/api/dps-series', async (req, res) => {
     const compareTo = req.query.compareTo ? String(req.query.compareTo) : null;
 
     const bundle = await buildComparison({ ...charParams(req.query), ...specParams(req.query), encounterID, level, compareTo });
-
-    const mineFight = bundle.mine.detail.fight;
-    const myDurationMs = mineFight.keystoneTime ?? mineFight.endTime - mineFight.startTime;
-    const targetIndex = pickSimilarIndex(bundle.cohort, myDurationMs, bundle.targetLevel);
-    const target = bundle.cohort[targetIndex];
-    if (!target) return res.status(404).json({ error: 'no comparison run available' });
+    const other = bundle.other;
 
     // sequential — gql() has a shared rate-limiter that parallel calls would race
-    const mine = await fetchDamageSeries({
+    const mineSeries = await fetchDamageSeries({
       code: bundle.mine.detail.code,
       fightID: bundle.mine.detail.fightID,
       playerName: bundle.params.name,
       server: bundle.params.serverSlug, // disambiguate same-named toons in one log
       className: bundle.params.className,
     });
-    const other = await fetchDamageSeries({
-      code: target.detail.code,
-      fightID: target.detail.fightID,
-      playerName: target.meta.name,
+    const otherSeries = await fetchDamageSeries({
+      code: other.detail.code,
+      fightID: other.detail.fightID,
+      playerName: other.meta.name,
     });
-    const spikeAnalysis = analyzeSpikes({
-      mineDetail: bundle.mine.detail,
-      otherDetail: target.detail,
-      mineSeries: mine,
-      otherSeries: other,
-    });
-    res.json({ mine, other, otherLabel: target.label ?? null, spikeAnalysis });
+    res.json({ mine: mineSeries, other: otherSeries, otherLabel: other.meta.name });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

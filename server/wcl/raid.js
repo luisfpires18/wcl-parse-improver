@@ -13,9 +13,9 @@ import {
 } from './api.js';
 import { buildProgression, attemptOutput } from '../analysis/raidProgress.js';
 import { buildRaidParse } from '../analysis/raidParse.js';
-import { rotationComposition, castOrder, analyzeSpikes } from '../analysis/spikes.js';
-import { buildDamageDoneTable } from '../analysis/compare.js';
-import { buildTimeline, buildTimelineInfo } from '../analysis/timeline.js';
+import { rotationComposition, castOrder } from '../analysis/spikes.js';
+import { buildAbilityTable } from '../analysis/compare.js';
+import { buildTimeline } from '../analysis/timeline.js';
 import { truncateDetail, truncateSeries, truncatePoints } from '../analysis/truncate.js';
 import { groupByEncounter, difficultyName } from '../parse/reportFights.js';
 import { timeAtHealthPct } from '../parse/bossHealth.js';
@@ -85,7 +85,6 @@ export async function buildRaidPull({
   // Drives the buff bar lanes on the rotation timeline.
   const buffSources = mineDetail.buffSources ?? {};
 
-  const spikeAnalysis = analyzeSpikes({ mineDetail, otherDetail, mineSeries, otherSeries });
   const timeline = buildTimeline(mineDetail, otherDetail, buffSources);
   if (timeline) timeline.otherRoleLabel = 'top parser';
 
@@ -146,7 +145,7 @@ export async function buildRaidPull({
     // (wipe) comparison it would silently pit your partial pull against their
     // FULL kill's damage. Omitted there rather than shown wrong; cast counts
     // above carry the same signal and are window-correct.
-    damageDone: cutoffSec == null ? buildDamageDoneTable(mineDetail, otherDetail) : null,
+    damageDone: cutoffSec == null ? buildAbilityTable(mineDetail, otherDetail, bench.name) : null,
     damageDoneOmittedReason:
       cutoffSec == null ? null : 'Per-ability damage totals only exist for the whole fight, so they cannot be cut to this window without comparing your partial pull against their full kill. Cast counts below are window-correct.',
   };
@@ -172,9 +171,7 @@ export async function buildRaidPull({
       truncated: cutoffSec != null,
     },
     bossHealth: { mine: myHealth, them: theirHealth ? { ...theirHealth, points: truncatePoints(theirHealth.points, cutoffSec) } : null },
-    spikeAnalysis,
     timeline,
-    timelineInfo: buildTimelineInfo(timeline),
   };
 }
 

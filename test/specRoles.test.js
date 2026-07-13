@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { roleOf, isDps, usesRunicPower, usesEpidemicSpenderMix } from '../server/wcl/specs.js';
+import { roleOf, isDps } from '../server/wcl/specs.js';
 
 // Spec names collide across classes — the map must be keyed by class+spec.
 test('roleOf: same spec name, different classes', () => {
@@ -37,14 +37,6 @@ test('isDps mirrors roleOf', () => {
   assert.equal(isDps('Shaman', 'Restoration'), false);
 });
 
-test('resource capabilities are scoped to the specs that actually have them', () => {
-  // Runic Power is the DK resource across all its specs
-  assert.equal(usesRunicPower('DeathKnight'), true);
-  assert.equal(usesRunicPower('DemonHunter'), false);
-  assert.equal(usesRunicPower('Shaman'), false);
-
-  // but the Death Coil vs Epidemic split is Unholy-only — Frost spends on Frost Strike
-  assert.equal(usesEpidemicSpenderMix('DeathKnight', 'Unholy'), true);
-  assert.equal(usesEpidemicSpenderMix('DeathKnight', 'Frost'), false);
-  assert.equal(usesEpidemicSpenderMix('Shaman', 'Enhancement'), false);
-});
+// `usesRunicPower` / `usesEpidemicSpenderMix` used to live here, gating the resource
+// panel to Death Knights. They are gone — the resource is read off the log now (see
+// test/resources.test.js), so there is no spec capability table left to test.
