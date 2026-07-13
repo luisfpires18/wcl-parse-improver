@@ -5,26 +5,65 @@ import { buildConsumables } from '../server/analysis/consumables.js';
 const withAuras = (auras) => ({ buffs: { totalTimeMs: 100000, auras } });
 const rowFor = (c, key) => c.rows.find((r) => r.key === key);
 
-test('detects all five consumable kinds, not just flask and food', () => {
+test('detects the consumables that actually leave a trace in the log', () => {
   const mine = withAuras([
     { name: 'Flask of the Shattered Sun', uptimeMs: 100000 },
     { name: 'Hearty Well Fed', uptimeMs: 100000 },
-    { name: 'Algari Mana Oil', uptimeMs: 90000 },
     { name: 'Crystallized Augment Rune', uptimeMs: 80000 },
-    { name: 'Potion of Unwavering Focus', uptimeMs: 3000 },
     { name: 'Rune Mastery', uptimeMs: 50000 }, // a CLASS buff, not a consumable
   ]);
   const c = buildConsumables(mine, withAuras([]), 'TopDK');
 
   assert.equal(rowFor(c, 'flask').mine.name, 'Flask of the Shattered Sun');
   assert.equal(rowFor(c, 'food').mine.name, 'Hearty Well Fed');
-  assert.equal(rowFor(c, 'oil').mine.name, 'Algari Mana Oil');
   assert.equal(rowFor(c, 'rune').mine.name, 'Crystallized Augment Rune');
-  assert.equal(rowFor(c, 'potion').mine.name, 'Potion of Unwavering Focus');
 
   // "Rune Mastery" is a Death Knight proc — it must not be mistaken for an
   // augment rune just because its name contains "Rune"
   assert.notEqual(rowFor(c, 'rune').mine.name, 'Rune Mastery');
+
+  // Weapon oil applies no combat aura, so it is not in the log. We do not invent
+  // a row for something we cannot see.
+  assert.equal(rowFor(c, 'oil'), undefined);
+});
+
+// A potion is a burst you press, not a buff you maintain, so uptime % is the wrong
+// question. All combat potions share one 5-minute cooldown and you may pre-pot, so
+// the ceiling is 1 + one per 5 minutes of fight.
+test('potions are counted against what the fight allowed, not shown as uptime', () => {
+  const fight = (sec) => ({ fight: { startTime: 0, endTime: sec * 1000 } });
+  const withPots = (sec, auras) => ({ ...fight(sec), buffs: { totalTimeMs: sec * 1000, auras } });
+
+  // an 11-minute fight allows 1 + floor(660/300) = 3 potions
+  const mine = withPots(660, [{ name: 'Potion of Recklessness', uptimeMs: 60000, uses: 2 }]);
+  const them = withPots(660, [
+    { name: 'Potion of Recklessness', uptimeMs: 60000, uses: 2 },
+    { name: "Light's Potential", uptimeMs: 30000, uses: 1 }, // not a potion by name
+  ]);
+  const c = buildConsumables(mine, them, 'TopDK');
+
+  assert.equal(c.potions.mine.used, 2);
+  assert.equal(c.potions.mine.max, 3);
+  assert.equal(c.potions.mine.missed, 1);
+  assert.ok(c.notes.some((n) => /free burst you left unused/.test(n)));
+});
+
+test('potions: different potion types share one cooldown, so they sum into one count', () => {
+  const d = {
+    fight: { startTime: 0, endTime: 600000 }, // 10 min -> 1 + 2 = 3 allowed
+    buffs: {
+      totalTimeMs: 600000,
+      auras: [
+        { name: 'Potion of Recklessness', uptimeMs: 30000, uses: 2 },
+        { name: 'Potion of Unwavering Focus', uptimeMs: 30000, uses: 1 },
+      ],
+    },
+  };
+  const c = buildConsumables(d, d, 'X');
+  assert.equal(c.potions.mine.used, 3, 'both potion types count against the same cooldown');
+  assert.equal(c.potions.mine.max, 3);
+  assert.equal(c.potions.mine.missed, 0);
+  assert.deepEqual(c.potions.mine.names.sort(), ['Potion of Recklessness', 'Potion of Unwavering Focus']);
 });
 
 test('flags a mismatched flask stat', () => {

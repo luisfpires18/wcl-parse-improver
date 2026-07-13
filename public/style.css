@@ -261,3 +261,30 @@ summary:hover { color: var(--text); }
 }
 
 .vs-line { font-size: 1.05rem; margin: 0.3rem 0 0.7rem; }
+
+/* Gap priority: a band, not a score. The old orange square showed the raw
+   severity number, which read as precise when it never was. */
+.prio {
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0.05rem 0.45rem;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+.prio-1 { border-left: 3px solid var(--viz-critical); }
+.prio-2 { border-left: 3px solid var(--viz-warning); }
+.prio-3 { border-left: 3px solid var(--border); }
+.prio-1 .prio { background: var(--viz-critical); color: #14141c; }
+.prio-2 .prio { background: var(--viz-warning); color: #14141c; }
+.prio-3 .prio { background: var(--border); color: var(--text); }
+.gap-behind { margin-top: 0.5rem; max-width: 480px; }
+.gap-behind th { font-size: 0.78rem; }
+
+/* Per-ability discrepancies — flagged relatively, so a 3-vs-8 cooldown shows and
+   noise on a 200-cast filler doesn't. */
+.disc-behind td, .disc-none td { background: color-mix(in srgb, var(--accent) 11%, transparent); }
+.disc-ahead td, .disc-extra td { background: color-mix(in srgb, var(--series-1) 12%, transparent); }
+.disc-behind .disc-dot, .disc-none .disc-dot { color: var(--accent); }
+.disc-ahead .disc-dot, .disc-extra .disc-dot { color: var(--series-1); }
+.disc-dot { font-size: 0.6rem; vertical-align: middle; }

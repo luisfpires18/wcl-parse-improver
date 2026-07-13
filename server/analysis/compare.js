@@ -46,7 +46,10 @@ export function buildReport(bundle) {
   const dpsGapPct = myDps != null && theirDps ? (100 * (theirDps - myDps)) / theirDps : null;
 
   const gaps = gapsFrom(mine, them, buffSources);
-  for (const g of gaps) g.advice = adviceFor(g);
+  for (const g of gaps) {
+    g.advice = adviceFor(g);
+    g.priority = priorityOf(g.severity);
+  }
 
   const timeline = buildTimeline(mineDetail, otherDetail, buffSources);
   if (timeline) timeline.otherRoleLabel = null;
@@ -65,6 +68,10 @@ export function buildReport(bundle) {
     myDps,
     history: bundle.mine.historyAtLevel,
     gaps,
+    // The #1 ranked parse of this spec at this exact key level — a real second
+    // point, so a player with only ONE logged run still gets a DPS target instead
+    // of "not enough data". Already fetched for the picker; costs nothing.
+    topParse: bundle.players?.top?.[0] ?? null,
   });
   parse.text = describeParsePlan(parse);
 
@@ -108,7 +115,10 @@ export function buildReport(bundle) {
  */
 export function buildGaps(mineDetail, otherDetail, buffSources = {}) {
   const gaps = gapsFrom(computeRunMetrics(mineDetail), computeRunMetrics(otherDetail), buffSources);
-  for (const g of gaps) g.advice = adviceFor(g);
+  for (const g of gaps) {
+    g.advice = adviceFor(g);
+    g.priority = priorityOf(g.severity);
+  }
   return gaps;
 }
 
@@ -127,18 +137,31 @@ function gapsFrom(mine, them, buffSources) {
     );
   }
 
+  const diffs = abilityDiffs(mine, them);
+
   if (them.totalCPM && mine.totalCPM < them.totalCPM * 0.97) {
     const diffPct = (100 * (them.totalCPM - mine.totalCPM)) / them.totalCPM;
-    gaps.push(gap('cpm', 'Total casts per minute', round1(mine.totalCPM), round1(them.totalCPM), 'CPM', diffPct * 0.8));
+    // "you cast less" is useless on its own — say WHICH buttons the missing casts
+    // are. Ranked by how many raw casts behind you are, not by rate, because the
+    // missing casts are what actually add up to the CPM shortfall.
+    const behind = diffs
+      .filter((d) => d.theirCasts - d.myCasts >= 3)
+      .sort((a, b) => b.theirCasts - b.myCasts - (a.theirCasts - a.myCasts))
+      .slice(0, 4)
+      .map((d) => ({ name: d.name, mine: d.myCasts, them: d.theirCasts, behindBy: d.theirCasts - d.myCasts }));
+    gaps.push(
+      gap('cpm', 'Total casts per minute', round1(mine.totalCPM), round1(them.totalCPM), 'CPM', diffPct * 0.8, { behind })
+    );
   }
 
-  for (const row of abilityDiffs(mine, them)) {
+  for (const row of diffs) {
     if (row.severity < 0.5) continue;
     gaps.push(
       gap('ability', `${row.name} usage`, `${round1(row.myCpm)} CPM`, `${round1(row.theirCpm)} CPM`, null, row.severity, {
         name: row.name,
         damageSharePct: round1(100 * row.share),
         myCasts: row.myCasts,
+        theirCasts: row.theirCasts,
       })
     );
   }
@@ -180,6 +203,7 @@ function abilityDiffs(mine, them) {
     rows.push({
       name,
       myCasts: mine.abilities.get(name)?.casts ?? 0,
+      theirCasts: them.abilities.get(name)?.casts ?? 0,
       myCpm,
       theirCpm,
       share,
@@ -188,6 +212,15 @@ function abilityDiffs(mine, them) {
     });
   }
   return rows.sort((a, b) => b.severity - a.severity);
+}
+
+// Severity is a rough %-DPS estimate, and showing it as a bare number invites the
+// reader to treat it as precise. It isn't — it only ever meant "fix this one
+// first". So it is banded into a priority instead of printed.
+export function priorityOf(severity) {
+  if (severity >= 8) return { rank: 1, label: 'High' };
+  if (severity >= 3) return { rank: 2, label: 'Medium' };
+  return { rank: 3, label: 'Low' };
 }
 
 function uptimeDiffs(mine, them, buffSources) {

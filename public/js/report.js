@@ -101,50 +101,97 @@ function renderParse(p) {
     </section>`;
 }
 
-/** Section 6 — biggest gaps: what stands out, ordered by estimated DPS impact. */
+/**
+ * Section 6 — biggest gaps: what stands out.
+ *
+ * The old orange square was the raw severity number (a rough %-DPS estimate),
+ * which read like a precise score. It never was one — it only ever meant "fix this
+ * first". So it's shown as a PRIORITY instead: ★★★ High / ★★ Medium / ★ Low.
+ */
 function renderGaps(gaps) {
   if (!gaps?.length) {
     return `<section class="card-section"><h3>Biggest gaps</h3>
       <p class="muted">Nothing stands out against this player — no significant gaps found.</p></section>`;
   }
+
+  // "you cast less" is not actionable; name the buttons the missing casts are.
+  const behindTable = (g) =>
+    g.behind?.length
+      ? `<table class="rot-table gap-behind">
+           <thead><tr><th>Missing casts, by ability</th><th>You</th><th>Them</th><th>Behind by</th></tr></thead>
+           <tbody>${g.behind
+             .map(
+               (b) => `<tr><td>${esc(b.name)}</td><td class="num">${b.mine}</td><td class="num">${b.them}</td>
+                 <td class="num p-orange">−${b.behindBy}</td></tr>`
+             )
+             .join('')}</tbody>
+         </table>`
+      : '';
+
   const items = gaps
-    .map(
-      (g) => `<li class="gap">
+    .map((g) => {
+      const p = g.priority ?? { rank: 3, label: 'Low' };
+      const stars = '★'.repeat(4 - p.rank) + '☆'.repeat(p.rank - 1);
+      return `<li class="gap prio-${p.rank}">
         <div class="gap-head">
-          <span class="sev">${g.severity}</span>
+          <span class="prio" title="Priority ${p.rank} of 3">${stars} ${esc(p.label)}</span>
           <b>${esc(g.title)}</b>
           <span class="vals">you <b>${esc(String(g.mine))}</b>${g.unit ? ' ' + esc(g.unit) : ''}
             · them <b>${esc(String(g.cohort))}</b>${g.unit ? ' ' + esc(g.unit) : ''}</span>
         </div>
         <div class="gap-advice">${esc(g.advice ?? '')}</div>
-      </li>`
-    )
+        ${behindTable(g)}
+      </li>`;
+    })
     .join('');
+
   return `
     <section class="card-section">
       <h3>Biggest gaps <small>— what stands out</small></h3>
       <ol class="gaps">${items}</ol>
-      <p class="table-note"><small>Ordered by a rough estimate of DPS impact, used only to rank them.</small></p>
+      <p class="table-note"><small><b>Priority</b> is a band, not a score: ★★★ High, ★★ Medium, ★ Low. It comes from a rough estimate
+        of how much DPS each gap costs, and is only good enough to say which to fix first.</small></p>
     </section>`;
 }
 
-/** Section 8 — per-ability casts AND damage, you vs them. One table, one baseline. */
+/**
+ * Section 8 — per-ability casts AND damage, you vs them.
+ *
+ * Highlights the real discrepancies rather than every row: a RELATIVE cast gap
+ * (±25%+ on an ability either of you pressed a meaningful number of times), and
+ * abilities one of you used and the other never touched. A flat "diff >= 5" rule
+ * missed a 3-vs-8 cooldown while flagging noise on a filler cast 200 times.
+ */
 function renderAbilities(a) {
   if (!a?.rows?.length) return '';
   const fmtM = (v) => (v ? (v / 1e6).toFixed(1) + 'm' : '—');
+
+  const flag = (r) => {
+    const max = Math.max(r.myCasts, r.theirCasts);
+    if (max < 3) return null; // too few presses either way to mean anything
+    if (r.myCasts === 0) return { cls: 'disc-none', why: `you never cast this; they used it ${r.theirCasts}×` };
+    if (r.theirCasts === 0) return { cls: 'disc-extra', why: `they never cast this; you used it ${r.myCasts}×` };
+    const rel = (r.theirCasts - r.myCasts) / r.theirCasts;
+    if (rel >= 0.25) return { cls: 'disc-behind', why: `${Math.round(100 * rel)}% fewer casts than them` };
+    if (rel <= -0.25) return { cls: 'disc-ahead', why: `${Math.round(-100 * rel)}% more casts than them` };
+    return null;
+  };
+
   const rows = a.rows
     .slice(0, 30)
-    .map(
-      (r) => `<tr class="${Math.abs(r.castDiff) >= 5 ? 'rot-big' : ''}">
-        <td>${esc(r.name)}</td>
+    .map((r) => {
+      const f = flag(r);
+      return `<tr class="${f ? f.cls : ''}"${f ? ` title="${esc(f.why)}"` : ''}>
+        <td>${esc(r.name)}${f ? ` <span class="disc-dot">●</span>` : ''}</td>
         <td class="num">${r.myCasts || '—'}</td>
         <td class="num">${r.theirCasts || '—'}</td>
         <td class="num">${r.castDiff > 0 ? '+' : ''}${r.castDiff || ''}</td>
         <td class="num sep">${fmtM(r.myAmount)}</td>
         <td class="num">${fmtM(r.theirAmount)}</td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join('');
+
   const t = a.totals;
   return `
     <section class="card-section">
@@ -158,7 +205,9 @@ function renderAbilities(a) {
         <tfoot><tr><td>Total</td><td></td><td></td><td></td>
           <td class="num sep">${fmtM(t.myDamage)}</td><td class="num">${fmtM(t.theirDamage)}</td></tr></tfoot>
       </table>
-      <p class="table-note"><small>Sorted by damage. A big cast <b>Diff</b> is where your globals went somewhere theirs didn't.</small></p>
+      <p class="table-note"><small>Sorted by damage. Highlighted rows are the real discrepancies — <b class="p-orange">orange</b> = you cast it
+        25%+ less than them (or never), <b class="p-blue">blue</b> = 25%+ more (or they never did). Hover a row for why.
+        Rows either of you pressed fewer than 3 times aren't flagged; that's noise.</small></p>
     </section>`;
 }
 
@@ -185,6 +234,21 @@ export function renderConsumables(c) {
     )
     .join('');
 
+  // Potions are pressed repeatedly, so the question is "how many, out of how many
+  // the fight allowed" — not what % of it you spent under one.
+  const pot = (p) => {
+    if (!p || p.max == null) return '<span class="muted">—</span>';
+    const short = p.missed > 0;
+    return `<b class="${short ? 'p-orange' : 'p-green'}">${p.used}</b> <span class="muted">of ${p.max} possible</span>` +
+      (p.names.length ? ` <small class="muted">(${p.names.map(esc).join(', ')})</small>` : '');
+  };
+  const potionRow = `
+    <tr class="${c.potions?.mine?.missed > 0 ? 'rot-big' : ''}">
+      <td>Potions</td>
+      <td>${pot(c.potions?.mine)}</td>
+      <td>${pot(c.potions?.them)}</td>
+    </tr>`;
+
   const gave = c.partyBuffs?.theyHadIDidnt ?? [];
   const partyRows = (c.partyBuffs?.them ?? [])
     .map((b) => {
@@ -202,8 +266,11 @@ export function renderConsumables(c) {
       <h3>Consumables &amp; party buffs <small>— you vs ${esc(c.otherLabel)}</small></h3>
       <table class="rot-table">
         <thead><tr><th>Consumable</th><th>You</th><th>${esc(c.otherLabel)}</th></tr></thead>
-        <tbody>${rows}</tbody>
+        <tbody>${rows}${potionRow}</tbody>
       </table>
+      <p class="table-note"><small>Flask/food/rune show uptime. Potions show <b>how many you drank vs how many the fight allowed</b> —
+        they share a 5-minute cooldown and you can pre-pot, so the ceiling is 1 + one per 5 minutes.
+        Weapon oil isn't listed: it applies no combat aura, so it isn't in the log at all.</small></p>
       ${c.notes?.length ? c.notes.map((n) => `<p class="section-note">${esc(n)}</p>`).join('') : ''}
       ${
         partyRows

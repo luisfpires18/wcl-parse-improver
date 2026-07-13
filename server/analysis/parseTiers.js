@@ -57,10 +57,33 @@ export function fitLine(points) {
  * @param {object[]} p.gaps ranked gaps (compare.js shape: {title, severity, ...})
  * @param {number} p.honestyExplainedPct
  */
-export function buildParsePlan({ myBestPercent, overallBestPercent, overallBestLevel, myDps, history, gaps, honestyExplainedPct }) {
-  const points = (history ?? []).filter(
+export function buildParsePlan({ myBestPercent, overallBestPercent, overallBestLevel, myDps, history, gaps, honestyExplainedPct, topParse = null }) {
+  let points = (history ?? []).filter(
     (h) => typeof h.rankPercent === 'number' && typeof h.dps === 'number'
   );
+
+  // With only one logged run at this level there is nothing to fit a line
+  // through, and the tool used to just give up. But a SECOND real point is
+  // already in hand: the #1 ranked parse of your spec at this exact key level,
+  // which sits at ~the 100th percentile by definition. Your run plus the top run
+  // is a line.
+  //
+  // It's a crude one — two points, and it assumes DPS rises linearly with
+  // percentile between them, which it doesn't (the curve steepens near the top).
+  // So it's marked `twoPoint` and the text says as much. A rough target beats no
+  // target, as long as nobody is told it's precise.
+  let twoPoint = false;
+  if (points.length < 2 && topParse?.dps > 0 && typeof myBestPercent === 'number' && myDps > 0) {
+    const topPercent = 100;
+    if (topParse.dps > myDps && topPercent > myBestPercent) {
+      points = [
+        { rankPercent: myBestPercent, dps: myDps },
+        { rankPercent: topPercent, dps: topParse.dps },
+      ];
+      twoPoint = true;
+    }
+  }
+
   const distinctPercents = new Set(points.map((p) => p.rankPercent)).size;
 
   // floor = whichever is higher: this level's own percentile, or the site's
@@ -79,22 +102,32 @@ export function buildParsePlan({ myBestPercent, overallBestPercent, overallBestL
   };
 
   if (!nextTiers.length) {
-    return { currentTier: currentTier?.name ?? null, historyCount: points.length, insufficientData: false, atTopTier: true, tiers: [], ...overallNote };
+    return { currentTier: currentTier?.name ?? null, historyCount: points.length, insufficientData: false, atTopTier: true, tiers: [], twoPoint, ...overallNote };
   }
   if (distinctPercents < MIN_POINTS) {
-    return { currentTier: currentTier?.name ?? null, historyCount: points.length, insufficientData: true, atTopTier: false, tiers: [], ...overallNote };
+    return { currentTier: currentTier?.name ?? null, historyCount: points.length, insufficientData: true, atTopTier: false, tiers: [], twoPoint, ...overallNote };
   }
 
   const { a, b } = fitLine(points);
   const minObserved = Math.min(...points.map((p) => p.rankPercent));
   const maxObserved = Math.max(...points.map((p) => p.rankPercent));
 
+  // A non-positive slope means "more DPS ranks you lower", which is not a thing —
+  // the points are too few or too noisy to carry a real relationship.
+  if (!(b > 0)) {
+    return { currentTier: currentTier?.name ?? null, historyCount: points.length, insufficientData: true, fitUnreliable: true, atTopTier: false, tiers: [], twoPoint, ...overallNote };
+  }
+
   const sortedGaps = [...(gaps ?? [])].sort((x, y) => y.severity - x.severity);
   const totalGapSeverity = sortedGaps.reduce((s, g) => s + g.severity, 0);
 
   const tiers = nextTiers.map((tier) => {
-    const estDps = a + b * tier.min;
-    const dpsDelta = estDps - myDps;
+    // Price each tier off the fitted SLOPE (what one percentile point costs in
+    // DPS) but ANCHOR it at the run in front of you, not at the line's
+    // noise-fitted intercept. Without the anchor the line can put a HIGHER tier
+    // BELOW your current DPS — i.e. tell you to do less damage to rank up.
+    const dpsDelta = b * (tier.min - floor);
+    const estDps = myDps + dpsDelta;
     const pctDeltaNeeded = myDps ? (100 * dpsDelta) / myDps : null;
     const extrapolated = tier.min < minObserved || tier.min > maxObserved;
 
@@ -126,6 +159,7 @@ export function buildParsePlan({ myBestPercent, overallBestPercent, overallBestL
     insufficientData: false,
     atTopTier: false,
     regression: { minObserved, maxObserved, n: distinctPercents },
+    twoPoint,
     tiers,
     ...overallNote,
   };
@@ -151,6 +185,23 @@ export function describeParsePlan(plan) {
       `— not enough to fit a DPS-to-percentile line (need at least 2 at different percentiles). Log a few more runs ` +
       `at this level for a real number here; in the meantime use the DPS gap above the "compared against" line as ` +
       `your rough target.`
+    );
+  }
+
+  // Two-point mode: your single run + the #1 parse at this level. Real data, but
+  // a straight line between two points can't know the curve steepens near the top,
+  // so say that plainly rather than dressing it up as a fit.
+  if (plan.twoPoint) {
+    const lines = plan.tiers.map((t) => {
+      const sign = t.dpsDelta >= 0 ? '+' : '';
+      return `${CAP(t.tier)} (${t.threshold}%+): about ${sign}${t.pctDeltaNeeded}% more DPS (~${sign}${(t.dpsDelta / 1000).toFixed(1)}k).`;
+    });
+    return (
+      `${overallPrefix}You only have one logged run at this key level, so there's no line to fit through your own history. ` +
+      `Instead this is drawn between two REAL points: your run, and the #1 ranked parse of your spec at this exact level. ` +
+      `${lines.join(' ')} ` +
+      `Straight line between two points — the real curve steepens near the top, so the high tiers are likely understated. ` +
+      `Log another run at this level and it gets fitted properly.`
     );
   }
 

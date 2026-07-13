@@ -210,6 +210,49 @@ export async function buildRaidPull({
   };
 }
 
+/**
+ * Analyse a raid boss WITHOUT a pasted log: resolve the character's own best
+ * ranked kill on it, then run the normal pull analysis on that fight.
+ *
+ * This is what the raid view should have defaulted to all along. Pasting a report
+ * URL is still needed for the one thing rankings cannot show — a WIPE — but you
+ * shouldn't have to go hunting for a URL just to look at a boss you killed.
+ */
+export async function buildRaidBossReport({
+  encounterID,
+  difficulty = DEFAULT_RAID_DIFFICULTY,
+  name,
+  serverSlug,
+  serverRegion,
+  className,
+  specName,
+  compareTo = null,
+  refresh = false,
+}) {
+  // byBracket:false — a raid bracket is item level (see the note in api.js)
+  const runs = await fetchMyEncounterRuns({ name, serverSlug, serverRegion, encounterID, specName, byBracket: false, refresh });
+  const kills = (runs.runs ?? []).filter((r) => r.report?.code && r.report?.fightID != null);
+  if (!kills.length) {
+    throw new Error(`No ranked kill of that boss logged for ${name} — paste a report to analyse a wipe instead.`);
+  }
+  // your best parse on the boss is the one worth looking at
+  const best = [...kills].sort((a, b) => (b.rankPercent ?? 0) - (a.rankPercent ?? 0))[0];
+
+  return buildRaidPull({
+    code: best.report.code,
+    fightID: best.report.fightID,
+    encounterID,
+    difficulty,
+    name,
+    serverSlug,
+    serverRegion,
+    className,
+    specName,
+    compareTo,
+    refresh,
+  });
+}
+
 /** Extract a WCL report code from a raw code or a full report URL. */
 export function reportCode(input) {
   const s = String(input ?? '').trim();

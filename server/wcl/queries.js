@@ -72,6 +72,26 @@ query CharacterClass($name: String!, $serverSlug: String!, $serverRegion: String
   }
 }`;
 
+// Every zone of every expansion, with its difficulties — used to work out which
+// zones are RAIDS (they have a Mythic difficulty; a dungeon zone has "Dungeon").
+// Static game data, so the disk cache holds it until a patch adds a tier.
+export const RAID_ZONES = `
+query RaidZones {
+  worldData {
+    expansions {
+      id
+      name
+      zones {
+        id
+        name
+        frozen
+        difficulties { id name }
+        encounters { id name }
+      }
+    }
+  }
+}`;
+
 export const ZONE_BRACKETS = `
 query ZoneBrackets($zoneID: Int!) {
   worldData {

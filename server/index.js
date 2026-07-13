@@ -3,7 +3,8 @@ import path from 'node:path';
 import { loadEnv, PROJECT_ROOT } from './env.js';
 import { fetchOverview, fetchDamageSeries, fetchGameClasses, detectCharacter } from './wcl/api.js';
 import { buildComparison, DEFAULT_LEVEL } from './wcl/comparison.js';
-import { buildRaidReport, buildRaidPull, DEFAULT_RAID_DIFFICULTY } from './wcl/raid.js';
+import { buildRaidReport, buildRaidPull, buildRaidBossReport, DEFAULT_RAID_DIFFICULTY } from './wcl/raid.js';
+import { fetchRaidOverview } from './wcl/raidZones.js';
 import { buildReport } from './analysis/compare.js';
 import { loadCharacters, upsertCharacter, removeCharacter, setCharacterHidden } from './characters.js';
 
@@ -112,6 +113,44 @@ app.get('/api/dps-series', async (req, res) => {
       playerName: other.meta.name,
     });
     res.json({ mine: mineSeries, other: otherSeries, otherLabel: other.meta.name });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// All raids of the current expansion and how this character parsed in each.
+// This is the raid view's DEFAULT — you shouldn't need a report URL to look at a
+// boss you killed. Pasting a log stays, for the one thing rankings can't show: wipes.
+app.get('/api/raid/overview', async (req, res) => {
+  try {
+    const { name, serverSlug, serverRegion } = charParams(req.query);
+    const overview = await fetchRaidOverview({
+      name,
+      serverSlug,
+      serverRegion,
+      specName: req.query.specName ? String(req.query.specName) : null,
+      refresh: wantsRefresh(req.query),
+    });
+    res.json({ zones: overview });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Analyse a raid boss from the character's own best ranked kill — no log needed.
+app.get('/api/raid/boss', async (req, res) => {
+  try {
+    const encounterID = Number(req.query.encounter);
+    if (!encounterID) return res.status(400).json({ error: 'encounter query param required' });
+    const report = await buildRaidBossReport({
+      ...charParams(req.query),
+      ...specParams(req.query),
+      encounterID,
+      difficulty: req.query.difficulty ? Number(req.query.difficulty) : DEFAULT_RAID_DIFFICULTY,
+      compareTo: req.query.compareTo ? String(req.query.compareTo) : null,
+      refresh: wantsRefresh(req.query),
+    });
+    res.json(report);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

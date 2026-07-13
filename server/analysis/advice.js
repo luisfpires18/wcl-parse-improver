@@ -27,11 +27,19 @@ export function adviceFor(gapItem) {
         `You were idle ${gapItem.mine}% of the run vs their ${gapItem.cohort}% — close the biggest gaps ` +
         `(see downtime windows): always be casting something while moving between pulls.`
       );
-    case 'cpm':
+    case 'cpm': {
+      // "cast more" is not actionable. Name the buttons the missing casts are.
+      const behind = gapItem.behind ?? [];
+      const which = behind.length
+        ? ` The missing casts are mostly ${behind
+            .map((b) => `${b.name} (${b.mine} vs their ${b.them}, ${b.behindBy} behind)`)
+            .join(', ')}.`
+        : '';
       return (
-        `You averaged ${gapItem.mine} casts/min vs their ${gapItem.cohort} — that is pure GCD throughput; ` +
-        `fewer rotation pauses and earlier pre-positioning close most of this.`
+        `You averaged ${gapItem.mine} casts/min vs their ${gapItem.cohort} — that is pure GCD throughput.${which} ` +
+        `Fewer rotation pauses and earlier pre-positioning close most of this.`
       );
+    }
     case 'ability': {
       const note = ABILITY_MECHANIC_NOTE[gapItem.name];
       return (

@@ -17,13 +17,21 @@
 
 // Ordered: the first pattern that matches an aura claims it, so "Flask of the
 // Shattered Sun" can't also be counted as a potion.
+//
+// Weapon oil is deliberately absent: it applies no combat aura, so it is not in
+// the log at all. Anything we showed for it would be invented.
 const CONSUMABLE_KINDS = [
   { key: 'flask', label: 'Flask', re: /flask|phial/i },
   { key: 'food', label: 'Food', re: /well fed/i },
-  { key: 'oil', label: 'Weapon oil', re: /\boil\b|sharpening stone|weightstone/i },
   { key: 'rune', label: 'Augment rune', re: /rune of|augment rune|void-touched|draconic augment/i },
-  { key: 'potion', label: 'Potion', re: /^potion of|elixir/i },
 ];
+
+// Potions are the one consumable you use REPEATEDLY, so uptime % is the wrong
+// question — "how many did you drink, out of how many you could have?" is the
+// right one. All combat potions share one 5-minute cooldown, and you may pre-pot
+// before the pull, so the ceiling is 1 + one per 5 minutes of fight.
+const POTION_RE = /^potion of|^elixir/i;
+const POTION_CD_SEC = 300;
 
 // Which secondary stat a flask grants. Display-only sugar — an unmapped flask
 // still shows its name, it just doesn't get a stat label.
@@ -49,6 +57,34 @@ const consumablesOf = (detail) => {
   for (const kind of CONSUMABLE_KINDS) out[kind.key] = findAura(detail, kind.re);
   return out;
 };
+
+/** Fight length in seconds (keystone time if present, else the fight span). */
+function fightSec(detail) {
+  const f = detail?.fight ?? {};
+  const ms = f.keystoneTime > 0 ? f.keystoneTime : (f.endTime ?? 0) - (f.startTime ?? 0);
+  return ms > 0 ? ms / 1000 : 0;
+}
+
+/**
+ * Potions drunk, and how many the fight allowed.
+ *
+ * Counted from the number of times a potion aura was APPLIED (`uses`), not from
+ * its uptime — a potion is a burst you press, not a buff you maintain. All combat
+ * potions share one cooldown, so every potion aura is summed into one count.
+ */
+function potionsOf(detail) {
+  const auras = (detail?.buffs?.auras ?? []).filter((a) => a?.name && POTION_RE.test(a.name));
+  const used = auras.reduce((n, a) => n + (a.uses ?? 0), 0);
+  const sec = fightSec(detail);
+  // a pre-pot, plus one more every time the shared cooldown comes back up
+  const max = sec > 0 ? 1 + Math.floor(sec / POTION_CD_SEC) : null;
+  return {
+    used,
+    max,
+    names: [...new Set(auras.map((a) => a.name))],
+    missed: max != null ? Math.max(0, max - used) : null,
+  };
+}
 
 // A groupmate's buff only counts as a "party buff" if they KEPT it on you. Without
 // this the list is 23 entries long and mostly stray heal ticks — a real run came
@@ -109,6 +145,8 @@ export function buildConsumables(mineDetail, otherDetail, otherName, buffSources
     missing: Boolean(!mine[k.key] && them[k.key]),
   }));
 
+  const potions = { mine: potionsOf(mineDetail), them: potionsOf(otherDetail) };
+
   const notes = [];
   if (mine.flask && them.flask && myStat && theirStat && myStat !== theirStat) {
     notes.push(
@@ -120,6 +158,12 @@ export function buildConsumables(mineDetail, otherDetail, otherName, buffSources
   if (missing.length) {
     notes.push(
       `They had ${missing.map((r) => `${r.label.toLowerCase()} (${r.them.name})`).join(', ')} and you didn't — free stats you're not taking.`
+    );
+  }
+  if (potions.mine.missed > 0) {
+    notes.push(
+      `You drank ${potions.mine.used} potion${potions.mine.used === 1 ? '' : 's'} but the fight was long enough for ${potions.mine.max} ` +
+        `(they share a 5-minute cooldown, and you can pre-pot). That's ${potions.mine.missed} free burst you left unused.`
     );
   }
 
@@ -134,6 +178,7 @@ export function buildConsumables(mineDetail, otherDetail, otherName, buffSources
   return {
     otherLabel: otherName,
     rows,
+    potions,
     partyBuffs: { mine: myParty, them: theirParty, theyHadIDidnt },
     notes,
   };

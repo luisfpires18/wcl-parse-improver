@@ -178,3 +178,69 @@ test('buildParsePlan: overall best already at pink means atTopTier even if this 
   assert.equal(plan.atTopTier, true);
   assert.match(describeParsePlan(plan), /Your real Best % for this dungeon is already 99\.2%/);
 });
+
+// One logged run used to be a dead end: "not enough to fit a DPS-to-percentile
+// line". But a second REAL point is already in hand — the #1 ranked parse of the
+// spec at this exact key level, which sits at ~the 100th percentile by definition.
+test('a single logged run still yields a target, using the #1 parse as the second point', () => {
+  const plan = buildParsePlan({
+    myBestPercent: 50,
+    myDps: 100000,
+    history: [{ rankPercent: 50, dps: 100000 }], // only ONE run
+    topParse: { dps: 200000 }, // the best parse at this level
+    gaps: [],
+  });
+
+  assert.equal(plan.insufficientData, false, 'no longer a dead end');
+  assert.equal(plan.twoPoint, true, 'and it says how it got there');
+
+  // line through (50%, 100k) and (100%, 200k) => 2000 dps per percentile point
+  const purple = plan.tiers.find((t) => t.tier === 'purple'); // 75%
+  assert.equal(purple.estDps, 150000); // 100k + 2000*(75-50)
+  assert.equal(purple.dpsDelta, 50000);
+
+  assert.match(plan.text ?? describeParsePlan(plan), /two REAL points/i);
+  assert.match(describeParsePlan(plan), /steepens near the top/i, 'the crudeness is stated, not hidden');
+});
+
+test('the two-point fallback is not used when real history exists', () => {
+  const plan = buildParsePlan({
+    myBestPercent: 20,
+    myDps: 100000,
+    history: [
+      { rankPercent: 10, dps: 90000 },
+      { rankPercent: 30, dps: 110000 },
+    ],
+    topParse: { dps: 999999 },
+    gaps: [],
+  });
+  assert.equal(plan.twoPoint, false, 'your own logs beat a two-point guess');
+});
+
+test('no top parse and one run: still honestly says it cannot', () => {
+  const plan = buildParsePlan({ myBestPercent: 50, myDps: 100000, history: [{ rankPercent: 50, dps: 100000 }], gaps: [] });
+  assert.equal(plan.insufficientData, true);
+});
+
+// The intercept-based pricing could put a HIGHER tier BELOW your current DPS —
+// i.e. tell you to do less damage to rank up. Anchoring at your own run makes that
+// impossible.
+test('a higher tier always costs MORE DPS than the run you just did', () => {
+  const plan = buildParsePlan({
+    myBestPercent: 48,
+    myDps: 112596,
+    // deliberately noisy: a low-percentile run with high DPS drags the intercept
+    history: [
+      { rankPercent: 4, dps: 82094 },
+      { rankPercent: 30, dps: 84153 },
+      { rankPercent: 48, dps: 112596 },
+    ],
+    gaps: [],
+  });
+  for (const t of plan.tiers) {
+    assert.ok(t.estDps > 112596, `${t.tier} must cost more than the run you did, got ${t.estDps}`);
+    assert.ok(t.dpsDelta > 0);
+  }
+  const need = plan.tiers.map((t) => t.estDps);
+  assert.deepEqual(need, [...need].sort((x, y) => x - y), 'the ladder rises');
+});

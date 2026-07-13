@@ -5,22 +5,32 @@
 // rankings only ever contain KILLS — a wipe appears in no ranking anywhere, and
 // wipes are the whole point on progress. The per-pull consistency table and the
 // death-timing read are raid-only; everything below them is the shared report.
-import { $, esc, fmtK, fmtSec, fmtTime } from './util.js';
+import { $, esc, fmtK, fmtPct, fmtSec, fmtTime, pctClass } from './util.js';
 import { state, charQuery } from './state.js';
 import { renderReport } from './report.js';
 import { dpsChartSvg, wireDpsBrush, setCastWindow, castOrderSlot } from './chart.js';
 
 let raidState = { code: null, difficulty: '5', bosses: [] };
 
+/**
+ * The raid view. Your RANKED PARSES are the default — every raid of the tier and
+ * what you scored on each boss, straight from WCL, exactly like the M+ overview.
+ * You shouldn't need to go hunting for a report URL to look at a boss you killed.
+ *
+ * Pasting a log is still here, but demoted to what it's actually for: WIPES.
+ * Rankings only ever contain kills, so a progression pull appears in no ranking
+ * anywhere and a report is the only way to see it.
+ */
 export function renderRaidCard() {
   const el = $('#raid');
   if (!el) return;
   el.innerHTML = `
-    <div class="card">
-      <h2>Raid progression <small>&mdash; analyse a log, kills or wipes</small></h2>
-      <p><small>Paste a Warcraft Logs report link or its 16-char code. Reads
-        <b>${esc(state.activeChar.name)}</b>'s output across every pull of a boss &mdash; even with no kill &mdash;
-        flags how consistent your damage is pull to pull, and benchmarks it against a top kill.</small></p>
+    <div id="raid-zones" class="card"><p class="muted">Loading your raid parses…</p></div>
+
+    <details class="card" id="raid-log-card">
+      <summary><b>Analyse a specific log</b> — for wipes / progression pulls</summary>
+      <p><small>Your kills are already above, ranked. Paste a report only when you want a pull that
+        <b>isn't</b> a kill: a wipe appears in no ranking anywhere, so the log is the only place to see it.</small></p>
       <form id="raid-form" class="raid-form">
         <input id="raid-code" placeholder="warcraftlogs.com/reports/XXXXXXXX… or the code" required />
         <label class="spec-pick">difficulty
@@ -34,12 +44,94 @@ export function renderRaidCard() {
       </form>
       <div id="raid-status"></div>
       <div id="raid-bosses"></div>
-      <div id="raid-result"></div>
-    </div>`;
+    </details>
+
+    <div id="raid-result"></div>`;
+
   $('#raid-form').addEventListener('submit', (e) => {
     e.preventDefault();
     loadRaidBosses();
   });
+  loadRaidZones();
+}
+
+/** All raids of the tier + this character's parse on every boss. */
+async function loadRaidZones() {
+  const el = $('#raid-zones');
+  try {
+    const res = await fetch(`/api/raid/overview?${charQuery()}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    renderRaidZones(data.zones ?? []);
+  } catch (err) {
+    if (el) el.innerHTML = `<span class="error">Could not load raid parses: ${esc(err.message)}</span>`;
+  }
+}
+
+function renderRaidZones(zones) {
+  const el = $('#raid-zones');
+  if (!el) return;
+  if (!zones.length) {
+    el.innerHTML = `<p class="muted">No raids found for this expansion.</p>`;
+    return;
+  }
+
+  const zoneBlock = (z) => {
+    const rows = z.bosses
+      .map((b) => {
+        const killed = b.kills > 0;
+        return `<tr class="${killed ? 'clickable' : 'unanalysed'}" ${killed ? `data-encounter="${b.encounterID}"` : ''}>
+          <td>${esc(b.name)}</td>
+          <td class="num">${b.kills || '—'}</td>
+          <td class="num ${pctClass(b.bestPercent)}">${b.bestPercent != null ? fmtPct(b.bestPercent) + '%' : '—'}</td>
+          <td class="num">${b.bestDps ? fmtK(b.bestDps) : '—'}</td>
+          <td>${killed ? '<button class="mini" data-analyze="' + b.encounterID + '">analyze</button>' : '<small class="muted">no kill</small>'}</td>
+        </tr>`;
+      })
+      .join('');
+    return `
+      <h3>${esc(z.zoneName)}
+        <small>— ${z.killedCount}/${z.bossCount} killed${
+          z.bestAverage != null ? ` · best avg <b class="${pctClass(z.bestAverage)}">${fmtPct(z.bestAverage)}%</b>` : ''
+        }</small>
+      </h3>
+      <table>
+        <thead><tr><th>Boss</th><th>Kills</th><th>Best %</th><th>Best DPS</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  };
+
+  el.innerHTML = `
+    <h2>${esc(state.activeChar.name)} <small>— Raids</small></h2>
+    ${zones.map(zoneBlock).join('')}
+    <p class="table-note"><small>Click a boss to analyse your best ranked kill on it — no log needed.
+      For a <b>wipe</b>, use "Analyse a specific log" below: wipes appear in no ranking.</small></p>`;
+
+  el.querySelectorAll('[data-encounter], [data-analyze]').forEach((n) =>
+    n.addEventListener('click', () => {
+      const id = n.dataset.analyze ?? n.dataset.encounter;
+      if (id) loadRaidBoss(Number(id));
+    })
+  );
+}
+
+/** Analyse a boss from your own best ranked kill — the paste-free path. */
+async function loadRaidBoss(encounterID, compareTo = '') {
+  const root = $('#raid-result');
+  if (!root) return;
+  root.innerHTML = `<p class="muted">Analysing your best kill on this boss (pulls damage events — ~15s first time, cached after)…</p>`;
+  try {
+    const params = charQuery();
+    params.set('encounter', encounterID);
+    params.set('difficulty', raidState.difficulty);
+    if (compareTo) params.set('compareTo', compareTo);
+    const res = await fetch(`/api/raid/boss?${params}`);
+    const view = await res.json();
+    if (!res.ok) throw new Error(view.error || `HTTP ${res.status}`);
+    renderRaidPull(view, root, { encounterID, difficulty: raidState.difficulty, fromRankings: true });
+  } catch (err) {
+    root.innerHTML = `<span class="error">${esc(err.message)}</span>`;
+  }
 }
 
 async function loadRaidBosses() {
@@ -328,7 +420,11 @@ function renderRaidPull(view, root, ctx) {
 
   const picker = root.querySelector('#compare-to');
   if (picker) {
-    picker.addEventListener('change', (e) => loadRaidPullChart(view.pull.id, ctx.encounterID, ctx.difficulty, e.target.value));
+    picker.addEventListener('change', (e) =>
+      ctx.fromRankings
+        ? loadRaidBoss(ctx.encounterID, e.target.value)
+        : loadRaidPullChart(view.pull.id, ctx.encounterID, ctx.difficulty, e.target.value)
+    );
   }
 
   root.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
