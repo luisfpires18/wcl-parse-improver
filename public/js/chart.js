@@ -317,9 +317,13 @@ const ORD_DISPLAY_CAP = 150;
 /**
  * One player's cast order as a column: burst cooldowns pinned at the top (never
  * truncated — they're the reason you opened it), then the literal sequence.
- * Shared by the 1v1 comparison and the "learn this boss" top-10 view.
+ *
+ * `cap` bounds the sequence list. Under the DPS chart that's what the brush is
+ * for — narrow the window and the rest come into view. The "learn a boss" view
+ * has NO chart, so there is nothing to brush and a cap would just hide casts with
+ * no way to reach them: it passes cap = Infinity and renders the lot.
  */
-export function castOrderColumn(list, title) {
+export function castOrderColumn(list, title, { cap = ORD_DISPLAY_CAP, brushable = true } = {}) {
   const amps = list.filter((c) => c.kind === 'amp');
 
   // never truncated — the cooldowns are the whole reason you opened this
@@ -332,17 +336,22 @@ export function castOrderColumn(list, title) {
        </div>`
     : `<div class="ord-cds"><div class="ord-cds-head muted">No burst cooldowns in this window</div></div>`;
 
-  const shown = list.slice(0, ORD_DISPLAY_CAP);
+  const shown = Number.isFinite(cap) ? list.slice(0, cap) : list;
   const items = shown
     .map(
       (c) =>
         `<li class="${c.kind === 'amp' ? 'ord-amp' : ''}"><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="${castKindClass(c.kind)}">${esc(c.name)}</span></li>`
     )
     .join('');
-  // the truncation note now says what it actually drops — and the cooldowns
-  // among them are safe, because they're pinned above
+  // the truncation note says what it actually drops — and the cooldowns among them
+  // are safe, because they're pinned above
   const cut = list.length - shown.length;
-  const more = cut > 0 ? `<li class="ord-more">…and ${cut} more casts below (all burst cooldowns are pinned above) — brush a smaller window on the chart to read them</li>` : '';
+  const more =
+    cut > 0
+      ? `<li class="ord-more">…and ${cut} more casts below (all burst cooldowns are pinned above)${
+          brushable ? ' — brush a smaller window on the chart to read them' : ''
+        }</li>`
+      : '';
 
   return `<div class="ord-col">
     <div class="ord-head">${esc(title)} <small>(${list.length})</small></div>

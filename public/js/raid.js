@@ -211,7 +211,7 @@ function renderBossRotations() {
     <span class="muted"><small>&middot; ${fmtK(p.dps)} DPS &middot; ${fmtTime(p.durationSec * 1000)} &middot; ${p.cpm} CPM</small></span>
 
     <div class="ord-wrap learn-ord">
-      ${castOrderColumn(p.castOrder, `#${p.rank} ${p.name} — cast order`)}
+      ${castOrderColumn(p.castOrder, `#${p.rank} ${p.name} — cast order`, { cap: Infinity, brushable: false })}
     </div>
     <p class="table-note"><small>One top parser's kill, top to bottom, with their <b>burst cooldowns pinned</b> above the sequence —
       every potion, plus any damaging ability pressed at cooldown frequency (derived from the run, not a per-class list).
