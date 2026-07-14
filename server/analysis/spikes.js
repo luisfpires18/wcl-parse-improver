@@ -3,14 +3,15 @@
 //
 // Every cast is one of three kinds:
 //   damage — it appears in the DamageDone table
-//   amp    — a burst cooldown: any combat potion, or a DAMAGING ability pressed
-//            at cooldown frequency (see amplifierNamesOf). Derived from the run,
-//            never from a per-class list, so it works for a spec nobody wrote one
-//            for. `amp` beats `damage`: a potion and a big cooldown ARE damage,
-//            but reading them as ordinary damage casts buries the thing you are
-//            actually scanning the list for.
-//   util   — everything else (interrupts, defensives, movement)
+//   amp    — a cooldown or consumable: any potion, any TRINKET, or a DAMAGING
+//            ability pressed at cooldown frequency (see amplifierNamesOf). Derived
+//            from the run, never from a per-class list, so it works for a spec
+//            nobody wrote one for. `amp` beats `damage`: a potion and a big
+//            cooldown ARE damage, but reading them as ordinary damage casts buries
+//            the thing you are actually scanning the list for.
+//   util   — everything else (interrupts, movement)
 import { IGNORED_ABILITIES } from './metrics.js';
+import { isPotion } from './potions.js';
 import { distributionMatch, bigramMatch } from '../../shared/rotationMatch.js';
 
 // A named list of Death Knight cooldowns. Kept only because raidProgress.js uses
@@ -30,11 +31,6 @@ export const AMPLIFIERS = new Set([
   'Potion of Unwavering Focus',
 ]);
 
-// Any class's combat potion. Naming is a stable convention ("Potion of …"), the
-// same one consumables.js already keys off — and a potion is unambiguously a burst
-// cooldown, so it should read as one in the cast list whatever class pressed it.
-const POTION_RE = /^potion of|^elixir/i;
-
 // A DAMAGING ability you press rarely is a cooldown — that is what "rarely" means.
 // This is the same frequency rule timeline.js already uses to pick its cooldown
 // lanes (never a name), so The Hunt and Eye Beam light up for a Havoc DH exactly
@@ -42,18 +38,35 @@ const POTION_RE = /^potion of|^elixir/i;
 const AMP_CPM_CEILING = 1.5;
 
 /**
- * The abilities that count as burst amplifiers in THIS run: every combat potion,
- * plus every damaging ability cast at cooldown frequency. Derived from the run, so
- * it works for a class nobody has written a list for.
+ * The abilities that count as cooldowns/consumables in THIS run:
+ *
+ *   1. every potion — identified by its icon, so "Light's Potential" counts as
+ *      surely as "Potion of Recklessness" (see potions.js);
+ *   2. every DAMAGING ability pressed at cooldown frequency;
+ *   3. every OTHER rare cast that applies a buff of its own name — which is what an
+ *      on-use TRINKET looks like in a log. Algeth'ar Puzzle is cast once, deals no
+ *      damage, and grants a stat buff called "Algeth'ar Puzzle"; under rules 1–2 it
+ *      fell into grey "utility" and got buried in the cast list, even though the
+ *      whole field presses it in the opener.
+ *
+ * All three are read off the run. There is no item list and no class list — which
+ * is also why a rare DEFENSIVE that grants a self-buff (a Blur, a Darkness) lands
+ * here too: nothing in a log distinguishes "this buff raises my damage" from "this
+ * buff lowers theirs". The strip is labelled "cooldowns & consumables" rather than
+ * "burst" for exactly that reason; over-showing a defensive is a far cheaper error
+ * than hiding a trinket.
  */
 export function amplifierNamesOf(detail) {
   const out = new Set();
   const dmg = damageNamesOf(detail);
   const activeMin = (detail?.casts?.totalTimeMs ?? 0) / 60000;
+  // a buff whose name is a cast's name was applied BY that cast: trinket, potion,
+  // or cooldown. External raid buffs can't collide — you never cast Battle Shout.
+  const selfBuffNames = new Set((detail?.buffs?.auras ?? []).map((a) => a?.name).filter(Boolean));
 
   for (const a of detail?.casts?.abilities ?? []) {
     if (!a?.name || !a.casts) continue;
-    if (POTION_RE.test(a.name)) {
+    if (isPotion(a)) {
       out.add(a.name); // a potion is a cooldown by definition
       continue;
     }
@@ -62,7 +75,8 @@ export function amplifierNamesOf(detail) {
       continue;
     }
     const cpm = activeMin > 0 ? a.casts / activeMin : 0;
-    if (dmg.has(a.name) && cpm <= AMP_CPM_CEILING) out.add(a.name);
+    if (cpm > AMP_CPM_CEILING) continue; // pressed often => a filler, whatever it does
+    if (dmg.has(a.name) || selfBuffNames.has(a.name)) out.add(a.name);
   }
   return out;
 }
@@ -296,7 +310,7 @@ function potionUsesFromBuffs(detail) {
   const end = detail.fight?.endTime ?? Infinity;
   const out = [];
   for (const aura of detail.buffs?.auras ?? []) {
-    if (!aura?.name || !POTION_RE.test(aura.name)) continue;
+    if (!isPotion(aura)) continue;
     for (const b of aura.bands ?? []) {
       if (b.startTime < start || b.startTime > end) continue;
       out.push({ name: aura.name, tSec: Math.round(((b.startTime - start) / 1000) * 10) / 10 });

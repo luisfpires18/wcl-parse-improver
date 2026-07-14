@@ -213,6 +213,102 @@ test('two DIFFERENT potions at the same moment are both kept', () => {
 // The cast EVENT stream carries more events than there were presses: the same cast
 // is often logged under a second ability id. Naming those off masterData would look
 // like a fix and silently double the count.
+// Two things the old rules could not see, both taken from a real Chimaerus log:
+//
+//   "Light's Potential" is a combat potion the whole field drinks, but the name test
+//   was /^potion of/ — so it was never an amplifier and never counted as a potion.
+//   Every potion's ICON carries the word, whatever the item is called.
+//
+//   An on-use TRINKET (Algeth'ar Puzzle) is cast once, deals no damage, and grants a
+//   buff of its own name. Under "damaging + rare" it fell into grey utility and was
+//   buried in the cast list, even though the top parsers press it in the opener.
+const withItems = (casts) => ({
+  fight: { startTime: 0, endTime: 300000 },
+  casts: {
+    totalTimeMs: 300000,
+    totalCasts: 0,
+    abilities: [
+      { name: 'Chaos Strike', guid: 10, casts: 150, abilityIcon: 'ability_demonhunter_chaosstrike.jpg' },
+      // a potion whose NAME says nothing — only the icon does
+      { name: "Light's Potential", guid: 20, casts: 1, abilityIcon: 'inv_12_profession_alchemy_lightpotion_yellow.jpg' },
+      // an on-use trinket: no damage, grants a same-named buff
+      { name: "Algeth'ar Puzzle", guid: 21, casts: 1, abilityIcon: 'inv_misc_enggizmos_18.jpg' },
+      // a rare defensive, also buff-granting — it lands in the strip too, knowingly
+      { name: 'Blur', guid: 22, casts: 2, abilityIcon: 'ability_demonhunter_blur.jpg' },
+      { name: 'Disrupt', guid: 23, casts: 4, abilityIcon: 'ability_demonhunter_disrupt.jpg' }, // no damage, no buff
+    ],
+  },
+  damage: { totalDamage: 1000, abilities: [{ name: 'Chaos Strike', total: 1000, hits: 1 }] },
+  buffs: {
+    totalTimeMs: 300000,
+    auras: [
+      { name: "Light's Potential", guid: 20, abilityIcon: 'inv_12_profession_alchemy_lightpotion_yellow.jpg', uptimeMs: 30000, uses: 1, bands: [{ startTime: 100, endTime: 30100 }] },
+      { name: "Algeth'ar Puzzle", guid: 21, abilityIcon: 'inv_misc_enggizmos_18.jpg', uptimeMs: 40000, uses: 2, bands: [] },
+      { name: 'Blur', guid: 22, abilityIcon: 'ability_demonhunter_blur.jpg', uptimeMs: 12000, uses: 2, bands: [] },
+      // a flask is NOT a potion — even though its ART is a potion bottle
+      { name: 'Flask of the Shattered Sun', guid: 30, abilityIcon: 'inv_12_profession_alchemy_flask_sindoreipotion_red--.jpg', uptimeMs: 300000, uses: 1, bands: [{ startTime: 0, endTime: 300000 }] },
+      // someone else's raid buff: never cast by me, so it can't be mistaken for one
+      { name: 'Battle Shout', guid: 31, abilityIcon: 'ability_warrior_battleshout.jpg', uptimeMs: 300000, uses: 2, bands: [] },
+    ],
+  },
+  deaths: { deaths: [] },
+  castEvents: casts,
+  resourceEvents: [],
+});
+
+test("a potion is identified by its icon, so Light's Potential counts like any other", () => {
+  const amps = amplifierNamesOf(withItems([]));
+  assert.ok(amps.has("Light's Potential"), 'the icon says potion even though the name does not');
+  // a flask's icon ALSO says potion (its art is a Sin'dorei potion bottle) — it is
+  // still not a drink, and must never be pinned as one
+  assert.ok(!amps.has('Flask of the Shattered Sun'), 'a flask is maintained, not pressed');
+});
+
+test('a flask is never recovered as a potion use from its buff band', () => {
+  const order = castOrder(withItems([{ timestamp: 2000, abilityGameID: 10 }]));
+  assert.ok(!order.some((c) => c.name === 'Flask of the Shattered Sun'), 'a flask is not a cast, and not a drink');
+});
+
+test('an on-use trinket is a cooldown: a rare cast that grants a buff of its own name', () => {
+  const amps = amplifierNamesOf(withItems([]));
+  assert.ok(amps.has("Algeth'ar Puzzle"), 'no damage, but it is plainly a pressed cooldown');
+  assert.ok(!amps.has('Disrupt'), 'an interrupt grants no buff and deals no damage — still utility');
+  assert.ok(!amps.has('Chaos Strike'), 'a spammed filler is never a cooldown');
+  assert.ok(!amps.has('Battle Shout'), "a groupmate's buff is not something I cast");
+});
+
+test('the buff-granting rule is generous by design: a rare defensive lands in the strip too', () => {
+  // Stated rather than hidden: nothing in a log distinguishes "this buff raises my
+  // damage" from "this buff lowers theirs". Over-showing Blur beats burying a trinket.
+  assert.ok(amplifierNamesOf(withItems([])).has('Blur'));
+});
+
+test('the trinket and the potion appear in cast order as amplifiers, in sequence', () => {
+  const order = castOrder(
+    withItems([
+      { timestamp: 100, abilityGameID: 20 }, // Light's Potential
+      { timestamp: 1000, abilityGameID: 21 }, // Algeth'ar Puzzle
+      { timestamp: 2000, abilityGameID: 10 }, // Chaos Strike
+    ])
+  );
+  assert.deepEqual(
+    order.map((c) => [c.name, c.kind]),
+    [
+      ["Light's Potential", 'amp'],
+      ["Algeth'ar Puzzle", 'amp'],
+      ['Chaos Strike', 'damage'],
+    ]
+  );
+});
+
+test("a potion with no cast event is recovered from its buff by icon, not by name", () => {
+  const order = castOrder(withItems([{ timestamp: 2000, abilityGameID: 10 }])); // only a filler cast
+  const pot = order.find((c) => c.name === "Light's Potential");
+  assert.ok(pot, 'the buff band proves it was drunk');
+  assert.equal(pot.kind, 'amp');
+  assert.equal(pot.fromBuff, true);
+});
+
 test('an event whose ability is not in the Casts table is NOT invented into a cast', () => {
   const d = havoc([
     { timestamp: 1000, abilityGameID: 11 }, // The Hunt — in the table

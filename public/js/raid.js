@@ -213,8 +213,9 @@ function renderBossRotations() {
     <div class="ord-wrap learn-ord">
       ${castOrderColumn(p.castOrder, `#${p.rank} ${p.name} — cast order`, { cap: Infinity, brushable: false })}
     </div>
-    <p class="table-note"><small>One top parser's kill, top to bottom, with their <b>burst cooldowns pinned</b> above the sequence —
-      every potion, plus any damaging ability pressed at cooldown frequency (derived from the run, not a per-class list).
+    <p class="table-note"><small>One top parser's kill, top to bottom, with their <b>cooldowns &amp; consumables pinned</b> above the sequence —
+      every potion, every on-use trinket, and any ability pressed at cooldown frequency that deals damage or grants a buff
+      (derived from the run, not a per-class or per-item list).
       Switch player above to see how a different one played the same boss: where they <b>differ</b> is where the fight allows a choice,
       where they <b>agree</b> is the rotation. Only the player you pick is fetched.</small></p>`;
 

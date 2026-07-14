@@ -329,12 +329,12 @@ export function castOrderColumn(list, title, { cap = ORD_DISPLAY_CAP, brushable 
   // never truncated — the cooldowns are the whole reason you opened this
   const pinned = amps.length
     ? `<div class="ord-cds">
-         <div class="ord-cds-head">Burst cooldowns <small>(${amps.length})</small></div>
+         <div class="ord-cds-head">Cooldowns &amp; consumables <small>(${amps.length})</small></div>
          <ol class="ord-cds-list">${amps
            .map((c) => `<li><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="p-orange">${esc(c.name)}</span></li>`)
            .join('')}</ol>
        </div>`
-    : `<div class="ord-cds"><div class="ord-cds-head muted">No burst cooldowns in this window</div></div>`;
+    : `<div class="ord-cds"><div class="ord-cds-head muted">No cooldowns or consumables in this window</div></div>`;
 
   const shown = Number.isFinite(cap) ? list.slice(0, cap) : list;
   const items = shown
@@ -348,7 +348,7 @@ export function castOrderColumn(list, title, { cap = ORD_DISPLAY_CAP, brushable 
   const cut = list.length - shown.length;
   const more =
     cut > 0
-      ? `<li class="ord-more">…and ${cut} more casts below (all burst cooldowns are pinned above)${
+      ? `<li class="ord-more">…and ${cut} more casts below (all cooldowns &amp; consumables are pinned above)${
           brushable ? ' — brush a smaller window on the chart to read them' : ''
         }</li>`
       : '';
@@ -366,9 +366,11 @@ export function renderCastOrderCols(them, mine, otherLabel) {
       ${castOrderColumn(them, `${otherLabel ?? 'Them'} — cast order`)}
       ${castOrderColumn(mine, 'You — cast order')}
     </div>
-    <p class="table-note"><small><b>Burst cooldowns are pinned at the top of each column</b> so you never have to hunt for a potion in a
-      150-row list. <span class="p-orange"><b>Orange</b> = burst cooldown</span> — every <b>potion</b>, plus any damaging ability pressed at
-      cooldown frequency (worked out from the run, not a per-class list, so it lights up The Hunt for a DH exactly as it does Army for a DK).
+    <p class="table-note"><small><b>Cooldowns &amp; consumables are pinned at the top of each column</b> so you never have to hunt for a potion
+      in a 150-row list. <span class="p-orange"><b>Orange</b></span> is every <b>potion</b> (matched by its icon, so Light's Potential counts
+      as surely as Potion of Recklessness), every <b>on-use trinket</b>, and any ability pressed at cooldown frequency that either deals damage
+      or grants you a buff — all worked out from the run, never a per-class or per-item list. That last rule is deliberately generous: a rare
+      <b>defensive</b> can land here too, because nothing in a log says whether a buff raises your damage or lowers theirs.
       <span class="p-blue">Blue</span> = ordinary damage, grey = utility. Below the pin is the literal cast sequence — read their column
       top-down for the flow, then check the <b>buff bars on the rotation timeline</b> to see which buffs were up while they pressed them.</small></p>`;
 }

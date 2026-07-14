@@ -35,10 +35,10 @@ test('potions are counted against what the fight allowed, not shown as uptime', 
   const withPots = (sec, auras) => ({ ...fight(sec), buffs: { totalTimeMs: sec * 1000, auras } });
 
   // an 11-minute fight allows 1 + floor(660/300) = 3 potions
-  const mine = withPots(660, [{ name: 'Potion of Recklessness', uptimeMs: 60000, uses: 2 }]);
+  const mine = withPots(660, [{ name: 'Potion of Recklessness', abilityIcon: 'inv_12_profession_alchemy_voidpotion_red.jpg', uptimeMs: 60000, uses: 2 }]);
   const them = withPots(660, [
-    { name: 'Potion of Recklessness', uptimeMs: 60000, uses: 2 },
-    { name: "Light's Potential", uptimeMs: 30000, uses: 1 }, // not a potion by name
+    { name: 'Potion of Recklessness', abilityIcon: 'inv_12_profession_alchemy_voidpotion_red.jpg', uptimeMs: 60000, uses: 2 },
+    { name: "Light's Potential", abilityIcon: 'inv_12_profession_alchemy_lightpotion_yellow.jpg', uptimeMs: 30000, uses: 1 },
   ]);
   const c = buildConsumables(mine, them, 'TopDK');
 
@@ -46,6 +46,33 @@ test('potions are counted against what the fight allowed, not shown as uptime', 
   assert.equal(c.potions.mine.max, 3);
   assert.equal(c.potions.mine.missed, 1);
   assert.ok(c.notes.some((n) => /free burst you left unused/.test(n)));
+
+  // This assertion used to say the opposite. "Light's Potential" IS a combat potion
+  // — the name test simply couldn't see it, so a paladin who potted three times was
+  // told they'd drunk nothing. The icon says potion; that's what we go on now.
+  assert.equal(c.potions.them.used, 3, "Light's Potential counts, even though its name never says potion");
+  assert.ok(c.potions.them.names.includes("Light's Potential"));
+});
+
+// The trap in matching on the icon: a FLASK's art is a potion bottle. The real icon
+// for "Flask of the Shattered Sun" is inv_12_profession_alchemy_flask_sindoreipotion_red--
+// — it contains "potion". Matching that counted the flask as a drink and reported
+// "2 potions used, 1 possible", which is impossible on its face.
+test('a flask has potion ART but is not a potion — it must not inflate the potion count', () => {
+  const d = {
+    fight: { startTime: 0, endTime: 300000 },
+    buffs: {
+      totalTimeMs: 300000,
+      auras: [
+        { name: 'Flask of the Shattered Sun', abilityIcon: 'inv_12_profession_alchemy_flask_sindoreipotion_red--.jpg', uptimeMs: 300000, uses: 1 },
+        { name: "Light's Potential", abilityIcon: 'inv_12_profession_alchemy_lightpotion_yellow.jpg', uptimeMs: 30000, uses: 1 },
+      ],
+    },
+  };
+  const c = buildConsumables(d, d, 'X');
+  assert.equal(c.potions.mine.used, 1, 'the flask is a flask; only the potion counts');
+  assert.deepEqual(c.potions.mine.names, ["Light's Potential"]);
+  assert.equal(rowFor(c, 'flask').mine.name, 'Flask of the Shattered Sun', 'and it still shows as the flask');
 });
 
 test('potions: different potion types share one cooldown, so they sum into one count', () => {

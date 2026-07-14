@@ -15,6 +15,8 @@
 //   without a list. This was already computed; it just used to be buried in a panel
 //   called "Group comp / talent differences (not actionable)" that nobody read.
 
+import { isPotion } from './potions.js';
+
 // Ordered: the first pattern that matches an aura claims it, so "Flask of the
 // Shattered Sun" can't also be counted as a potion.
 //
@@ -30,7 +32,10 @@ const CONSUMABLE_KINDS = [
 // question — "how many did you drink, out of how many you could have?" is the
 // right one. All combat potions share one 5-minute cooldown, and you may pre-pot
 // before the pull, so the ceiling is 1 + one per 5 minutes of fight.
-const POTION_RE = /^potion of|^elixir/i;
+//
+// WHICH auras are potions is decided by icon, not name (potions.js) — the old name
+// prefix silently missed "Light's Potential", so a player who potted correctly was
+// told they'd drunk nothing.
 const POTION_CD_SEC = 300;
 
 // Which secondary stat a flask grants. Display-only sugar — an unmapped flask
@@ -73,7 +78,7 @@ function fightSec(detail) {
  * potions share one cooldown, so every potion aura is summed into one count.
  */
 function potionsOf(detail) {
-  const auras = (detail?.buffs?.auras ?? []).filter((a) => a?.name && POTION_RE.test(a.name));
+  const auras = (detail?.buffs?.auras ?? []).filter((a) => isPotion(a));
   const used = auras.reduce((n, a) => n + (a.uses ?? 0), 0);
   const sec = fightSec(detail);
   // a pre-pot, plus one more every time the shared cooldown comes back up

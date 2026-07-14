@@ -33,6 +33,9 @@ export function parseBuffsTable(table) {
       .map((a) => ({
         name: a.name ?? '(unknown)',
         guid: a.guid ?? null,
+        // the icon is how a potion is identified (see analysis/potions.js) — a name
+        // prefix misses "Light's Potential"
+        abilityIcon: a.abilityIcon ?? null,
         uptimeMs: numOr0(a.totalUptime),
         uses: numOr0(a.totalUses),
         // report-relative [start,end] application windows; needed for
