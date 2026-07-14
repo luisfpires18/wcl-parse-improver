@@ -45,8 +45,8 @@ h2 { font-size: 1.15rem; margin: 0 0 0.6rem; }
 h3 { font-size: 1rem; margin: 1.2rem 0 0.4rem; }
 small { color: var(--muted); }
 
-form { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
-input, button {
+form { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+input, button, select {
   background: var(--panel);
   color: var(--text);
   border: 1px solid var(--border);
@@ -54,6 +54,24 @@ input, button {
   padding: 0.4rem 0.6rem;
   font-size: 0.9rem;
 }
+.spec-pick { display: flex; align-items: center; gap: 0.35rem; color: var(--muted); font-size: 0.85rem; }
+
+.nav-add { border-style: dashed; }
+button.danger { border-color: var(--viz-critical); color: var(--viz-critical); }
+
+/* character header bar */
+.char-bar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.char-bar .muted { color: var(--muted); font-size: 0.85rem; }
+
+/* add-character spec picker */
+.detected { margin-top: 1rem; }
+.detected h3 { margin-top: 0; }
+.spec-list { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.6rem 0 1rem; }
+.spec-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+.spec-row.disabled { color: var(--muted); }
+.spec-row input { padding: 0; }
+.spec-row .ok { color: var(--viz-success, var(--accent)); }
+#save-status { margin-left: 0.6rem; font-size: 0.85rem; }
 button { cursor: pointer; border-color: var(--accent); }
 button.mini { padding: 0.15rem 0.5rem; font-size: 0.78rem; }
 h2 button.mini { margin-left: 0.6rem; font-weight: 400; vertical-align: middle; }
@@ -129,14 +147,6 @@ ol.gaps { list-style: none; padding: 0; margin: 0.4rem 0; }
 .comp-notes { margin: 0.4rem 0 0; padding-left: 1.1rem; color: var(--muted); }
 .comp-notes li { margin-bottom: 0.3rem; }
 
-.guide-ref { border: 1px dashed var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 1rem 0; }
-.guide-ref h3 { margin-top: 0; }
-.guide-ref h3 small { color: var(--muted); font-weight: 400; }
-.guide-ref h4 { margin: 0.8rem 0 0.3rem; font-size: 0.9rem; color: var(--muted); }
-.guide-ref ol, .guide-ref ul { margin: 0.2rem 0; padding-left: 1.3rem; }
-.guide-ref ol li, .guide-ref ul li { margin-bottom: 0.2rem; font-size: 0.88rem; }
-.guide-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.5rem; }
-@media (max-width: 700px) { .guide-grid { grid-template-columns: 1fr; } }
 details { margin: 0.5rem 0; }
 summary { cursor: pointer; color: var(--muted); font-size: 0.9rem; padding: 0.2rem 0; }
 summary:hover { color: var(--text); }
@@ -200,4 +210,59 @@ ol.spikes { list-style: none; padding: 0; margin: 0; }
   margin: 0.6rem 0 0;
   font-size: 0.88rem;
   line-height: 1.5;
+}
+
+/* Base .muted — was only ever defined scoped to .char-bar, so every other use
+   (loading text, "with raid" death cells, empty states) rendered unstyled. */
+.muted { color: var(--muted); }
+
+/* Buff windows live on the rotation timeline as bar lanes. Per-cast badges were
+   tried and removed: a DK had five buffs up on nearly every global, so every row
+   wrapped into an unreadable pile of chips. */
+.buff-band { pointer-events: all; }
+
+/* --- raid progression --- */
+.raid-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.6rem 0; }
+.raid-form input#raid-code { flex: 1 1 22rem; min-width: 16rem; }
+.raid-boss-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.6rem 0; }
+.raid-boss { text-align: left; border-color: var(--border); }
+.raid-boss:hover { border-color: var(--accent); }
+.raid-boss small { color: var(--muted); font-weight: 400; }
+.raid-verdict {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding: 0.6rem 0.8rem;
+  margin: 0.6rem 0;
+  line-height: 1.5;
+}
+.raid-stats { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; margin: 0.6rem 0; font-size: 0.9rem; }
+.raid-stats span { color: var(--muted); }
+.raid-stats b { color: var(--text); }
+
+/* The selected pull, re-anchored against the night's verdict directly above it. */
+.raid-current-line {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--series-1);
+  border-radius: 0 6px 6px 0;
+  padding: 0.5rem 0.8rem;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Every pull of the night is listed; the ones outside the analysed sample are
+   dimmed but still clickable — clicking analyses them in full on demand. */
+.pull-table { max-height: 26rem; }
+.pull-table tbody tr.unanalysed td { opacity: 0.62; }
+/* Too short to have left the opener — its DPS is real but burst-inflated, so it
+   is struck out of every comparison rather than silently setting the bar. */
+.pull-table tbody tr.burst td { opacity: 0.7; }
+.pull-table tbody tr.burst td:first-child { border-left: 3px solid var(--viz-warning); }
+.pull-table tbody tr:hover td { background: var(--panel2); }
+.pull-table tbody tr.selected td {
+  background: var(--panel2);
+  box-shadow: inset 3px 0 0 var(--accent);
 }

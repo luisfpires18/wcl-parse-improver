@@ -29,7 +29,7 @@ export function tierFor(pct) {
 }
 
 /** Least-squares line dps = a + b*rankPercent over {rankPercent, dps} points. */
-function fitLine(points) {
+export function fitLine(points) {
   const n = points.length;
   const meanX = points.reduce((s, p) => s + p.rankPercent, 0) / n;
   const meanY = points.reduce((s, p) => s + p.dps, 0) / n;

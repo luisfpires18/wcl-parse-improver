@@ -9,6 +9,7 @@ import { adviceFor } from './advice.js';
 import { buildTimeline, buildTimelineInfo } from './timeline.js';
 import { buildSummary } from './summary.js';
 import { buildParsePlan, describeParsePlan } from './parseTiers.js';
+import { usesRunicPower, usesEpidemicSpenderMix } from '../wcl/specs.js';
 
 // Ability cast-count diffs below this share of damage are noise — skip.
 const MIN_DAMAGE_SHARE = 0.01;
@@ -50,6 +51,11 @@ export function pickSimilarIndex(cohort, myDurationMs, targetLevel) {
 }
 
 export function buildReport(bundle) {
+  // Which spec this report is for — gates the spec-specific panels/notes below.
+  // Tests build bundles without params, so default to the original DK/Unholy.
+  const className = bundle.params?.className ?? 'DeathKnight';
+  const specName = bundle.params?.specName ?? 'Unholy';
+
   const mine = computeRunMetrics(bundle.mine.detail);
   const cohortMetrics = bundle.cohort.map((c) => computeRunMetrics(c.detail));
   const myDps = bundle.mine.meta.dps ?? null;
@@ -247,12 +253,19 @@ export function buildReport(bundle) {
   headline.similarTarget = target?.meta?.name ?? null;
   headline.similarTargetLabel = target?.label ?? null;
 
-  const timeline = target ? buildTimeline(bundle.mine.detail, target.detail) : null;
+  const timeline = target ? buildTimeline(bundle.mine.detail, target.detail, buffSources) : null;
   if (timeline) timeline.otherRoleLabel = target.label ?? null;
   const timelineInfo = buildTimelineInfo(timeline);
 
   const damageDone = target ? buildDamageDoneTable(bundle.mine.detail, target.detail) : null;
-  const consumables = target ? buildConsumables(bundle.mine.detail, target.detail, target.meta.name) : null;
+  // spec-specific flask stat-priority hint (only Unholy DK has one wired up so far)
+  const statPriorityNote =
+    className === 'DeathKnight' && specName === 'Unholy'
+      ? "Unholy's stat priority is Mastery > Crit > Haste > Versatility, so match the flask to that."
+      : null;
+  const consumables = target
+    ? buildConsumables(bundle.mine.detail, target.detail, target.meta.name, statPriorityNote)
+    : null;
 
   const parsePlan = buildParsePlan({
     myBestPercent: bundle.mine.meta.bestPercent,
@@ -298,18 +311,25 @@ export function buildReport(bundle) {
         // whether that's every single top run or a lucky one
         cohortByPlayer: bundle.cohort.map((c, i) => ({ name: c.meta.name, deaths: cohortMetrics[i].deaths.length })),
       },
-      spender: {
-        mine: mine.spender,
-        cohortEpidemicShare,
-        cohortDeathCoilCasts: cohortDeathCoilCasts != null ? round1(cohortDeathCoilCasts) : null,
-        cohortEpidemicCasts: cohortEpidemicCasts != null ? round1(cohortEpidemicCasts) : null,
-      },
-      rpWaste: {
-        mine: mine.rpWaste,
-        cohortWastePct: cohortWastePct != null ? round1(cohortWastePct) : null,
-        cohortNetGain: cohortNetGain != null ? round1(cohortNetGain) : null,
-        cohortWasteAmount: cohortWasteAmount != null ? round1(cohortWasteAmount) : null,
-      },
+      // null (not an empty table) when the spec has no such resource/spender —
+      // a Shaman must never be shown a row labelled "Death Coil casts". The UI
+      // skips null panels entirely.
+      spender: usesEpidemicSpenderMix(className, specName)
+        ? {
+            mine: mine.spender,
+            cohortEpidemicShare,
+            cohortDeathCoilCasts: cohortDeathCoilCasts != null ? round1(cohortDeathCoilCasts) : null,
+            cohortEpidemicCasts: cohortEpidemicCasts != null ? round1(cohortEpidemicCasts) : null,
+          }
+        : null,
+      rpWaste: usesRunicPower(className)
+        ? {
+            mine: mine.rpWaste,
+            cohortWastePct: cohortWastePct != null ? round1(cohortWastePct) : null,
+            cohortNetGain: cohortNetGain != null ? round1(cohortNetGain) : null,
+            cohortWasteAmount: cohortWasteAmount != null ? round1(cohortWasteAmount) : null,
+          }
+        : null,
     },
     honesty,
   };
@@ -516,7 +536,7 @@ const consumablesOf = (detail) => ({
  * Flask + food comparison (mine vs one target). Surfaces which flask each
  * ran — with the stat it grants — so a suboptimal flask choice is visible.
  */
-export function buildConsumables(mineDetail, otherDetail, otherName) {
+export function buildConsumables(mineDetail, otherDetail, otherName, statPriorityNote = null) {
   const mine = consumablesOf(mineDetail);
   const them = consumablesOf(otherDetail);
   const statOf = (f) => (f ? FLASK_STAT[f.name] ?? null : null);
@@ -526,8 +546,8 @@ export function buildConsumables(mineDetail, otherDetail, otherName) {
   let flaskNote = null;
   if (mine.flask && them.flask && myStat && theirStat && myStat !== theirStat) {
     flaskNote =
-      `You run the ${myStat} flask (${mine.flask.name}); they run the ${theirStat} flask (${them.flask.name}). ` +
-      `Unholy's stat priority is Mastery > Crit > Haste > Versatility (per the rotation guide), so match the flask to that.`;
+      `You run the ${myStat} flask (${mine.flask.name}); they run the ${theirStat} flask (${them.flask.name}).` +
+      (statPriorityNote ? ` ${statPriorityNote}` : ' Match the flask to your spec\'s stat priority.');
   } else if (!mine.flask && them.flask) {
     flaskNote = `You had no flask up; they ran ${them.flask.name}${theirStat ? ` (${theirStat})` : ''}. Free stats you're missing.`;
   }

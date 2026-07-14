@@ -2,12 +2,15 @@
 // zoneRankings / encounterRankings / characterRankings / table / events are
 // loosely-typed JSON scalars — parse them defensively (see server/parse/).
 
+// specName narrows the character's own rankings to a single spec (e.g. only
+// Havoc, not Devourer). Optional — null returns the character's best across
+// all specs (the old behaviour).
 export const ZONE_RANKINGS = `
-query ZoneRankings($name: String!, $serverSlug: String!, $serverRegion: String!, $zoneID: Int!, $metric: CharacterPageRankingMetricType, $byBracket: Boolean, $role: RoleType) {
+query ZoneRankings($name: String!, $serverSlug: String!, $serverRegion: String!, $zoneID: Int!, $metric: CharacterPageRankingMetricType, $byBracket: Boolean, $role: RoleType, $specName: String) {
   characterData {
     character(name: $name, serverSlug: $serverSlug, serverRegion: $serverRegion) {
       name
-      zoneRankings(zoneID: $zoneID, metric: $metric, byBracket: $byBracket, role: $role)
+      zoneRankings(zoneID: $zoneID, metric: $metric, byBracket: $byBracket, role: $role, specName: $specName)
     }
   }
 }`;
@@ -16,10 +19,10 @@ query ZoneRankings($name: String!, $serverSlug: String!, $serverRegion: String!,
 // bracketData (key level), rankPercent (parse percentile within bracket)
 // and report{code,fightID}.
 export const ENCOUNTER_RANKINGS = `
-query EncounterRankings($name: String!, $serverSlug: String!, $serverRegion: String!, $encounterID: Int!, $metric: CharacterRankingMetricType, $byBracket: Boolean, $role: RoleType) {
+query EncounterRankings($name: String!, $serverSlug: String!, $serverRegion: String!, $encounterID: Int!, $metric: CharacterRankingMetricType, $byBracket: Boolean, $role: RoleType, $specName: String) {
   characterData {
     character(name: $name, serverSlug: $serverSlug, serverRegion: $serverRegion) {
-      encounterRankings(encounterID: $encounterID, metric: $metric, byBracket: $byBracket, role: $role)
+      encounterRankings(encounterID: $encounterID, metric: $metric, byBracket: $byBracket, role: $role, specName: $specName)
     }
   }
 }`;
@@ -33,6 +36,38 @@ query CharacterRankings($encounterID: Int!, $className: String!, $specName: Stri
     encounter(id: $encounterID) {
       name
       characterRankings(className: $className, specName: $specName, bracket: $bracket, page: $page, metric: $metric)
+    }
+  }
+}`;
+
+// Static game data — all 13 classes with their specs. `class.slug` is exactly
+// the `className` that characterRankings expects ("DeathKnight"), and
+// `spec.slug` is exactly the `specName` ("BeastMastery" — NOT the display name
+// "Beast Mastery", which characterRankings silently answers with 0 rankings).
+// Changes only on game patches, so the disk cache holds it indefinitely.
+export const GAME_CLASSES = `
+query GameClasses {
+  gameData {
+    classes {
+      id
+      name
+      slug
+      specs { id name slug }
+    }
+  }
+}`;
+
+// Class detection for the "add character" flow. One round trip gives both the
+// class (classID indexes gameData.classes) and, via zoneRankings.allStars, the
+// specs this character actually has logged runs with in the zone. A character
+// or server that doesn't exist comes back as `character: null`, not an error.
+export const CHARACTER_CLASS = `
+query CharacterClass($name: String!, $serverSlug: String!, $serverRegion: String!, $zoneID: Int!) {
+  characterData {
+    character(name: $name, serverSlug: $serverSlug, serverRegion: $serverRegion) {
+      name
+      classID
+      zoneRankings(zoneID: $zoneID, metric: dps, role: DPS)
     }
   }
 }`;
@@ -60,11 +95,100 @@ query ReportFightsActors($code: String!, $fightIDs: [Int!]) {
   }
 }`;
 
+// All boss fights in a report — kills AND wipes — for raid progression. Unlike
+// REPORT_FIGHTS_ACTORS (which pins specific fightIDs), this lists every fight so
+// wipes (kill:false), which never appear in any ranking, are discoverable.
+// `fightPercentage` = boss health % REMAINING when the fight ended (0 on a kill);
+// `bossPercentage` is the same for the current boss in multi-boss encounters.
+// Trash fights come back with encounterID 0 and are filtered out downstream.
+export const REPORT_BOSS_FIGHTS = `
+query ReportBossFights($code: String!, $encounterID: Int) {
+  reportData {
+    report(code: $code) {
+      title
+      startTime
+      zone { id name }
+      fights(encounterID: $encounterID, translate: true) {
+        id
+        encounterID
+        name
+        kill
+        difficulty
+        fightPercentage
+        bossPercentage
+        lastPhase
+        startTime
+        endTime
+      }
+      masterData(translate: true) {
+        actors(type: "Player") { id name subType server }
+      }
+    }
+  }
+}`;
+
+// Top ranked players on a RAID boss at a given difficulty (3 Normal / 4 Heroic /
+// 5 Mythic). Mirrors CHARACTER_RANKINGS but keyed by `difficulty` instead of the
+// M+ `bracket` (keystone level) — raids have no keystones. Only KILLS are ranked,
+// so this is the kill benchmark, never a wipe cohort.
+export const RAID_CHARACTER_RANKINGS = `
+query RaidCharacterRankings($encounterID: Int!, $className: String!, $specName: String!, $difficulty: Int, $page: Int, $metric: CharacterRankingMetricType) {
+  worldData {
+    encounter(id: $encounterID) {
+      name
+      characterRankings(className: $className, specName: $specName, difficulty: $difficulty, page: $page, metric: $metric)
+    }
+  }
+}`;
+
 export const REPORT_TABLE = `
 query ReportTable($code: String!, $fightIDs: [Int!], $dataType: TableDataType!, $sourceID: Int!) {
   reportData {
     report(code: $code) {
       table(fightIDs: $fightIDs, dataType: $dataType, sourceID: $sourceID)
+    }
+  }
+}`;
+
+// Enemy (NPC) actors + fight timing — used to resolve which NPC is the boss so
+// its health curve can be reconstructed. Player actors come from
+// REPORT_FIGHTS_ACTORS; this is the enemy side.
+export const REPORT_ENEMY_ACTORS = `
+query ReportEnemyActors($code: String!, $fightIDs: [Int!]) {
+  reportData {
+    report(code: $code) {
+      fights(fightIDs: $fightIDs) { id name startTime endTime kill fightPercentage bossPercentage }
+      masterData(translate: true) {
+        actors(type: "NPC") { id name gameID }
+      }
+    }
+  }
+}`;
+
+// Binned damage-TAKEN on one target (the boss), server-side aggregated into
+// per-source series. Summing the series bin-by-bin gives total damage on the
+// boss over time — which, calibrated against WCL's own fightPercentage (how much
+// boss health was left when the fight ended), yields a boss-health curve without
+// pulling the raw multi-MB event stream. WCL exposes no direct boss-HP field
+// (verified: damage/resource events carry no hitPoints for enemies).
+export const REPORT_DAMAGE_TAKEN_GRAPH = `
+query ReportDamageTakenGraph($code: String!, $fightIDs: [Int!], $targetID: Int, $startTime: Float, $endTime: Float) {
+  reportData {
+    report(code: $code) {
+      graph(fightIDs: $fightIDs, dataType: DamageTaken, targetID: $targetID, startTime: $startTime, endTime: $endTime)
+    }
+  }
+}`;
+
+// Deaths for the WHOLE raid across one or more fights (no sourceID → every
+// player's deaths). Each entry carries a `fight` field, so one call over all
+// analysed fightIDs returns the full death cascade per pull — used to tell "you
+// died early (before the raid)" from "you went down with the raid".
+export const REPORT_FIGHT_DEATHS = `
+query ReportFightDeaths($code: String!, $fightIDs: [Int!]) {
+  reportData {
+    report(code: $code) {
+      table(fightIDs: $fightIDs, dataType: Deaths)
     }
   }
 }`;

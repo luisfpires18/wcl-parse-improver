@@ -11,25 +11,34 @@
   <main id="app">
     <header>
       <h1>WCL Parse Improver</h1>
-      <nav id="nav">
-        <button type="button" class="nav-link active" data-view="character">Character Overview</button>
-        <button type="button" class="nav-link" data-view="guide">Unholy DK Rotation</button>
-      </nav>
+      <nav id="nav"></nav>
     </header>
-    <section id="view-character">
-      <form id="char-form">
-        <input id="f-name" placeholder="Character" value="Unreally" />
-        <input id="f-server" placeholder="Server slug" value="aggra-portugues" />
-        <input id="f-region" placeholder="Region" value="EU" size="4" />
-        <input id="f-zone" placeholder="Zone ID" value="47" size="6" />
-        <button type="submit">Load</button>
-      </form>
+
+    <section id="view-character" hidden>
+      <div id="char-bar"></div>
       <div id="status"></div>
       <section id="overview"></section>
+      <section id="raid"></section>
       <section id="report"></section>
     </section>
-    <section id="view-guide" hidden></section>
+
+    <section id="view-add" hidden>
+      <div class="card">
+        <h2>Add character</h2>
+        <p><small>The class is detected from Warcraft Logs; pick which of its specs to analyse.
+          Only DPS specs can be analysed &mdash; the whole report is damage-based.</small></p>
+        <form id="detect-form">
+          <input id="a-name" placeholder="Character" required />
+          <input id="a-server" placeholder="Server slug (e.g. grim-batol)" required />
+          <input id="a-region" placeholder="Region" value="EU" size="4" required />
+          <input id="a-zone" placeholder="Zone ID" value="47" size="6" required />
+          <button type="submit">Detect class</button>
+        </form>
+        <div id="detect-status"></div>
+        <div id="detect-result"></div>
+      </div>
+    </section>
   </main>
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

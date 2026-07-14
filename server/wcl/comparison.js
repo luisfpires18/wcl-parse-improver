@@ -40,7 +40,7 @@ export async function buildComparison({
   compareTo = null,
   refresh = false,
 }) {
-  const myRuns = await fetchMyEncounterRuns({ name, serverSlug, serverRegion, encounterID, refresh });
+  const myRuns = await fetchMyEncounterRuns({ name, serverSlug, serverRegion, encounterID, specName, refresh });
   const summary = summarizeAtLevel(myRuns, level);
   if (!summary.bestRun?.report?.code) {
     throw new Error(`No logged run near +${level} found for encounter ${encounterID}`);
@@ -57,6 +57,8 @@ export async function buildComparison({
     code: summary.bestRun.report.code,
     fightID: summary.bestRun.report.fightID,
     playerName: name,
+    server: serverSlug, // disambiguate if the log has two same-named toons
+    className,
     includeBuffSources: true,
   });
 
@@ -64,7 +66,9 @@ export async function buildComparison({
   const top5 = top.entries.filter((e) => e.name && e.report?.code && e.report?.fightID != null).slice(0, 5);
 
   const rankedNames = new Set(top5.map((e) => norm(e.name)));
-  const missingNamed = NAMED_PLAYERS.filter((p) => !rankedNames.has(norm(p.name)));
+  // NAMED_PLAYERS are DK/Unholy reference players — only inject them for that spec
+  const namedForSpec = className === 'DeathKnight' && specName === 'Unholy' ? NAMED_PLAYERS : [];
+  const missingNamed = namedForSpec.filter((p) => !rankedNames.has(norm(p.name)));
 
   const cohort = [];
   top5.forEach((entry, i) => {

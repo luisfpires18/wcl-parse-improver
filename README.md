@@ -10,6 +10,15 @@ parameterized.
 
 ## What it shows
 
+- **Add any character from the UI** — type name + server + region + zone; the
+  class is auto-detected from Warcraft Logs and you pick which of its specs to
+  track (specs with logged runs are pre-checked). Only DPS specs can be
+  analysed — the whole report is damage-based — so healer/tank specs are shown
+  but disabled. Saved to `characters.json`.
+- **Character tabs + spec filter** — one tab per tracked character, with a
+  dropdown for its chosen specs. The spec selects the comparison cohort *and*
+  filters which of your own runs count — without it, Warcraft Logs blends your
+  specs together.
 - **Overview** — per-dungeon best key level, time, runs, dungeon score points,
   Best % / Median % parse percentiles (matches the WCL character page exactly)
   and best DPS.
@@ -46,9 +55,9 @@ parameterized.
    npm start
    ```
 
-   Open <http://localhost:3000>. Defaults point at Unreally /
-   aggra-portugues / EU / zone 47 — change the form fields for any other
-   character or season zone ID.
+   Open <http://localhost:3000>. On first run `characters.json` is seeded with
+   two example characters; use **＋ Add character** to track your own, and
+   **Remove** to drop the examples.
 
 The first report for a dungeon pulls ~6 reports from the WCL API and takes up
 to a minute; every response is cached on disk in `cache/` (keyed by
@@ -86,4 +95,13 @@ public/           vanilla-JS UI
 scripts/          CLI entry points
 fixtures/         real API payloads used by the tests
 test/             node:test suites (npm test)
+docs/             how it works — architecture, metrics, WCL API notes
 ```
+
+## Docs
+
+- [docs/architecture.md](docs/architecture.md) — modules, request flow, endpoints
+- [docs/metrics.md](docs/metrics.md) — severity formulas, honesty model, parse tiers
+- [docs/wcl-api.md](docs/wcl-api.md) — Warcraft Logs API quirks and gotchas
+- [docs/caching.md](docs/caching.md) — the two-layer disk cache and refresh
+- [docs/adding-a-spec.md](docs/adding-a-spec.md) — adding characters/specs, and what's still class-specific

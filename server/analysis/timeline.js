@@ -7,6 +7,7 @@
 // own CD, not the global cooldown). This survives ability reworks across
 // patches; nothing here is a hardcoded rotation.
 import { computeRunMetrics, IGNORED_ABILITIES } from './metrics.js';
+import { selectBuffWindows, sharedBuffLanes } from './buffWindows.js';
 
 const MAX_LANES = 8; // categorical color ceiling
 const COOLDOWN_CPM_CEILING = 1.5;
@@ -29,12 +30,13 @@ function castTimestampsByName(detail) {
   return byName;
 }
 
-function runView(detail, laneNames) {
+function runView(detail, laneNames, buffLaneNames = [], buffWindows = []) {
   const fight = detail.fight ?? {};
   const start = fight.startTime ?? 0;
   const end = fight.endTime ?? start;
   const metrics = computeRunMetrics(detail);
   const events = castTimestampsByName(detail);
+  const windowByName = new Map(buffWindows.map((w) => [w.name, w]));
 
   return {
     label: detail.player?.name ?? '?',
@@ -46,6 +48,13 @@ function runView(detail, laneNames) {
     deaths: (detail.deaths?.deaths ?? [])
       .filter((d) => typeof d.timestamp === 'number')
       .map((d) => ({ atMs: d.timestamp - start })),
+    // Buff WINDOWS, drawn as bars — the only view that can see a buff which is
+    // never cast (a proc). Empty bands when this run never had the buff, which is
+    // itself the finding: they held it, you didn't.
+    buffLanes: buffLaneNames.map((name) => ({
+      name,
+      bands: windowByName.get(name)?.bands ?? [],
+    })),
     lanes: laneNames.map((name) => ({
       name,
       casts: (events.get(name) ?? []).map((t) => t - start),
@@ -56,8 +65,12 @@ function runView(detail, laneNames) {
 /**
  * Two-run rotation timeline with a shared lane set (same abilities, same
  * order, same color slot in both runs) so the two are visually comparable.
+ *
+ * `buffSources` (from classifyBuffSources, computed once for "mine") additionally
+ * yields shared BUFF lanes — the self-applied, impermanent buffs of each run,
+ * drawn as bars. Omit it and the timeline behaves exactly as before.
  */
-export function buildTimeline(mineDetail, otherDetail) {
+export function buildTimeline(mineDetail, otherDetail, buffSources = null) {
   const mineMetrics = computeRunMetrics(mineDetail);
   const otherMetrics = computeRunMetrics(otherDetail);
 
@@ -88,10 +101,15 @@ export function buildTimeline(mineDetail, otherDetail) {
     .slice(0, MAX_LANES)
     .map(([name]) => name);
 
+  const mineBuffs = buffSources ? selectBuffWindows(mineDetail, buffSources) : [];
+  const otherBuffs = buffSources ? selectBuffWindows(otherDetail, buffSources) : [];
+  const buffLaneNames = buffSources ? sharedBuffLanes(mineBuffs, otherBuffs) : [];
+
   return {
     laneNames,
-    mine: runView(mineDetail, laneNames),
-    other: runView(otherDetail, laneNames),
+    buffLaneNames,
+    mine: runView(mineDetail, laneNames, buffLaneNames, mineBuffs),
+    other: runView(otherDetail, laneNames, buffLaneNames, otherBuffs),
   };
 }
 
