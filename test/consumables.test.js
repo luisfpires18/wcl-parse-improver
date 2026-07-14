@@ -93,6 +93,36 @@ test('potions: different potion types share one cooldown, so they sum into one c
   assert.deepEqual(c.potions.mine.names.sort(), ['Potion of Recklessness', 'Potion of Unwavering Focus']);
 });
 
+// Every potion name/icon pair below is taken from a real ranked kill, except
+// Zealotry — whose icon appears in none of the 29 logs checked, which is exactly why
+// the NAME has to remain evidence in its own right.
+test('a potion is caught by its icon or its name — neither alone covers the field', () => {
+  const fight = { startTime: 0, endTime: 300000 };
+  const pots = [
+    // says nothing, but its art does
+    { name: "Light's Potential", abilityIcon: 'inv_12_profession_alchemy_lightpotion_yellow.jpg', uptimeMs: 30000, uses: 1 },
+    { name: 'Draught of Rampant Abandon', abilityIcon: 'inv_12_profession_alchemy_voidpotion_purple.jpg', uptimeMs: 30000, uses: 1 },
+    // art unknown to us; the name is not
+    { name: 'Potion of Zealotry', abilityIcon: null, uptimeMs: 30000, uses: 1 },
+  ];
+  const d = { fight, buffs: { totalTimeMs: 300000, auras: pots } };
+  const c = buildConsumables(d, d, 'X');
+
+  assert.equal(c.potions.mine.used, 3, 'all three are drinks against the same shared cooldown');
+  assert.deepEqual(c.potions.mine.names.sort(), ['Draught of Rampant Abandon', "Light's Potential", 'Potion of Zealotry']);
+});
+
+test('"Healing Elixir" is a monk talent, not a consumable — a name rule would have counted it', () => {
+  const d = {
+    fight: { startTime: 0, endTime: 300000 },
+    buffs: {
+      totalTimeMs: 300000,
+      auras: [{ name: 'Healing Elixir', abilityIcon: 'ability_monk_jasmineforcetea.jpg', uptimeMs: 20000, uses: 4 }],
+    },
+  };
+  assert.equal(buildConsumables(d, d, 'X').potions.mine.used, 0);
+});
+
 test('flags a mismatched flask stat', () => {
   const mine = withAuras([{ name: 'Flask of the Shattered Sun', uptimeMs: 100000 }]); // Crit
   const them = withAuras([{ name: 'Flask of the Magisters', uptimeMs: 100000 }]); // Mastery
