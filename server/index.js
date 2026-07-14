@@ -104,7 +104,17 @@ app.get('/api/dps-series', async (req, res) => {
     const level = Math.max(2, Math.min(30, Number(req.query.level || DEFAULT_LEVEL)));
     const compareTo = req.query.compareTo ? String(req.query.compareTo) : null;
 
-    const bundle = await buildComparison({ ...charParams(req.query), ...specParams(req.query), encounterID, level, compareTo });
+    // refresh reaches the RANKING lookups (which run is "mine", who's on the ranked
+    // page). The damage-event fetches below are keyed by report+fight and can't go
+    // stale — a logged fight never changes — so they stay cached either way.
+    const bundle = await buildComparison({
+      ...charParams(req.query),
+      ...specParams(req.query),
+      encounterID,
+      level,
+      compareTo,
+      refresh: wantsRefresh(req.query),
+    });
     const other = bundle.other;
 
     // sequential — gql() has a shared rate-limiter that parallel calls would race

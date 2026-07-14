@@ -74,11 +74,17 @@ function renderOverview({ character, overall, dungeons }) {
   $('#refresh-overview').addEventListener('click', () => loadOverview(true));
 }
 
-async function loadReport(encounterID, level, compareTo = '') {
+/**
+ * @param {boolean} [refresh] bypass the disk cache — for after you've logged a new
+ *   run, when the cached ranking still shows the old one.
+ */
+async function loadReport(encounterID, level, compareTo = '', refresh = false) {
   const dungeon = state.currentOverview?.dungeons.find((d) => d.encounterID === encounterID);
   setStatus(
-    `Building report for <b>${esc(dungeon?.name ?? encounterID)}</b> at +${level}… ` +
-      `<small>first fetch pulls your run and one opponent from WCL; cached afterwards</small>`
+    refresh
+      ? `Re-fetching <b>${esc(dungeon?.name ?? encounterID)}</b> at +${level} from Warcraft Logs (bypassing the cache — slower)…`
+      : `Building report for <b>${esc(dungeon?.name ?? encounterID)}</b> at +${level}… ` +
+          `<small>first fetch pulls your run and one opponent from WCL; cached afterwards</small>`
   );
   $('#report').innerHTML = '';
   try {
@@ -86,6 +92,7 @@ async function loadReport(encounterID, level, compareTo = '') {
     params.set('encounter', encounterID);
     params.set('level', level);
     if (compareTo) params.set('compareTo', compareTo);
+    if (refresh) params.set('refresh', '1');
     const res = await fetch(`/api/report?${params}`);
     const view = await res.json();
     if (!res.ok) throw new Error(view.error || `HTTP ${res.status}`);
@@ -101,6 +108,7 @@ async function loadReport(encounterID, level, compareTo = '') {
       <div class="card">
         <h2>${esc(h.title)} ${esc(h.subtitle ?? '')}
           ${h.myBestPercent != null ? `— <span class="${pctClass(h.myBestPercent)}">${h.myBestPercent}%</span> parse` : ''}
+          <button id="refresh-report" class="mini" title="Re-fetch this report from Warcraft Logs, bypassing the local cache">↻ Refresh</button>
         </h2>
         ${renderReport(view)}
       </div>`;
@@ -109,20 +117,23 @@ async function loadReport(encounterID, level, compareTo = '') {
       b.addEventListener('click', () => loadReport(encounterID, Number(b.dataset.level), compareTo))
     );
     $('#compare-to').addEventListener('change', (e) => loadReport(encounterID, level, e.target.value));
+    $('#refresh-report').addEventListener('click', () => loadReport(encounterID, level, compareTo, true));
 
     setStatus('');
     $('#report').scrollIntoView({ behavior: 'smooth' });
 
     // Lazy: the report is on screen; now fetch the heavy damage-event series and
     // inject the chart. Fire-and-forget so it never blocks the render.
-    loadDpsChart(encounterID, level, compareTo, view.castOrder);
+    // The chart is a SECOND request, so a refresh has to reach it too — otherwise
+    // you'd get a re-fetched report with a stale chart under it.
+    loadDpsChart(encounterID, level, compareTo, view.castOrder, refresh);
   } catch (err) {
     setStatus(`<span class="error">Report failed: ${esc(err.message)}</span>`);
   }
 }
 
 /** Section 1's chart + section 2's cast order (the brush filters one into the other). */
-async function loadDpsChart(encounterID, level, compareTo, order) {
+async function loadDpsChart(encounterID, level, compareTo, order, refresh = false) {
   const el = $('#dps-chart');
   if (!el) return;
   try {
@@ -130,6 +141,7 @@ async function loadDpsChart(encounterID, level, compareTo, order) {
     params.set('encounter', encounterID);
     params.set('level', level);
     if (compareTo) params.set('compareTo', compareTo);
+    if (refresh) params.set('refresh', '1');
     const res = await fetch(`/api/dps-series?${params}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);

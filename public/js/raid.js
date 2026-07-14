@@ -84,11 +84,18 @@ export function renderRaidCard() {
   loadRaidZones();
 }
 
-/** All raids of the tier + this character's parse on every boss. */
-async function loadRaidZones() {
+/**
+ * All raids of the tier + this character's parse on every boss.
+ * @param {boolean} [refresh] bypass the disk cache — the ranked parses are cached,
+ *   so last night's kill won't appear here until you ask for it fresh.
+ */
+async function loadRaidZones(refresh = false) {
   const el = $('#raid-zones');
+  if (refresh && el) el.innerHTML = `<p class="muted">Re-fetching your raid parses from Warcraft Logs (bypassing the cache)…</p>`;
   try {
-    const res = await fetch(`/api/raid/overview?${charQuery()}`);
+    const params = charQuery();
+    if (refresh) params.set('refresh', '1');
+    const res = await fetch(`/api/raid/overview?${params}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
     renderRaidZones(data.zones ?? []);
@@ -131,9 +138,12 @@ function renderRaidZones(zones) {
   };
 
   el.innerHTML = `
-    <h2>${esc(state.activeChar.name)} <small>— Raids</small></h2>
+    <h2>${esc(state.activeChar.name)} <small>— Raids</small>
+      <button id="refresh-raids" class="mini" title="Re-fetch your raid parses from Warcraft Logs, bypassing the local cache">↻ Refresh</button>
+    </h2>
     ${zones.map(zoneBlock).join('')}
     <p class="table-note"><small>Click a boss to analyse your best ranked kill on it — no log needed.
+      Parses are cached, so after a raid night hit <b>↻ Refresh</b> to pull your new kills.
       For a <b>wipe</b>, use "Analyse a specific log" below: wipes appear in no ranking.
       Only raids live on the current patch are shown — Warcraft Logs lists next-patch raids months early, and they're filtered out
       by their PTR partition.</small></p>`;
@@ -144,6 +154,7 @@ function renderRaidZones(zones) {
       if (id) loadRaidBoss(Number(id));
     })
   );
+  $('#refresh-raids').addEventListener('click', () => loadRaidZones(true));
 
   // the "learn a boss" picker lists every boss of the tier, killed or not
   tierBosses = zones.flatMap((z) => z.bosses.map((b) => ({ ...b, zoneName: z.zoneName })));
@@ -161,12 +172,14 @@ function renderRaidZones(zones) {
 // chart. It answers one question: what does this spec actually press on this boss,
 // and when do they burn their cooldowns.
 
-async function loadBossRotations(player = '') {
+async function loadBossRotations(player = '', refresh = false) {
   const root = $('#learn-result');
   const encounterID = Number($('#learn-boss').value);
   if (!root || !encounterID) return;
   const difficulty = $('#learn-diff').value;
-  root.innerHTML = `<p class="muted">Reading ${player ? esc(player) + "'s" : "the #1 parse's"} casts (one log — ~5s, cached after)…</p>`;
+  root.innerHTML = `<p class="muted">${
+    refresh ? 'Re-fetching' : 'Reading'
+  } ${player ? esc(player) + "'s" : "the #1 parse's"} casts (one log — ~5s, cached after)…</p>`;
   try {
     const params = charQuery();
     // the character is irrelevant here; only their class+spec is used
@@ -175,6 +188,7 @@ async function loadBossRotations(player = '') {
     params.set('encounter', encounterID);
     params.set('difficulty', difficulty);
     if (player) params.set('player', player);
+    if (refresh) params.set('refresh', '1');
     const res = await fetch(`/api/raid/rotations?${params}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -209,6 +223,7 @@ function renderBossRotations() {
       <select id="learn-player">${opts}</select>
     </label>
     <span class="muted"><small>&middot; ${fmtK(p.dps)} DPS &middot; ${fmtTime(p.durationSec * 1000)} &middot; ${p.cpm} CPM</small></span>
+    <button id="refresh-learn" class="mini" title="Re-fetch the rankings and this rotation from Warcraft Logs, bypassing the local cache">↻ Refresh</button>
 
     <div class="ord-wrap learn-ord">
       ${castOrderColumn(p.castOrder, `#${p.rank} ${p.name} — cast order`, { cap: Infinity, brushable: false })}
@@ -220,18 +235,24 @@ function renderBossRotations() {
       where they <b>agree</b> is the rotation. Only the player you pick is fetched.</small></p>`;
 
   $('#learn-player').addEventListener('change', (e) => loadBossRotations(e.target.value));
+  $('#refresh-learn').addEventListener('click', () => loadBossRotations(p.name, true));
 }
 
 /** Analyse a boss from your own best ranked kill — the paste-free path. */
-async function loadRaidBoss(encounterID, compareTo = '') {
+async function loadRaidBoss(encounterID, compareTo = '', refresh = false) {
   const root = $('#raid-result');
   if (!root) return;
-  root.innerHTML = `<p class="muted">Analysing your best kill on this boss (pulls damage events — ~15s first time, cached after)…</p>`;
+  root.innerHTML = `<p class="muted">${
+    refresh
+      ? 'Re-fetching this boss from Warcraft Logs (bypassing the cache — slower)…'
+      : 'Analysing your best kill on this boss (pulls damage events — ~15s first time, cached after)…'
+  }</p>`;
   try {
     const params = charQuery();
     params.set('encounter', encounterID);
     params.set('difficulty', raidState.difficulty);
     if (compareTo) params.set('compareTo', compareTo);
+    if (refresh) params.set('refresh', '1');
     const res = await fetch(`/api/raid/boss?${params}`);
     const view = await res.json();
     if (!res.ok) throw new Error(view.error || `HTTP ${res.status}`);
@@ -284,10 +305,15 @@ function renderRaidBosses(bosses) {
     .forEach((btn) => btn.addEventListener('click', () => loadRaidProgression(btn.dataset.encounter, btn.dataset.diff)));
 }
 
-async function loadRaidProgression(encounterID, difficulty) {
-  $('#raid-result').innerHTML = `<p class="muted">Analysing every pull (fetches your casts per attempt &amp; the kill benchmark — up to ~20s the first time, cached after)…</p>`;
+async function loadRaidProgression(encounterID, difficulty, refresh = false) {
+  $('#raid-result').innerHTML = `<p class="muted">${
+    refresh
+      ? 'Re-fetching every pull from Warcraft Logs (bypassing the cache — slower)…'
+      : 'Analysing every pull (fetches your casts per attempt &amp; the kill benchmark — up to ~20s the first time, cached after)…'
+  }</p>`;
   try {
     const params = charQuery();
+    if (refresh) params.set('refresh', '1');
     params.set('code', raidState.code);
     params.set('encounter', encounterID);
     params.set('difficulty', difficulty);
@@ -338,7 +364,9 @@ function renderRaidProgression(data) {
     : `<p class="table-note"><small>No ranked kill benchmark available for this boss/spec yet — showing your own consistency only.</small></p>`;
   const sampled = c.analysedPulls != null && c.analysedPulls < c.pulls;
   $('#raid-result').innerHTML = `
-    <h3>${esc(data.boss)} <small>&middot; ${esc(data.difficultyName || '')} &middot; ${c.pulls} pull${c.pulls === 1 ? '' : 's'}</small></h3>
+    <h3>${esc(data.boss)} <small>&middot; ${esc(data.difficultyName || '')} &middot; ${c.pulls} pull${c.pulls === 1 ? '' : 's'}</small>
+      <button id="refresh-prog" class="mini" title="Re-read this report from Warcraft Logs, bypassing the local cache — use it if you've added pulls since">↻ Refresh</button>
+    </h3>
     <p class="raid-verdict"><b class="${verdictClass}">${esc((c.verdict || '').replace('-', ' ').toUpperCase())}</b> output — ${esc(p.text)}</p>
     <div class="raid-stats">
       <span>Mean active DPS <b>${fmtK(c.meanActiveDps)}</b></span>
@@ -379,6 +407,8 @@ function renderRaidProgression(data) {
     bestBtn.disabled = !best;
     bestBtn.addEventListener('click', () => best && pick(best.fightID));
   }
+
+  $('#refresh-prog').addEventListener('click', () => loadRaidProgression(data.encounterID, data.difficulty, true));
 }
 
 /**
@@ -463,10 +493,10 @@ function deathCell(r) {
 // biggest gaps, resource management and an opponent picker entirely. It now feeds
 // the shared renderer, so a section exists in one place and both views get it.
 
-async function loadRaidPullChart(fightID, encounterID, difficulty, compareTo = '') {
+async function loadRaidPullChart(fightID, encounterID, difficulty, compareTo = '', refresh = false) {
   const root = $('#raid-pull-chart');
   if (!root) return;
-  root.innerHTML = `<p class="muted">Loading pull #${fightID} — damage events for both runs (~15s first time, cached after)…</p>`;
+  root.innerHTML = `<p class="muted">${refresh ? 'Re-fetching' : 'Loading'} pull #${fightID} — damage events for both runs (~15s first time, cached after)…</p>`;
   const cur0 = $('#raid-current');
   if (cur0) cur0.innerHTML = `<p class="raid-current-line muted">Analysing pull #${fightID}…</p>`;
   try {
@@ -476,6 +506,7 @@ async function loadRaidPullChart(fightID, encounterID, difficulty, compareTo = '
     params.set('difficulty', difficulty);
     params.set('fight', fightID);
     if (compareTo) params.set('compareTo', compareTo);
+    if (refresh) params.set('refresh', '1');
     const res = await fetch(`/api/raid/pull?${params}`);
     const view = await res.json();
     if (!res.ok) throw new Error(view.error || `HTTP ${res.status}`);
@@ -501,7 +532,21 @@ function renderRaidPull(view, root, ctx) {
     : `<p class="raid-verdict"><b>Full-fight comparison.</b> Your pull was a <b>kill</b> (100% → 0%), so it's measured against
         ${esc(view.otherLabel)}'s entire kill — no truncation needed.</p>`;
 
-  root.innerHTML = `<div class="card">${banner}${renderReport(view)}</div>`;
+  // One renderer, two callers — so the refresh has to re-run whichever one produced
+  // this view: the ranked-kill path (no log) or the specific-pull path.
+  const reload = (refresh) =>
+    ctx.fromRankings
+      ? loadRaidBoss(ctx.encounterID, view.compare?.selected ?? '', refresh)
+      : loadRaidPullChart(view.pull.id, ctx.encounterID, ctx.difficulty, view.compare?.selected ?? '', refresh);
+
+  root.innerHTML = `
+    <div class="card">
+      <p class="raid-refresh">
+        <button id="refresh-pull" class="mini" title="Re-fetch this analysis from Warcraft Logs, bypassing the local cache">↻ Refresh</button>
+      </p>
+      ${banner}${renderReport(view)}
+    </div>`;
+  root.querySelector('#refresh-pull').addEventListener('click', () => reload(true));
 
   // Section 1's chart: the raid version overlays boss health on a right-hand axis,
   // and the series are already in the payload (no second fetch, unlike M+).

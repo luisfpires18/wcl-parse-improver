@@ -197,6 +197,9 @@ summary:hover { color: var(--text); }
 /* --- raid progression --- */
 .raid-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.6rem 0; }
 .raid-form input#raid-code { flex: 1 1 22rem; min-width: 16rem; }
+.raid-refresh { text-align: right; margin: 0 0 0.4rem; }
+h3 button.mini { margin-left: 0.6rem; font-weight: 400; vertical-align: middle; }
+
 /* "Learn a boss": one player's rotation at a time, so the column is full width */
 .ord-wrap.learn-ord { grid-template-columns: 1fr; }
 .ord-wrap.learn-ord .ord-list { max-height: 460px; }
