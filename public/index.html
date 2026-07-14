@@ -11,18 +11,19 @@
   <main id="app">
     <header>
       <h1>WCL Parse Improver</h1>
-      <nav id="nav"></nav>
+      <nav id="nav">
+        <button type="button" class="nav-link" data-view="characters">Characters</button>
+        <button type="button" class="nav-link" data-view="mplus">M+ Parses</button>
+        <button type="button" class="nav-link" data-view="raid">Raid Parses</button>
+      </nav>
     </header>
 
-    <section id="view-character" hidden>
-      <div id="char-bar"></div>
-      <div id="status"></div>
-      <section id="overview"></section>
-      <section id="raid"></section>
-      <section id="report"></section>
-    </section>
+    <!-- who we're analysing; shown on the two analysis views -->
+    <div id="char-bar"></div>
+    <div id="status"></div>
 
-    <section id="view-add" hidden>
+    <section id="view-characters" hidden>
+      <div id="char-list"></div>
       <div class="card">
         <h2>Add character</h2>
         <p><small>The class is detected from Warcraft Logs; pick which of its specs to analyse.
@@ -37,6 +38,15 @@
         <div id="detect-status"></div>
         <div id="detect-result"></div>
       </div>
+    </section>
+
+    <section id="view-mplus" hidden>
+      <section id="overview"></section>
+      <section id="report"></section>
+    </section>
+
+    <section id="view-raid" hidden>
+      <section id="raid"></section>
     </section>
   </main>
   <script type="module" src="app.js"></script>

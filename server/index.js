@@ -3,10 +3,16 @@ import path from 'node:path';
 import { loadEnv, PROJECT_ROOT } from './env.js';
 import { fetchOverview, fetchDamageSeries, fetchGameClasses, detectCharacter } from './wcl/api.js';
 import { buildComparison, DEFAULT_LEVEL } from './wcl/comparison.js';
-import { buildRaidReport, buildRaidPull, DEFAULT_RAID_DIFFICULTY } from './wcl/raid.js';
-import { buildReport, pickSimilarIndex } from './analysis/compare.js';
-import { analyzeSpikes } from './analysis/spikes.js';
-import { loadCharacters, upsertCharacter, removeCharacter } from './characters.js';
+import {
+  buildRaidReport,
+  buildRaidPull,
+  buildRaidBossReport,
+  buildBossRotations,
+  DEFAULT_RAID_DIFFICULTY,
+} from './wcl/raid.js';
+import { fetchRaidOverview } from './wcl/raidZones.js';
+import { buildReport } from './analysis/compare.js';
+import { loadCharacters, upsertCharacter, removeCharacter, setCharacterHidden } from './characters.js';
 
 loadEnv();
 
@@ -19,21 +25,27 @@ app.use(express.static(path.join(PROJECT_ROOT, 'public')));
 // rotation-match maths). Serving it means there is exactly one copy.
 app.use('/shared', express.static(path.join(PROJECT_ROOT, 'shared')));
 
+// No defaults: these used to fall back to the author's own character, so a request
+// with missing params silently analysed someone else's toon.
 function charParams(query) {
+  const name = String(query.name || '').trim();
+  const serverSlug = String(query.server || '').trim();
+  if (!name || !serverSlug) throw new Error('name and server query params are required');
   return {
-    name: String(query.name || 'Unreally'),
-    serverSlug: String(query.server || 'aggra-portugues'),
-    serverRegion: String(query.region || 'EU'),
-    zoneID: Number(query.zone || 47),
+    name,
+    serverSlug,
+    serverRegion: String(query.region || 'EU').trim(),
+    zoneID: Number(query.zone || 0) || undefined,
   };
 }
 
-// class/spec drive the comparison cohort; default to the original DK/Unholy
 function specParams(query) {
-  return {
-    className: query.className ? String(query.className) : 'DeathKnight',
-    specName: query.specName ? String(query.specName) : 'Unholy',
-  };
+  const className = String(query.className || '').trim();
+  const specName = String(query.specName || '').trim();
+  if (!className || !specName) throw new Error('className and specName query params are required');
+  // display-only; used so a "wrong class" error reads "Death Knight", not "DeathKnight"
+  const classLabel = String(query.classLabel || '').trim() || null;
+  return { className, specName, classLabel };
 }
 
 // `refresh=1` bypasses the disk cache for ranking queries (use after logging
@@ -56,7 +68,7 @@ app.get('/api/overview', async (req, res) => {
     const { raw, ...rest } = overview; // raw payload not needed by the UI
     res.json(rest);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
@@ -77,15 +89,14 @@ app.get('/api/report', async (req, res) => {
     });
     res.json(buildReport(bundle));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
 // DPS-over-time series (mine vs one comparison run) for the line chart.
-// Lazy/separate from /api/report because the damage-event fetch is heavy;
-// the report renders first, this loads after. Cohort + report codes come
-// from the (cached) buildComparison, so this only adds the two damage-series
-// fetches on top.
+// Lazy/separate from /api/report because the damage-event fetch is heavy: the
+// report renders first, the chart loads after. The opponent is already chosen by
+// the (cached) buildComparison, so this only adds the two damage-series fetches.
 app.get('/api/dps-series', async (req, res) => {
   try {
     const encounterID = Number(req.query.encounter);
@@ -93,36 +104,98 @@ app.get('/api/dps-series', async (req, res) => {
     const level = Math.max(2, Math.min(30, Number(req.query.level || DEFAULT_LEVEL)));
     const compareTo = req.query.compareTo ? String(req.query.compareTo) : null;
 
-    const bundle = await buildComparison({ ...charParams(req.query), ...specParams(req.query), encounterID, level, compareTo });
-
-    const mineFight = bundle.mine.detail.fight;
-    const myDurationMs = mineFight.keystoneTime ?? mineFight.endTime - mineFight.startTime;
-    const targetIndex = pickSimilarIndex(bundle.cohort, myDurationMs, bundle.targetLevel);
-    const target = bundle.cohort[targetIndex];
-    if (!target) return res.status(404).json({ error: 'no comparison run available' });
+    // refresh reaches the RANKING lookups (which run is "mine", who's on the ranked
+    // page). The damage-event fetches below are keyed by report+fight and can't go
+    // stale — a logged fight never changes — so they stay cached either way.
+    const bundle = await buildComparison({
+      ...charParams(req.query),
+      ...specParams(req.query),
+      encounterID,
+      level,
+      compareTo,
+      refresh: wantsRefresh(req.query),
+    });
+    const other = bundle.other;
 
     // sequential — gql() has a shared rate-limiter that parallel calls would race
-    const mine = await fetchDamageSeries({
+    const mineSeries = await fetchDamageSeries({
       code: bundle.mine.detail.code,
       fightID: bundle.mine.detail.fightID,
       playerName: bundle.params.name,
       server: bundle.params.serverSlug, // disambiguate same-named toons in one log
       className: bundle.params.className,
     });
-    const other = await fetchDamageSeries({
-      code: target.detail.code,
-      fightID: target.detail.fightID,
-      playerName: target.meta.name,
+    const otherSeries = await fetchDamageSeries({
+      code: other.detail.code,
+      fightID: other.detail.fightID,
+      playerName: other.meta.name,
     });
-    const spikeAnalysis = analyzeSpikes({
-      mineDetail: bundle.mine.detail,
-      otherDetail: target.detail,
-      mineSeries: mine,
-      otherSeries: other,
-    });
-    res.json({ mine, other, otherLabel: target.label ?? null, spikeAnalysis });
+    res.json({ mine: mineSeries, other: otherSeries, otherLabel: other.meta.name });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
+  }
+});
+
+// All raids of the current expansion and how this character parsed in each.
+// This is the raid view's DEFAULT — you shouldn't need a report URL to look at a
+// boss you killed. Pasting a log stays, for the one thing rankings can't show: wipes.
+app.get('/api/raid/overview', async (req, res) => {
+  try {
+    const { name, serverSlug, serverRegion } = charParams(req.query);
+    const overview = await fetchRaidOverview({
+      name,
+      serverSlug,
+      serverRegion,
+      specName: req.query.specName ? String(req.query.specName) : null,
+      refresh: wantsRefresh(req.query),
+    });
+    res.json({ zones: overview });
+  } catch (err) {
+    res.status(err.status ?? 500).json({ error: err.message });
+  }
+});
+
+// How ONE top-ranked player of a class+spec plays a boss — rotation only, plus the
+// roster of the other nine to switch to (`player` picks one; default is the #1
+// parse). Only the selected player's run is ever fetched.
+//
+// Note there is no charParams here: this is not about you, so it needs no
+// character, no log and no kill of your own. It's the "learn the fight before you
+// pull it" view.
+app.get('/api/raid/rotations', async (req, res) => {
+  try {
+    const encounterID = Number(req.query.encounter);
+    if (!encounterID) return res.status(400).json({ error: 'encounter query param required' });
+    const rotations = await buildBossRotations({
+      ...specParams(req.query),
+      encounterID,
+      difficulty: req.query.difficulty ? Number(req.query.difficulty) : DEFAULT_RAID_DIFFICULTY,
+      player: req.query.player ? String(req.query.player) : null,
+      topN: Math.max(2, Math.min(25, Number(req.query.top) || 10)), // roster size — costs nothing
+      refresh: wantsRefresh(req.query),
+    });
+    res.json(rotations);
+  } catch (err) {
+    res.status(err.status ?? 500).json({ error: err.message });
+  }
+});
+
+// Analyse a raid boss from the character's own best ranked kill — no log needed.
+app.get('/api/raid/boss', async (req, res) => {
+  try {
+    const encounterID = Number(req.query.encounter);
+    if (!encounterID) return res.status(400).json({ error: 'encounter query param required' });
+    const report = await buildRaidBossReport({
+      ...charParams(req.query),
+      ...specParams(req.query),
+      encounterID,
+      difficulty: req.query.difficulty ? Number(req.query.difficulty) : DEFAULT_RAID_DIFFICULTY,
+      compareTo: req.query.compareTo ? String(req.query.compareTo) : null,
+      refresh: wantsRefresh(req.query),
+    });
+    res.json(report);
+  } catch (err) {
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
@@ -151,7 +224,7 @@ app.get('/api/raid/report', async (req, res) => {
     });
     res.json(report);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
@@ -177,11 +250,12 @@ app.get('/api/raid/pull', async (req, res) => {
       encounterID,
       fightID,
       difficulty,
+      compareTo: req.query.compareTo ? String(req.query.compareTo) : null,
       refresh: wantsRefresh(req.query),
     });
     res.json(pull);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
@@ -206,7 +280,7 @@ app.get('/api/characters', (req, res) => {
   try {
     res.json(loadCharacters());
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
@@ -216,6 +290,15 @@ app.post('/api/characters', async (req, res) => {
     res.json(upsertCharacter(req.body, classes));
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// Hide a character from the analysis views without forgetting it.
+app.patch('/api/characters/:id', (req, res) => {
+  try {
+    res.json(setCharacterHidden(req.params.id, Boolean(req.body?.hidden)));
+  } catch (err) {
+    res.status(404).json({ error: err.message });
   }
 });
 

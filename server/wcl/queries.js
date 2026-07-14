@@ -72,6 +72,30 @@ query CharacterClass($name: String!, $serverSlug: String!, $serverRegion: String
   }
 }`;
 
+// Every zone of every expansion, with its difficulties — used to work out which
+// zones are RAIDS (they have a Mythic difficulty; a dungeon zone has "Dungeon").
+// Static game data, so the disk cache holds it until a patch adds a tier.
+export const RAID_ZONES = `
+query RaidZones {
+  worldData {
+    expansions {
+      id
+      name
+      zones {
+        id
+        name
+        frozen
+        # a zone's partitions are its patch history ("12.0", "12.0.5", "12.0.7").
+        # Next-patch content carries a "PTR"/"Beta" partition instead — that is
+        # how a live raid is told apart from one that isn't out yet.
+        partitions { id name compactName default }
+        difficulties { id name }
+        encounters { id name }
+      }
+    }
+  }
+}`;
+
 export const ZONE_BRACKETS = `
 query ZoneBrackets($zoneID: Int!) {
   worldData {
@@ -176,6 +200,19 @@ query ReportDamageTakenGraph($code: String!, $fightIDs: [Int!], $targetID: Int, 
   reportData {
     report(code: $code) {
       graph(fightIDs: $fightIDs, dataType: DamageTaken, targetID: $targetID, startTime: $startTime, endTime: $endTime)
+    }
+  }
+}`;
+
+// The fight's player roster WITH SPEC. masterData.actors only carries the class
+// (subType), never the spec — but a pasted log analysed against the wrong spec is
+// worthless, so we need both. `playerDetails` in the Summary table has each
+// player's class (`type`) and `specs`.
+export const REPORT_SUMMARY = `
+query ReportSummary($code: String!, $fightIDs: [Int!]) {
+  reportData {
+    report(code: $code) {
+      table(fightIDs: $fightIDs, dataType: Summary)
     }
   }
 }`;

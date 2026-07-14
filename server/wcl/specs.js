@@ -30,13 +30,7 @@ export function roleOf(classSlug, specSlug) {
 
 export const isDps = (classSlug, specSlug) => roleOf(classSlug, specSlug) === 'DPS';
 
-// --- spec capabilities -----------------------------------------------------
-// Which spec-specific analysis panels have any meaning. A spec that lacks the
-// resource model must not render an empty table of another class's abilities.
-
-/** Runic Power is the Death Knight resource — RP waste applies to all its specs. */
-export const usesRunicPower = (classSlug) => classSlug === 'DeathKnight';
-
-/** The Death Coil vs Epidemic spender split is Unholy-only (Frost spends on Frost Strike). */
-export const usesEpidemicSpenderMix = (classSlug, specSlug) =>
-  classSlug === 'DeathKnight' && specSlug === 'Unholy';
+// There used to be `usesRunicPower` / `usesEpidemicSpenderMix` here, gating the
+// resource panel to Death Knights. They are gone: the resource is now read off the
+// log itself (see analysis/resources.js), so no spec capability table is needed —
+// which also means nothing to update when a new spec ships.

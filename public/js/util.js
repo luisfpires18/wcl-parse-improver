@@ -29,14 +29,6 @@ export const fmtSec = (s) => `${Math.floor(s / 60)}:${String(Math.round(s % 60))
 
 export const fmtK = (v) => (typeof v === 'number' ? (v / 1000).toFixed(1) + 'k' : '—');
 
-/** Positive gap = behind; negative = ahead of the comparison. */
-export const gapPhrase = (v) => {
-  if (typeof v !== 'number') return 'gap —';
-  if (v > 0) return `gap <b>${v}%</b>`;
-  if (v < 0) return `ahead by <b>${Math.abs(v)}%</b>`;
-  return `dead even`;
-};
-
 /** Cast colouring shared by the timeline and the cast-order columns. */
 export const castKindClass = (kind) => (kind === 'damage' ? 'p-blue' : kind === 'amp' ? 'p-orange' : 'p-gray');
 

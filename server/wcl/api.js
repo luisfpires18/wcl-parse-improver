@@ -345,23 +345,55 @@ const firstNum = (...vs) => {
 };
 
 /**
- * Top ranked KILL of a raid boss at a difficulty — the benchmark a wipe is
- * measured against. Returns the #1 spec parse with its full run detail, or
- * throws if the boss has no ranked kills for that spec/difficulty yet.
+ * Ranked KILLS of a raid boss at a difficulty. One cheap, cached call — it fills
+ * the opponent dropdown. This used to fetch the whole page and then throw away
+ * every entry but the first, so the raid view had no picker at all.
+ *
+ * Kills only: a wipe appears in no ranking anywhere.
  */
-export async function fetchRaidBenchmark({ encounterID, className, specName, difficulty, page = 1, refresh = false }) {
+export async function fetchRaidRankings({ encounterID, className, specName, difficulty, page = 1, refresh = false }) {
   const data = await gql(
     RAID_CHARACTER_RANKINGS,
     { encounterID, className, specName, difficulty, page, metric: 'dps' },
     { noCache: refresh }
   );
   const parsed = parseCharacterRankings(data?.worldData?.encounter?.characterRankings);
-  const top = parsed.entries.find((e) => e.name && e.report?.code && e.report?.fightID != null);
-  if (!top) {
+  const entries = parsed.entries.filter((e) => e.name && e.report?.code && e.report?.fightID != null);
+  if (!entries.length) {
     throw new Error(`No ranked ${difficultyName(difficulty) ?? ''} kill for encounter ${encounterID} / ${specName}`);
   }
-  const detail = await fetchRunDetail({ code: top.report.code, fightID: top.report.fightID, playerName: top.name });
-  return { name: top.name, difficultyName: difficultyName(difficulty), dps: top.dps, detail };
+  return entries;
+}
+
+/**
+ * One ranked opponent + their full run detail. Defaults to the #1 parse; pass
+ * `compareTo` to pick anyone else off the ranked page.
+ */
+export async function fetchRaidBenchmark({ encounterID, className, specName, difficulty, compareTo = null, refresh = false }) {
+  const entries = await fetchRaidRankings({ encounterID, className, specName, difficulty, refresh });
+  const norm = (s) => String(s ?? '').trim().toLowerCase();
+
+  let pick = entries[0];
+  if (compareTo) {
+    // Never substitute silently. This used to fall back to entries[0] when the
+    // requested player wasn't on the ranked page, so you could pick one player
+    // from the dropdown and be shown a DIFFERENT player's casts and cooldowns —
+    // then reasonably conclude "their potion isn't showing" when in fact you were
+    // looking at someone else entirely.
+    const found = entries.find((e) => norm(e.name) === norm(compareTo));
+    if (!found) {
+      const err = new Error(
+        `${compareTo} isn't among the ranked ${difficultyName(difficulty) ?? ''} kills for this boss, so there's nothing to compare against. ` +
+          `Pick someone from the list.`
+      );
+      err.status = 400;
+      throw err;
+    }
+    pick = found;
+  }
+
+  const detail = await fetchRunDetail({ code: pick.report.code, fightID: pick.report.fightID, playerName: pick.name });
+  return { name: pick.name, difficultyName: difficultyName(difficulty), dps: pick.dps, detail, entries };
 }
 
 /**
@@ -374,7 +406,7 @@ export async function fetchRaidBenchmark({ encounterID, className, specName, dif
  * property of the ability itself (can a DK ever self-cast it), not of one
  * specific run, so fetching it once is enough.
  */
-export async function fetchRunDetail({ code, fightID, playerName, server = null, className = null, includeBuffSources = false, lite = false }) {
+export async function fetchRunDetail({ code, fightID, playerName, server = null, className = null, includeBuffSources = false, lite = false, castsOnly = false }) {
   const rd = await gql(REPORT_FIGHTS_ACTORS, { code, fightIDs: [fightID] });
   const report = rd?.reportData?.report;
   const fight = report?.fights?.[0];
@@ -395,13 +427,22 @@ export async function fetchRunDetail({ code, fightID, playerName, server = null,
   // need. It cuts a full run's ~7 requests (with multi-page event streams) down
   // to 3 table calls, so every pull of a raid night can be analysed, not just a
   // sample. The full fetch is reserved for the one pull compared to a top parser.
+  //
+  // `castsOnly` is the opposite trade: keep everything castOrder() reads (the Casts
+  // table names the presses, DamageDone separates fillers from cooldowns, Buffs
+  // recovers potions with no cast event, and the event stream gives the order) and
+  // drop the rest. It's what makes fetching TEN top players' rotations affordable:
+  // ~5 requests each instead of ~7, with no death or resource data pulled that a
+  // rotation-only view would never show.
   const castsT = await gql(REPORT_TABLE, { ...tableVars, dataType: 'Casts' });
   const damageT = await gql(REPORT_TABLE, { ...tableVars, dataType: 'DamageDone' });
-  const deathsT = await gql(REPORT_TABLE, { ...tableVars, dataType: 'Deaths' });
+  // NB: `lite` still fetches Deaths — per-pull death timing is the whole point of it.
+  const deathsT = castsOnly ? null : await gql(REPORT_TABLE, { ...tableVars, dataType: 'Deaths' });
   const buffsT = lite ? null : await gql(REPORT_TABLE, { ...tableVars, dataType: 'Buffs' });
 
   const castPages = lite ? [] : await paginateEvents(REPORT_CAST_EVENTS, { code, fightID, sourceID: actor.id, fight });
-  const resourcePages = lite ? [] : await paginateEvents(REPORT_RESOURCE_EVENTS, { code, fightID, sourceID: actor.id, fight });
+  const resourcePages =
+    lite || castsOnly ? [] : await paginateEvents(REPORT_RESOURCE_EVENTS, { code, fightID, sourceID: actor.id, fight });
 
   let buffSources = null;
   if (includeBuffSources && !lite) {
@@ -431,7 +472,7 @@ export async function fetchRunDetail({ code, fightID, playerName, server = null,
     casts: parseCastsTable(rdTable(castsT)),
     buffs: buffsT ? parseBuffsTable(rdTable(buffsT)) : { totalTimeMs: null, auras: [] },
     damage: parseDamageTable(rdTable(damageT)),
-    deaths: parseDeathsTable(rdTable(deathsT)),
+    deaths: deathsT ? parseDeathsTable(rdTable(deathsT)) : { deaths: [] },
     castEvents: parseCastEvents(castPages),
     resourceEvents: parseResourceEvents(resourcePages),
     buffSources,

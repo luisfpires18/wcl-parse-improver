@@ -5,7 +5,6 @@
 // or duplicate element ids. Every helper here is scoped to a root element + its
 // view — never to `document`.
 import { esc, fmtK, fmtSec, fmtTime, castKindClass, seriesColor } from './util.js';
-import { distributionMatch, bigramMatch, countByName } from '/shared/rotationMatch.js';
 
 // ---- rotation timeline (cast lanes) ----
 // Lanes are picked server-side purely by cast frequency (see
@@ -115,7 +114,7 @@ export function renderTimelineSection(timeline, timelineInfo) {
     : '';
   return `
     <h3>Rotation timeline</h3>
-    <p class="timeline-sub"><small>Ticks = individual casts. Only cooldown-gated abilities get a lane (fillers like Scourge Strike/Death Coil are already in the CPM table below).${buffHelp} The two runs have different durations — each has its own time axis.</small></p>
+    <p class="timeline-sub"><small>Ticks = individual casts. Only cooldown-gated abilities get a lane — fillers are in the per-ability table further down.${buffHelp} The two runs have different durations, so each has its own time axis.</small></p>
     <div class="timeline-wrap">
       <div class="timeline-sub">You &middot; duration ${fmtTime(mine.durationMs)}</div>
       ${timelineSvg(mine, laneNames, buffLaneNames)}
@@ -262,34 +261,17 @@ export function clearBrush(root) {
   if (sel) sel.setAttribute('width', 0);
 }
 
-export function renderSpikeAnalysis(sa) {
-  if (!sa || !sa.windows?.length) return '';
-  const rows = sa.windows
-    .map((s) => {
-      const casts = (s.castDiffs ?? [])
-        .map((d) => `<span class="cd ${d.diff > 0 ? 'behind' : ''}">${esc(d.name)} <b>${d.them}</b>/${d.mine}</span>`)
-        .join(' ');
-      const amps = s.theirAmps?.length ? `<div class="spike-amps"><small>amplifiers — them: ${s.theirAmps.map(esc).join(', ')}${s.myAmps?.length ? ` · you: ${s.myAmps.map(esc).join(', ')}` : ' · you: none'}</small></div>` : '';
-      return `<li class="spike-row">
-        <div class="spike-head"><b>${esc(s.atLabel)}</b> — them <b class="p-purple">${fmtK(s.theirDps)}</b> vs you <b class="p-blue">${fmtK(s.myDps)}</b>
-          <span class="vals">(+${fmtK(s.gapDps)} their favor · ${s.theirCastTotal} vs your ${s.myCastTotal} damage casts)</span></div>
-        ${amps}
-        <div class="spike-casts"><small>damage casts (them/you): ${casts}</small></div>
-        <div class="spike-note">${esc(s.note)}</div>
-      </li>`;
-    })
-    .join('');
-  return `
-    <div class="spike-analysis">
-      <h4>Why their spikes are higher <small>— same rotation, where the damage goes</small></h4>
-      <p class="spike-headline">${esc(sa.headline)}</p>
-      ${sa.openerNote ? `<p class="spike-opener"><b>Opener:</b> ${esc(sa.openerNote)}</p>` : ''}
-      <div class="rotation-dyn"></div>
-      <ol class="spikes">${rows}</ol>
-    </div>`;
-}
+/**
+ * The mount point the chart brush writes cast order into.
+ *
+ * This slot used to be emitted by renderSpikeAnalysis, which coupled the
+ * cast-order view to a panel that has nothing to do with it — deleting the spike
+ * panel would have silently killed the brush. It stands on its own now: whoever
+ * renders the chart renders this next to it.
+ */
+export const castOrderSlot = () => '<div class="rotation-dyn"></div>';
 
-/** Filter the full cast-order lists to a time window and render columns + composition. */
+/** Filter the full cast-order lists to a time window and render the columns. */
 export function setCastWindow(root, view, loSec, hiSec) {
   const el = root?.querySelector('.rotation-dyn');
   if (!el || !view?.state) return;
@@ -303,8 +285,7 @@ export function setCastWindow(root, view, loSec, hiSec) {
     <div class="ord-bar">Rotation for <b>${label}</b> — drag on the chart above to inspect any window${
       whole ? '' : ` · <a href="#" class="ord-reset">reset to whole run</a>`
     }</div>
-    ${renderCastOrderCols(them, mine, st.otherLabel)}
-    ${renderWindowComposition(them, mine)}`;
+    ${renderCastOrderCols(them, mine, st.otherLabel)}`;
   const reset = el.querySelector('.ord-reset');
   if (reset)
     reset.addEventListener('click', (e) => {
@@ -316,88 +297,80 @@ export function setCastWindow(root, view, loSec, hiSec) {
 
 const ORD_DISPLAY_CAP = 150;
 
-export function renderCastOrderCols(them, mine, otherLabel) {
-  const col = (list, title) => {
-    const shown = list.slice(0, ORD_DISPLAY_CAP);
-    const items = shown
-      .map((c) => `<li><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="${castKindClass(c.kind)}">${esc(c.name)}</span></li>`)
-      .join('');
-    const more = list.length > ORD_DISPLAY_CAP ? `<li class="ord-more">…and ${list.length - ORD_DISPLAY_CAP} more — select a smaller window on the chart</li>` : '';
-    return `<div class="ord-col"><div class="ord-head">${esc(title)} <small>(${list.length})</small></div><ol class="ord-list">${items}${more}</ol></div>`;
-  };
-  return `
-    <div class="ord-wrap">
-      ${col(them, `${esc(otherLabel ?? 'Them')} — cast order`)}
-      ${col(mine, 'You — cast order')}
-    </div>
-    <p class="table-note"><small>Literal spell-cast sequence for the selected window.
-      <span class="p-blue">Blue</span> = damage, <span class="p-orange">orange</span> = amplifier (Army/Dark Transformation/pot), grey = utility. Read their column top-down to see their flow —
-      then check the <b>buff bars on the rotation timeline</b> to see which buffs were up while they were pressing them.</small></p>`;
-}
-
 /**
- * Spell-mix + cast-order match for a brushed window, plus the per-ability counts
- * behind it. The two percentages come from shared/rotationMatch.js — the exact
- * code the server runs for the whole-run numbers, so a window and the full run
- * can never disagree about what "83% spell mix" means.
+ * The two cast-order columns, each with its burst cooldowns PINNED above the
+ * scrolling list.
+ *
+ * Two things made a cooldown impossible to find, and both are display bugs — the
+ * data was always there:
+ *
+ *   1. A potion is usually the FIRST thing pressed, so it sits at the top of a
+ *      140-row scrolling list. The moment you scroll to compare mid-fight play,
+ *      it's gone. (Reported as "I can't find the potion, only shows mine" — theirs
+ *      was at 0.1s, scrolled out of view.)
+ *   2. The list is capped at 150 rows. A cooldown past that was silently DROPPED,
+ *      so on a long window it genuinely wasn't rendered at all.
+ *
+ * The pinned strip fixes both: every burst cooldown in the window, complete, in
+ * order, always visible. The full sequence stays below for reading the flow.
  */
-export function renderWindowComposition(them, mine) {
-  if (them.length + mine.length < 6) return '';
-  const kindOf = new Map([...them, ...mine].map((c) => [c.name, c.kind]));
-  const mc = countByName(mine.map((c) => c.name));
-  const tc = countByName(them.map((c) => c.name));
-  const names = [...new Set([...mc.keys(), ...tc.keys()])];
-  const mTot = mine.length || 1;
-  const tTot = them.length || 1;
-  const sim = Math.round(distributionMatch(mc, tc));
-  const orderSim = Math.round(bigramMatch(mine.map((c) => c.name), them.map((c) => c.name)));
-  const rows = names
-    .map((n) => {
-      const mine2 = mc.get(n) ?? 0;
-      const them2 = tc.get(n) ?? 0;
-      const diffPp = Math.round(1000 * (mine2 / mTot - them2 / tTot)) / 10;
-      return { n, mine: mine2, them: them2, diffPp, kind: kindOf.get(n) };
-    })
-    .sort((a, b) => b.them - a.them)
-    .map((r) => {
-      const tag = r.kind === 'amp' ? ' <small class="util">amp</small>' : r.kind === 'util' ? ' <small class="util">util</small>' : '';
-      return `<tr class="${Math.abs(r.diffPp) >= 2 ? 'rot-big' : ''}"><td>${esc(r.n)}${tag}</td>
-        <td class="num">${r.mine}</td><td class="num">${r.them}</td><td class="num">${r.diffPp > 0 ? '+' : ''}${r.diffPp}pp</td></tr>`;
-    })
-    .join('');
-  return `
-    <details><summary>Rotation match for this window — spell mix ${sim}% · cast order ${orderSim}%</summary>
-      <p class="table-note"><small><b>Spell mix</b> = the share of casts on the same button in the same proportion (ignores order). <b>Cast order</b> = the same measure on cast-to-cast transitions (order-sensitive) — lower means you sequence the same spells differently. Both are honest proportion matches, not cosine (which sits near 100% for any two runs of a spec).</small></p>
-      <table class="rot-table"><thead><tr><th>Ability</th><th>You</th><th>Them</th><th>Diff</th></tr></thead><tbody>${rows}</tbody></table>
-    </details>`;
-}
+/**
+ * One player's cast order as a column: burst cooldowns pinned at the top (never
+ * truncated — they're the reason you opened it), then the literal sequence.
+ *
+ * `cap` bounds the sequence list. Under the DPS chart that's what the brush is
+ * for — narrow the window and the rest come into view. The "learn a boss" view
+ * has NO chart, so there is nothing to brush and a cap would just hide casts with
+ * no way to reach them: it passes cap = Infinity and renders the lot.
+ */
+export function castOrderColumn(list, title, { cap = ORD_DISPLAY_CAP, brushable = true } = {}) {
+  const amps = list.filter((c) => c.kind === 'amp');
 
-/** Side-by-side per-ability damage table. Used by the M+ report and the raid comparison. */
-export function renderDamageDone(dd) {
-  if (!dd || !dd.rows.length) return '';
-  const fmtM = (v) => (v / 1e6).toFixed(1) + 'm';
-  const rows = dd.rows
-    .slice(0, 30)
+  // never truncated — the cooldowns are the whole reason you opened this
+  const pinned = amps.length
+    ? `<div class="ord-cds">
+         <div class="ord-cds-head">Cooldowns &amp; consumables <small>(${amps.length})</small></div>
+         <ol class="ord-cds-list">${amps
+           .map((c) => `<li><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="p-orange">${esc(c.name)}</span></li>`)
+           .join('')}</ol>
+       </div>`
+    : `<div class="ord-cds"><div class="ord-cds-head muted">No cooldowns or consumables in this window</div></div>`;
+
+  const shown = Number.isFinite(cap) ? list.slice(0, cap) : list;
+  const items = shown
     .map(
-      (a) => `<tr>
-        <td>${esc(a.name)}</td>
-        <td class="num">${fmtM(a.myAmount)}</td><td class="num">${a.myCasts || '—'}</td><td class="num">${a.myHits || '—'}</td><td class="num">${fmtK(a.myDps)}</td>
-        <td class="num sep">${a.theirAmount ? fmtM(a.theirAmount) : '—'}</td><td class="num">${a.theirCasts || '—'}</td><td class="num">${a.theirHits || '—'}</td><td class="num">${a.theirDps ? fmtK(a.theirDps) : '—'}</td>
-      </tr>`
+      (c) =>
+        `<li class="${c.kind === 'amp' ? 'ord-amp' : ''}"><span class="ord-t">${fmtTime(c.tSec * 1000)}</span> <span class="${castKindClass(c.kind)}">${esc(c.name)}</span></li>`
     )
     .join('');
-  const t = dd.totals;
+  // the truncation note says what it actually drops — and the cooldowns among them
+  // are safe, because they're pinned above
+  const cut = list.length - shown.length;
+  const more =
+    cut > 0
+      ? `<li class="ord-more">…and ${cut} more casts below (all cooldowns &amp; consumables are pinned above)${
+          brushable ? ' — brush a smaller window on the chart to read them' : ''
+        }</li>`
+      : '';
+
+  return `<div class="ord-col">
+    <div class="ord-head">${esc(title)} <small>(${list.length})</small></div>
+    ${pinned}
+    <ol class="ord-list">${items}${more}</ol>
+  </div>`;
+}
+
+export function renderCastOrderCols(them, mine, otherLabel) {
   return `
-    <details open><summary>Damage done — you vs ${esc(dd.otherLabel)} (per ability)</summary>
-      <table class="dmg-table">
-        <thead>
-          <tr><th rowspan="2">Ability</th><th colspan="4" class="grp">You</th><th colspan="4" class="grp sep">${esc(dd.otherLabel)}</th></tr>
-          <tr><th>Amount</th><th>Casts</th><th>Hits</th><th>DPS</th><th class="sep">Amount</th><th>Casts</th><th>Hits</th><th>DPS</th></tr>
-        </thead>
-        <tbody>${rows}</tbody>
-        <tfoot><tr><td>Total</td>
-          <td class="num">${fmtM(t.myDamage)}</td><td></td><td></td><td class="num">${fmtK(t.myDps)}</td>
-          <td class="num sep">${fmtM(t.theirDamage)}</td><td></td><td></td><td class="num">${fmtK(t.theirDps)}</td></tr></tfoot>
-      </table>
-    </details>`;
+    <div class="ord-wrap">
+      ${castOrderColumn(them, `${otherLabel ?? 'Them'} — cast order`)}
+      ${castOrderColumn(mine, 'You — cast order')}
+    </div>
+    <p class="table-note"><small><b>Cooldowns &amp; consumables are pinned at the top of each column</b> so you never have to hunt for a potion
+      in a 150-row list. <span class="p-orange"><b>Orange</b></span> is every <b>potion</b> (matched by its icon, so Light's Potential counts
+      as surely as Potion of Recklessness), every <b>on-use trinket</b>, and any ability pressed at cooldown frequency that either deals damage
+      or grants you a buff — all worked out from the run, never a per-class or per-item list. That last rule is deliberately generous: a rare
+      <b>defensive</b> can land here too, because nothing in a log says whether a buff raises your damage or lowers theirs.
+      <span class="p-blue">Blue</span> = ordinary damage, grey = utility. Below the pin is the literal cast sequence — read their column
+      top-down for the flow, then check the <b>buff bars on the rotation timeline</b> to see which buffs were up while they pressed them.</small></p>`;
 }

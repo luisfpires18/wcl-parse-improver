@@ -6,6 +6,7 @@ import {
   fetchReportFights,
   fetchRunDetail,
   fetchRaidBenchmark,
+  fetchRaidRankings,
   fetchFightDeaths,
   fetchBossHealth,
   fetchDamageSeries,
@@ -13,12 +14,15 @@ import {
 } from './api.js';
 import { buildProgression, attemptOutput } from '../analysis/raidProgress.js';
 import { buildRaidParse } from '../analysis/raidParse.js';
-import { rotationComposition, castOrder, analyzeSpikes } from '../analysis/spikes.js';
-import { buildDamageDoneTable } from '../analysis/compare.js';
-import { buildTimeline, buildTimelineInfo } from '../analysis/timeline.js';
+import { rotationComposition, castOrder } from '../analysis/spikes.js';
+import { buildAbilityTable, buildGaps } from '../analysis/compare.js';
+import { buildConsumables } from '../analysis/consumables.js';
+import { compareResource } from '../analysis/resources.js';
+import { buildTimeline } from '../analysis/timeline.js';
 import { truncateDetail, truncateSeries, truncatePoints } from '../analysis/truncate.js';
 import { groupByEncounter, difficultyName } from '../parse/reportFights.js';
 import { timeAtHealthPct } from '../parse/bossHealth.js';
+import { assertCharacterInLog } from './logIdentity.js';
 import { dumpDebug } from './client.js';
 
 export const DEFAULT_RAID_DIFFICULTY = 5; // Mythic
@@ -43,12 +47,19 @@ export async function buildRaidPull({
   serverRegion,
   className = 'DeathKnight',
   specName = 'Unholy',
+  classLabel = null,
+  compareTo = null,
   refresh = false,
 }) {
   code = reportCode(code);
   const report = await fetchReportFights({ code, encounterID, refresh });
   const fight = report.fights.find((f) => f.id === fightID);
   if (!fight) throw new Error(`Report ${code} has no fight ${fightID} on that boss`);
+
+  // Before spending a single heavy call: is this log even the right character?
+  // Analysing a Havoc log against an Unholy benchmark produces a full report in
+  // which every number is meaningless, and nothing would say so.
+  await assertCharacterInLog({ code, fightID, name, className, specName, classLabel, refresh });
 
   // includeBuffSources: classifies each aura as self-applied or external. Needed
   // to draw YOUR buff windows (procs, cooldowns) without dragging in raid buffs.
@@ -65,7 +76,31 @@ export async function buildRaidPull({
   const mineSeries = await fetchDamageSeries({ code, fightID, playerName: name, server: serverSlug, className });
   const myHealth = await fetchBossHealth({ code, fightID, refresh });
 
-  const bench = await fetchRaidBenchmark({ encounterID, className, specName, difficulty, refresh });
+  const bench = await fetchRaidBenchmark({ encounterID, className, specName, difficulty, compareTo, refresh });
+
+  // The opponent picker: top 10 of the spec on this boss, plus the 5 kills whose
+  // LENGTH most resembles this pull (a similar-length fight means a similar number
+  // of cooldown cycles, so the comparison is more purely execution). Costs nothing
+  // extra — the ranked page was already fetched to find the benchmark.
+  const myDurMs = fight.durationMs ?? 0;
+  const matchPct = (d) => (typeof d === 'number' && myDurMs > 0 ? Math.round(100 * Math.max(0, 1 - Math.abs(d - myDurMs) / myDurMs)) : 0);
+  const ranked = (bench.entries ?? []).map((e, i) => ({
+    name: e.name,
+    dps: e.dps,
+    durationMs: e.durationMs,
+    rank: i + 1,
+    matchPct: matchPct(e.durationMs),
+  }));
+  const top = ranked.slice(0, 10);
+  const topNames = new Set(top.map((p) => p.name.toLowerCase()));
+  const players = {
+    top,
+    similar: ranked
+      .filter((p) => !topNames.has(p.name.toLowerCase()))
+      .sort((a, b) => b.matchPct - a.matchPct)
+      .slice(0, 5),
+    selected: bench.name,
+  };
   const otherSeriesFull = await fetchDamageSeries({
     code: bench.detail.code,
     fightID: bench.detail.fightID,
@@ -85,7 +120,6 @@ export async function buildRaidPull({
   // Drives the buff bar lanes on the rotation timeline.
   const buffSources = mineDetail.buffSources ?? {};
 
-  const spikeAnalysis = analyzeSpikes({ mineDetail, otherDetail, mineSeries, otherSeries });
   const timeline = buildTimeline(mineDetail, otherDetail, buffSources);
   if (timeline) timeline.otherRoleLabel = 'top parser';
 
@@ -128,38 +162,47 @@ export async function buildRaidPull({
     dumpDebug('raid-parse-failed', { code, fightID, encounterID, error: String(err) });
   }
 
-  // Rotation vs the top parser FOR THIS PULL, over the fair boss-health window.
-  // Cast counts, spell mix and cast order are all rebuilt from the cast events
-  // inside the window, so they're correct on a truncated benchmark.
   const rotation = rotationComposition(mineDetail, otherDetail);
-  // each cast carries the buffs that were up when it landed — so the cast-order
-  // columns can show "The Hunt [Inertia]" for them and a bare "The Hunt" for you
-  rotation.order = { mine: castOrder(mineDetail), them: castOrder(otherDetail) };
-  const comparison = {
-    against: bench.name,
-    difficultyName: bench.difficultyName,
-    myPullId: fight.id,
-    myPullKill: fight.kill,
-    rotation,
-    // The DamageDone TABLE is a whole-fight aggregate — WCL gives no per-window
-    // per-ability damage without replaying the event stream. So on a truncated
-    // (wipe) comparison it would silently pit your partial pull against their
-    // FULL kill's damage. Omitted there rather than shown wrong; cast counts
-    // above carry the same signal and are window-correct.
-    damageDone: cutoffSec == null ? buildDamageDoneTable(mineDetail, otherDetail) : null,
-    damageDoneOmittedReason:
-      cutoffSec == null ? null : 'Per-ability damage totals only exist for the whole fight, so they cannot be cut to this window without comparing your partial pull against their full kill. Cast counts below are window-correct.',
-  };
+  const myDps = output.fightDps;
+  const theirDps = benchOutput.fightDps;
 
+  // The SAME eight sections the M+ report has, from the same builders — a raid
+  // pull was previously missing consumables, gaps and resource management
+  // entirely, and had no opponent picker at all.
   return {
+    // shared eight-section view model (see analysis/compare.js buildReport)
+    headline: {
+      title: fight.name,
+      subtitle: `${difficultyName(difficulty)} · pull #${fight.id}${fight.kill ? ' (kill)' : ` (wipe at ${fight.pctRemaining}%)`}`,
+      myDps: Math.round(myDps),
+      theirDps: Math.round(theirDps),
+      dpsGapPct: theirDps ? Math.round((1000 * (theirDps - myDps)) / theirDps) / 10 : null,
+      otherLabel: bench.name,
+    },
+    compare: { ...players, level: difficulty },
+    castOrder: { mine: castOrder(mineDetail), them: castOrder(otherDetail) },
+    timeline,
+    rotationMatch: { spellMixPct: rotation.similarityPct, castOrderPct: rotation.sequencePct },
+    consumables: buildConsumables(mineDetail, otherDetail, bench.name, buffSources),
+    parse,
+    gaps: buildGaps(mineDetail, otherDetail, buffSources),
+    resources: compareResource(mineDetail.resourceEvents ?? [], otherDetail.resourceEvents ?? []),
+    // The per-ability DAMAGE half is a whole-fight aggregate — WCL gives no
+    // per-window per-ability damage without replaying the event stream. On a
+    // truncated (wipe) comparison it would pit your partial pull against their
+    // FULL kill's damage, so it is omitted there rather than shown wrong. Cast
+    // counts carry the same signal and ARE window-correct.
+    abilities: cutoffSec == null ? buildAbilityTable(mineDetail, otherDetail, bench.name) : null,
+    abilitiesOmittedReason:
+      cutoffSec == null
+        ? null
+        : "Per-ability damage totals only exist for the whole fight, so they can't be cut to this window without comparing your partial pull against their full kill.",
+
+    // --- raid-only extras ---
     code,
     fightID,
-    boss: fight.name,
-    difficultyName: difficultyName(difficulty),
-    comparison,
     pull: { id: fight.id, kill: fight.kill, pctRemaining: fight.pctRemaining, durationMs: fight.durationMs },
     output, // this pull's active DPS / CPM / deaths / death timing
-    parse, // this pull's colour + what the next colours cost
     benchmarkOutput: { name: bench.name, activeDps: benchOutput.activeDps },
     mine: mineSeries,
     other: otherSeries,
@@ -172,9 +215,139 @@ export async function buildRaidPull({
       truncated: cutoffSec != null,
     },
     bossHealth: { mine: myHealth, them: theirHealth ? { ...theirHealth, points: truncatePoints(theirHealth.points, cutoffSec) } : null },
-    spikeAnalysis,
-    timeline,
-    timelineInfo: buildTimelineInfo(timeline),
+  };
+}
+
+/**
+ * Analyse a raid boss WITHOUT a pasted log: resolve the character's own best
+ * ranked kill on it, then run the normal pull analysis on that fight.
+ *
+ * This is what the raid view should have defaulted to all along. Pasting a report
+ * URL is still needed for the one thing rankings cannot show — a WIPE — but you
+ * shouldn't have to go hunting for a URL just to look at a boss you killed.
+ */
+export async function buildRaidBossReport({
+  encounterID,
+  difficulty = DEFAULT_RAID_DIFFICULTY,
+  name,
+  serverSlug,
+  serverRegion,
+  className,
+  specName,
+  classLabel = null,
+  compareTo = null,
+  refresh = false,
+}) {
+  // byBracket:false — a raid bracket is item level (see the note in api.js)
+  const runs = await fetchMyEncounterRuns({ name, serverSlug, serverRegion, encounterID, specName, byBracket: false, refresh });
+  const kills = (runs.runs ?? []).filter((r) => r.report?.code && r.report?.fightID != null);
+  if (!kills.length) {
+    throw new Error(`No ranked kill of that boss logged for ${name} — paste a report to analyse a wipe instead.`);
+  }
+  // your best parse on the boss is the one worth looking at
+  const best = [...kills].sort((a, b) => (b.rankPercent ?? 0) - (a.rankPercent ?? 0))[0];
+
+  return buildRaidPull({
+    code: best.report.code,
+    fightID: best.report.fightID,
+    encounterID,
+    difficulty,
+    name,
+    serverSlug,
+    serverRegion,
+    className,
+    specName,
+    classLabel,
+    compareTo,
+    refresh,
+  });
+}
+
+/**
+ * "How is this boss played by this spec" — ONE top-ranked player's rotation, and
+ * the names of the other nine to switch to.
+ *
+ * Deliberately NOT a comparison: there is no "you" here, no gaps, no parse. You
+ * don't need a log, a kill, or even the character to have pulled the boss. It
+ * exists to be read before you go in.
+ *
+ * Cost: the roster is the ranked page — one cached call, no run detail at all.
+ * Exactly one player's run is fetched: whichever you picked (`player`), or the
+ * #1 parse by default. Pulling all ten up front cost ten times the API for a view
+ * that shows one column at a time.
+ *
+ * @param {string} [p.player] name from the roster; omit for the #1 parse
+ */
+export async function buildBossRotations({
+  encounterID,
+  difficulty = DEFAULT_RAID_DIFFICULTY,
+  className,
+  specName,
+  player = null,
+  topN = 10,
+  refresh = false,
+}) {
+  const entries = await fetchRaidRankings({ encounterID, className, specName, difficulty, refresh });
+
+  // One row per player: the same name can hold several ranked kills, and ten
+  // copies of one player's rotation is not ten players' rotations.
+  const seen = new Set();
+  const picked = [];
+  for (const e of entries) {
+    const key = String(e.name).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    picked.push(e);
+    if (picked.length >= topN) break;
+  }
+
+  // The dropdown is FREE — it's the ranked page, one cached call. Only the player
+  // you actually select costs anything.
+  const roster = picked.map((e, i) => ({
+    rank: i + 1,
+    name: e.name,
+    dps: Math.round(e.dps ?? 0),
+    durationSec: e.durationMs ? Math.round(e.durationMs / 1000) : null,
+  }));
+
+  const base = {
+    encounterID,
+    difficulty,
+    difficultyName: difficultyName(difficulty),
+    className,
+    specName,
+    players: roster,
+  };
+
+  // No player chosen yet: hand back the roster and fetch nothing. Fetching all ten
+  // to show one column was ten times the API cost of what gets read.
+  const wanted = player ? roster.find((p) => p.name.toLowerCase() === String(player).toLowerCase()) : roster[0];
+  if (!wanted) {
+    const err = new Error(`${player} is not in the top ${roster.length} ${specName} kills of that boss.`);
+    err.status = 400;
+    throw err;
+  }
+
+  const entry = picked[wanted.rank - 1];
+  const detail = await fetchRunDetail({
+    code: entry.report.code,
+    fightID: entry.report.fightID,
+    playerName: entry.name,
+    castsOnly: true,
+  });
+  const order = castOrder(detail);
+  const durationSec = Math.max(1, Math.round((detail.fight.endTime - detail.fight.startTime) / 1000));
+
+  return {
+    ...base,
+    boss: detail.fight.name ?? null,
+    selected: {
+      ...wanted,
+      durationSec,
+      cpm: Math.round((10 * 60 * order.length) / durationSec) / 10,
+      report: entry.report,
+      castOrder: order,
+    },
   };
 }
 
@@ -210,12 +383,21 @@ export async function buildRaidReport({
   serverSlug,
   className = 'DeathKnight',
   specName = 'Unholy',
+  classLabel = null,
   benchmark = true,
   refresh = false,
   maxAttempts = 24,
 }) {
   code = reportCode(code);
   const report = await fetchReportFights({ code, encounterID, refresh });
+
+  // Reject the wrong log at the FIRST step — when the boss menu is built — rather
+  // than letting someone pick a boss and a pull before finding out. Checked on any
+  // fight in the report; the roster is the same throughout.
+  const anyFight = report.fights[0];
+  if (anyFight) {
+    await assertCharacterInLog({ code, fightID: anyFight.id, name, className, specName, classLabel, refresh });
+  }
 
   // Boss menu for the whole report (so the UI can offer a picker even before a
   // boss is chosen). Difficulty is NOT filtered here — the menu shows every mode

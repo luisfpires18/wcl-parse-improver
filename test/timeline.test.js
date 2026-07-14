@@ -12,7 +12,7 @@ const bundle = JSON.parse(
 );
 
 test('buildTimeline picks a shared, frequency-based lane set from real Pit data', () => {
-  const t = buildTimeline(bundle.mine.detail, bundle.cohort[0].detail);
+  const t = buildTimeline(bundle.mine.detail, bundle.other.detail);
   assert.ok(t.laneNames.length > 0 && t.laneNames.length <= 8);
   // high-CPM filler (Scourge Strike, Death Coil, Epidemic) must not be a lane
   for (const filler of ['Scourge Strike', 'Death Coil', 'Epidemic', 'Graveyard']) {
@@ -30,7 +30,7 @@ test('buildTimeline picks a shared, frequency-based lane set from real Pit data'
 });
 
 test('buildTimeline carries real idle windows and deaths, fight-relative', () => {
-  const t = buildTimeline(bundle.mine.detail, bundle.cohort[0].detail);
+  const t = buildTimeline(bundle.mine.detail, bundle.other.detail);
   assert.equal(t.mine.deaths.length, bundle.mine.detail.deaths.deaths.length);
   for (const d of t.mine.deaths) assert.ok(d.atMs >= 0 && d.atMs <= t.mine.durationMs);
   assert.ok(t.mine.idleWindows.length > 0);
@@ -41,7 +41,7 @@ test('buildTimeline carries real idle windows and deaths, fight-relative', () =>
 });
 
 test('lane cast timestamps fall within the run duration and are non-negative', () => {
-  const t = buildTimeline(bundle.mine.detail, bundle.cohort[0].detail);
+  const t = buildTimeline(bundle.mine.detail, bundle.other.detail);
   for (const view of [t.mine, t.other]) {
     for (const lane of view.lanes) {
       for (const ts of lane.casts) {
@@ -52,18 +52,18 @@ test('lane cast timestamps fall within the run duration and are non-negative', (
 });
 
 test('a real cooldown (Dark Transformation) resolves to actual cast timestamps, not an empty lane', () => {
-  const t = buildTimeline(bundle.mine.detail, bundle.cohort[0].detail);
+  const t = buildTimeline(bundle.mine.detail, bundle.other.detail);
   if (t.laneNames.includes('Dark Transformation')) {
     const lane = t.mine.lanes.find((l) => l.name === 'Dark Transformation');
     assert.ok(lane.casts.length > 0);
   }
 });
 
-test('buildReport builds the timeline against the most-similar cohort run (headline.similarTarget)', () => {
+test('buildReport builds the timeline against the one selected opponent', () => {
   const report = buildReport(bundle);
   assert.ok(report.timeline);
   assert.equal(report.timeline.mine.label, 'Unreally');
-  // 1:1 views now compare against the most-similar run, not always rank 1
-  assert.equal(report.timeline.other.label, report.headline.similarTarget);
-  assert.ok(bundle.cohort.some((c) => c.meta.name === report.headline.similarTarget));
+  // there is exactly one opponent now — no cohort, no median
+  assert.equal(report.timeline.other.label, bundle.other.meta.name);
+  assert.equal(report.headline.otherLabel, bundle.other.meta.name);
 });

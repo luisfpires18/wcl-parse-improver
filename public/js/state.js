@@ -23,6 +23,7 @@ export function charQuery() {
     zone: String(c.zone),
     className: c.className,
     specName: state.activeSpec, // the SLUG — "BeastMastery", not "Beast Mastery"
+    classLabel: c.classLabel ?? '', // display-only: "Death Knight" reads better than "DeathKnight" in an error
   });
 }
 

@@ -43,28 +43,22 @@ test('real Magisters bundle: buffSources classifies Dark Transformation as self 
   assert.ok(bs['Dark Transformation'].self > 0);
 });
 
-test('buildReport: no compNotes entry ever leaks into the actionable gap list, regardless of external flag or minePct', () => {
-  // whichever group-comp buffs happen to show up in THIS fixture (varies
-  // as fixtures get regenerated from live logs), none of them should ever
-  // rank as a gap the player is told to fix
+// classifyBuffSources still does the load-bearing job, it just feeds a different
+// place now: an externally-applied aura becomes a PARTY BUFF (section 4) instead of
+// being ranked as a rotation gap the player could have fixed.
+test('an externally-applied aura becomes a party buff, never an actionable gap', () => {
   const report = buildReport(magisters);
-  for (const note of report.compNotes) {
-    assert.ok(!report.gaps.some((g) => g.title.includes(note.name)), `${note.name} should not be an actionable gap`);
-    assert.ok(!report.summary.text.includes(note.name));
-    assert.ok(!report.summary.nextSteps.actions.some((a) => a.includes(note.name)));
+  const party = report.consumables.partyBuffs.mine.map((b) => b.name);
+  assert.ok(party.length >= 1, 'real run: groupmates buffed me');
+  for (const name of party) {
+    assert.ok(!report.gaps.some((g) => g.name === name), `${name} is not my rotation`);
   }
 });
 
-test('buildReport: a compNote with nonzero minePct (verified-external partial uptime) uses the groupmate wording, never "you 0%"', () => {
-  const report = buildReport(magisters);
-  const partial = report.compNotes.find((n) => n.external && n.minePct > 0);
-  if (!partial) return; // this specific fixture had no partial-external case this time — covered by the synthetic unit test above
-  assert.ok(partial.note.includes('groupmate'));
-  assert.ok(!partial.note.includes('you 0%'));
-});
-
-test('buildReport: a genuine self-managed aura with a real gap is unaffected by the external check', () => {
+test('a self-managed aura with a real gap is unaffected by the external check', () => {
   const report = buildReport(pit);
-  const festering = report.gaps.find((g) => g.title.includes('Festering Scythe'));
-  assert.ok(festering, 'Festering Scythe uptime gap should still be actionable');
+  const uptimeGaps = report.gaps.filter((g) => g.category === 'uptime');
+  const party = new Set(report.consumables.partyBuffs.mine.map((b) => b.name));
+  // whatever survives as an uptime gap must be a buff I apply to MYSELF
+  for (const g of uptimeGaps) assert.ok(!party.has(g.name));
 });

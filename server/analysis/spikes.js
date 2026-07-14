@@ -1,25 +1,23 @@
-// Explain WHY the comparison run out-damages mine in its burst windows when
-// we run the SAME rotation. Two honest signals:
+// Rotation similarity + the literal cast sequence, and how each cast is
+// classified for the reader.
 //
-//   1. Engagement start — the first DAMAGE cast of each run. Starting a pull
-//      late is pure lost uptime.
-//   2. Burst cast density — inside each burst window, the count of DAMAGE
-//      casts (Scourge Strike, Graveyard, Putrefy, …, from the DamageDone
-//      table) and which AMPLIFIERS fired. Same cooldowns but fewer damage
-//      casts = the real gap.
-//
-// A DAMAGE ability = one that appears in the DamageDone table (deals damage)
-// → its casts are the "dmg count". AMPLIFIERS use the named damage-cooldown
-// list the project spec sanctioned (Army of the Dead, Dark Transformation,
-// Apocalypse, …, + damage potions) — a fixed, reliable set, so utility
-// (Mind Freeze, Icebound, Death Charge, Blinding Sleet) never leaks in.
-// Windows align to EACH run's own burst peak (not the same clock time), so a
-// few seconds of routing offset never reads as "you did nothing".
+// Every cast is one of three kinds:
+//   damage — it appears in the DamageDone table
+//   amp    — a cooldown or consumable: any potion, any TRINKET, or a DAMAGING
+//            ability pressed at cooldown frequency (see amplifierNamesOf). Derived
+//            from the run, never from a per-class list, so it works for a spec
+//            nobody wrote one for. `amp` beats `damage`: a potion and a big
+//            cooldown ARE damage, but reading them as ordinary damage casts buries
+//            the thing you are actually scanning the list for.
+//   util   — everything else (interrupts, movement)
 import { IGNORED_ABILITIES } from './metrics.js';
+import { isPotion } from './potions.js';
 import { distributionMatch, bigramMatch } from '../../shared/rotationMatch.js';
 
-// Known Unholy DK / general damage cooldowns + damage potions (spec-sanctioned
-// named list). Not a rotation guess — just "these are the burst amplifiers".
+// A named list of Death Knight cooldowns. Kept only because raidProgress.js uses
+// it as the EVIDENCE for burst inflation on that spec — it is not how the cast
+// views decide what's an amplifier any more (see amplifierNamesOf below), because
+// a hardcoded DK list means a Demon Hunter sees nothing highlighted at all.
 export const AMPLIFIERS = new Set([
   'Army of the Dead',
   'Raise Abomination',
@@ -32,6 +30,56 @@ export const AMPLIFIERS = new Set([
   'Potion of Recklessness',
   'Potion of Unwavering Focus',
 ]);
+
+// A DAMAGING ability you press rarely is a cooldown — that is what "rarely" means.
+// This is the same frequency rule timeline.js already uses to pick its cooldown
+// lanes (never a name), so The Hunt and Eye Beam light up for a Havoc DH exactly
+// as Army and Apocalypse do for an Unholy DK, with no per-class list.
+const AMP_CPM_CEILING = 1.5;
+
+/**
+ * The abilities that count as cooldowns/consumables in THIS run:
+ *
+ *   1. every potion — identified by its icon, so "Light's Potential" counts as
+ *      surely as "Potion of Recklessness" (see potions.js);
+ *   2. every DAMAGING ability pressed at cooldown frequency;
+ *   3. every OTHER rare cast that applies a buff of its own name — which is what an
+ *      on-use TRINKET looks like in a log. Algeth'ar Puzzle is cast once, deals no
+ *      damage, and grants a stat buff called "Algeth'ar Puzzle"; under rules 1–2 it
+ *      fell into grey "utility" and got buried in the cast list, even though the
+ *      whole field presses it in the opener.
+ *
+ * All three are read off the run. There is no item list and no class list — which
+ * is also why a rare DEFENSIVE that grants a self-buff (a Blur, a Darkness) lands
+ * here too: nothing in a log distinguishes "this buff raises my damage" from "this
+ * buff lowers theirs". The strip is labelled "cooldowns & consumables" rather than
+ * "burst" for exactly that reason; over-showing a defensive is a far cheaper error
+ * than hiding a trinket.
+ */
+export function amplifierNamesOf(detail) {
+  const out = new Set();
+  const dmg = damageNamesOf(detail);
+  const activeMin = (detail?.casts?.totalTimeMs ?? 0) / 60000;
+  // a buff whose name is a cast's name was applied BY that cast: trinket, potion,
+  // or cooldown. External raid buffs can't collide — you never cast Battle Shout.
+  const selfBuffNames = new Set((detail?.buffs?.auras ?? []).map((a) => a?.name).filter(Boolean));
+
+  for (const a of detail?.casts?.abilities ?? []) {
+    if (!a?.name || !a.casts) continue;
+    if (isPotion(a)) {
+      out.add(a.name); // a potion is a cooldown by definition
+      continue;
+    }
+    if (AMPLIFIERS.has(a.name)) {
+      out.add(a.name); // the sanctioned list, for the spec it was written for
+      continue;
+    }
+    const cpm = activeMin > 0 ? a.casts / activeMin : 0;
+    if (cpm > AMP_CPM_CEILING) continue; // pressed often => a filler, whatever it does
+    if (dmg.has(a.name) || selfBuffNames.has(a.name)) out.add(a.name);
+  }
+  return out;
+}
 
 const BURST_LEAD_SEC = 20; // burst ramps over ~this long before the peak
 const BURST_TAIL_SEC = 6;
@@ -92,6 +140,7 @@ export function rotationComposition(mineDetail, otherDetail) {
   const my = castCountsByName(mineDetail);
   const their = castCountsByName(otherDetail);
   const dmg = new Set([...damageNamesOf(mineDetail), ...damageNamesOf(otherDetail)]);
+  const amps = new Set([...amplifierNamesOf(mineDetail), ...amplifierNamesOf(otherDetail)]);
   const names = [...new Set([...my.keys(), ...their.keys()])];
   const myTotal = [...my.values()].reduce((a, b) => a + b, 0) || 1;
   const theirTotal = [...their.values()].reduce((a, b) => a + b, 0) || 1;
@@ -118,7 +167,7 @@ export function rotationComposition(mineDetail, otherDetail) {
         minePct: Math.round((1000 * mine) / myTotal) / 10,
         themPct: Math.round((1000 * them) / theirTotal) / 10,
         diffPp: Math.round((1000 * (mine / myTotal - them / theirTotal))) / 10,
-        kind: dmg.has(name) ? 'damage' : AMPLIFIERS.has(name) ? 'amp' : 'util',
+        kind: amps.has(name) ? 'amp' : dmg.has(name) ? 'damage' : 'util',
       };
     })
     .sort((a, b) => b.them - a.them);
@@ -212,136 +261,62 @@ function topTransition(seq) {
  * Capped at `limit` only as a payload safety bound (a run is ~1300 casts).
  */
 export function castOrder(detail, limit = 4000) {
+  // Only abilities in the Casts TABLE count. The cast EVENT stream carries more
+  // events than there were presses (2575 events against a table total of 1489 on a
+  // real log) because the same press is often logged twice under a second ability
+  // id — The Hunt appears as both 370965 and 370966, 24 casts each, for 24 actual
+  // presses. Naming those extra events off masterData would look like a fix and
+  // silently double the count. The table is the authority on what was pressed.
   const nameOf = new Map((detail.casts?.abilities ?? []).map((a) => [a.guid, a.name]));
+
   const dmg = damageNamesOf(detail);
+  const amps = amplifierNamesOf(detail);
   const start = detail.fight?.startTime ?? 0;
+
   const out = [];
   for (const ev of detail.castEvents ?? []) {
     const name = nameOf.get(ev.abilityGameID);
     if (!name || IGNORED_ABILITIES.has(name)) continue;
     out.push({
       tSec: Math.round(((ev.timestamp - start) / 1000) * 10) / 10,
+      // amp wins over damage: a potion and a big cooldown ARE damage, but reading
+      // them as ordinary damage casts buries the thing you actually want to find
+      kind: amps.has(name) ? 'amp' : dmg.has(name) ? 'damage' : 'util',
       name,
-      kind: dmg.has(name) ? 'damage' : AMPLIFIERS.has(name) ? 'amp' : 'util',
     });
     if (out.length >= limit) break;
   }
-  return out;
+
+  // BACKSTOP: a potion you cannot see is the whole complaint. Even if its cast
+  // event is missing or unnameable, the BUFF it applies is in the Buffs table with
+  // a band per use — that is proof it was drunk, and when. Merge any potion use
+  // that the cast stream didn't already account for, so a potion can never be lost
+  // to a gap in the cast data. Works for the opponent exactly as for you: it is
+  // their log, same tables.
+  for (const use of potionUsesFromBuffs(detail)) {
+    const already = out.some((c) => c.name === use.name && Math.abs(c.tSec - use.tSec) <= 2);
+    if (!already) out.push({ ...use, kind: 'amp', fromBuff: true });
+  }
+
+  return out.sort((a, b) => a.tSec - b.tSec);
 }
 
-export function analyzeSpikes({ mineDetail, otherDetail, mineSeries, otherSeries }) {
-  if (!mineSeries?.points?.length || !otherSeries?.points?.length) return null;
-
-  const dmgNames = new Set([...damageNamesOf(mineDetail), ...damageNamesOf(otherDetail)]);
-  const myCasts = castTimesByName(mineDetail);
-  const theirCasts = castTimesByName(otherDetail);
-  const myAmps = new Set([...myCasts.keys()].filter((n) => AMPLIFIERS.has(n)));
-  const theirAmps = new Set([...theirCasts.keys()].filter((n) => AMPLIFIERS.has(n)));
-
-  // engagement start = first damage cast
-  const myStart = firstDamageCastSec(myCasts, dmgNames);
-  const theirStart = firstDamageCastSec(theirCasts, dmgNames);
-  let openerNote = null;
-  if (myStart != null && theirStart != null && myStart - theirStart > START_GAP_SEC) {
-    openerNote =
-      `You land your first damaging cast at ${fmt(myStart)} vs their ${fmt(theirStart)} — ` +
-      `~${Math.round(myStart - theirStart)}s of lost uptime at the pull start. Pre-pull with Outbreak/Festering ` +
-      `Strike and hit the pack the instant it's in range.`;
+/**
+ * When each potion was drunk, read from the aura it applies rather than from a
+ * cast. The band start IS the moment it was used.
+ */
+function potionUsesFromBuffs(detail) {
+  const start = detail.fight?.startTime ?? 0;
+  const end = detail.fight?.endTime ?? Infinity;
+  const out = [];
+  for (const aura of detail.buffs?.auras ?? []) {
+    if (!isPotion(aura)) continue;
+    for (const b of aura.bands ?? []) {
+      if (b.startTime < start || b.startTime > end) continue;
+      out.push({ name: aura.name, tSec: Math.round(((b.startTime - start) / 1000) * 10) / 10 });
+    }
   }
-
-  // their biggest burst peaks
-  const peaks = otherSeries.points
-    .map((p, i) => ({ i, tSec: p.tSec, dps: p.dps }))
-    .filter((p) => isPeak(otherSeries.points, p.i))
-    .sort((a, b) => b.dps - a.dps);
-  const chosen = [];
-  for (const p of peaks) {
-    if (chosen.some((c) => Math.abs(c.tSec - p.tSec) < MERGE_SEC)) continue;
-    chosen.push(p);
-    if (chosen.length >= MAX_WINDOWS) break;
-  }
-  chosen.sort((a, b) => a.tSec - b.tSec);
-
-  const perBurstCasts = [];
-  const windows = chosen.map((sp) => {
-    // my burst on the same pull = my highest bin within ±ALIGN_SEC of their peak
-    let myPeakSec = sp.tSec;
-    let best = -1;
-    for (const p of mineSeries.points) {
-      if (Math.abs(p.tSec - sp.tSec) <= ALIGN_SEC && p.dps > best) {
-        best = p.dps;
-        myPeakSec = p.tSec;
-      }
-    }
-    const theirLo = sp.tSec - BURST_LEAD_SEC;
-    const theirHi = sp.tSec + BURST_TAIL_SEC;
-    const myLo = myPeakSec - BURST_LEAD_SEC;
-    const myHi = myPeakSec + BURST_TAIL_SEC;
-
-    const castDiffs = [];
-    let myTotal = 0;
-    let theirTotal = 0;
-    for (const name of dmgNames) {
-      const mineN = countIn(myCasts.get(name), myLo, myHi);
-      const themN = countIn(theirCasts.get(name), theirLo, theirHi);
-      if (mineN === 0 && themN === 0) continue;
-      myTotal += mineN;
-      theirTotal += themN;
-      castDiffs.push({ name, mine: mineN, them: themN, diff: themN - mineN });
-    }
-    castDiffs.sort((a, b) => b.them - a.them || b.diff - a.diff);
-    perBurstCasts.push({ mine: myTotal, them: theirTotal });
-
-    const theirAmpsHere = [...theirAmps].filter((n) => countIn(theirCasts.get(n), theirLo, theirHi));
-    const myAmpsHere = [...myAmps].filter((n) => countIn(myCasts.get(n), myLo, myHi));
-    const missingAmps = theirAmpsHere.filter((n) => !myAmpsHere.includes(n));
-
-    // note: lead with amps if genuinely missing, else the biggest cast gaps
-    const bigGaps = castDiffs.filter((d) => d.diff >= 2).slice(0, 3);
-    let note;
-    if (missingAmps.length) {
-      note = `They fired ${listOf(missingAmps)} here and you didn't — that's a full burst window without your amplifiers.`;
-    } else if (bigGaps.length) {
-      note =
-        `Same amplifiers, but they landed more damage casts in the window: ` +
-        `${bigGaps.map((d) => `${d.name} ${d.them} vs your ${d.mine}`).join(', ')}. ` +
-        `${theirTotal} vs your ${myTotal} damage casts total — they weave more into the same burst (fewer GCD gaps).`;
-    } else {
-      note = `Cast composition is close here (${theirTotal} vs your ${myTotal} damage casts) — this window's gap is target count or pet timing, not your buttons.`;
-    }
-    return {
-      tSec: sp.tSec,
-      atLabel: fmt(sp.tSec),
-      theirDps: Math.round(sp.dps),
-      myDps: Math.round(best >= 0 ? best : dpsAtSec(mineSeries, sp.tSec)),
-      gapDps: Math.round(sp.dps - (best >= 0 ? best : dpsAtSec(mineSeries, sp.tSec))),
-      theirAmps: theirAmpsHere,
-      myAmps: myAmpsHere,
-      castDiffs: castDiffs.slice(0, 8),
-      myCastTotal: myTotal,
-      theirCastTotal: theirTotal,
-      note,
-    };
-  });
-
-  // rotation similarity — proven from cast composition, not assumed
-  const rotation = rotationComposition(mineDetail, otherDetail);
-  // literal cast-order sequences from the pull start (learn their flow). Buff
-  // context lives on the rotation timeline's bar lanes, not here — per-cast badges
-  // were unreadable (a DK had 5 buffs up on nearly every global).
-  rotation.order = { mine: castOrder(mineDetail), them: castOrder(otherDetail) };
-
-  // headline builds on the confirmed similarity + measured gaps
-  const avgMine = perBurstCasts.reduce((a, b) => a + b.mine, 0) / (perBurstCasts.length || 1);
-  const avgThem = perBurstCasts.reduce((a, b) => a + b.them, 0) / (perBurstCasts.length || 1);
-  const parts = [];
-  if (openerNote) parts.push(`you engage pulls later`);
-  if (avgThem - avgMine >= 2) parts.push(`they fit more damage casts into each burst (${Math.round(avgThem)} vs your ${Math.round(avgMine)})`);
-  const headline = `${rotation.summary}${
-    parts.length ? ` On top of the sequencing, ${listOf(parts)} — uptime and cast density.` : ''
-  }`;
-
-  return { headline, rotation, openerNote, windows };
+  return out;
 }
 
 function listOf(arr) {

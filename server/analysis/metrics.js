@@ -1,6 +1,7 @@
 // Per-run rotational metrics derived from a fetchRunDetail() result.
 // No patch-specific rotation knowledge: everything is computed from what the
 // run data itself contains, so the tool survives game patches.
+import { computeResource } from './resources.js';
 
 const DOWNTIME_GAP_MS = 5000;
 
@@ -63,8 +64,6 @@ export function computeRunMetrics(detail) {
   }));
 
   const totalCasts = detail.casts?.totalCasts ?? 0;
-  const deathCoil = abilities.get('Death Coil')?.casts ?? 0;
-  const epidemic = abilities.get('Epidemic')?.casts ?? 0;
 
   return {
     fightDurMs,
@@ -77,37 +76,12 @@ export function computeRunMetrics(detail) {
     damageShare,
     deaths,
     downtime,
-    spender: {
-      deathCoil,
-      epidemic,
-      epidemicShare: deathCoil + epidemic ? epidemic / (deathCoil + epidemic) : null,
-    },
-    rpWaste: computeRpWaste(detail.resourceEvents ?? []),
-  };
-}
-
-// WCL scales Runic Power x10 in resourcechange events (maxResourceAmount
-// 1000 = the real 100 RP cap) — verified against a real payload.
-const RP_SCALE = 10;
-
-/**
- * `resourceChange` is the net amount actually added (already clipped to the
- * cap); `waste` is the extra that would have been added if not capped. So
- * "% of potential generation lost" = waste / (net + waste).
- */
-function computeRpWaste(resourceEvents) {
-  let netGain = 0;
-  let waste = 0;
-  for (const e of resourceEvents) {
-    netGain += e.gain;
-    waste += e.waste;
-  }
-  const potential = netGain + waste;
-  return {
-    netGain: netGain / RP_SCALE,
-    waste: waste / RP_SCALE,
-    wastePct: potential ? (100 * waste) / potential : null,
-    events: resourceEvents.length,
+    // The spec's primary resource and its overcap waste, derived from the log
+    // rather than hardcoded per class (see analysis/resources.js). This replaced
+    // a Death-Knight-only `rpWaste` that carried a Runic-Power scaling constant
+    // and a 'Death Coil' vs 'Epidemic' spender split — neither of which any other
+    // class could ever have used.
+    resource: computeResource(detail.resourceEvents ?? []),
   };
 }
 

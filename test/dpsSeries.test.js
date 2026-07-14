@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { binDamageEvents, parseDamageTable } from '../server/parse/tables.js';
-import { pickSimilarIndex, buildDamageDoneTable, buildReport } from '../server/analysis/compare.js';
+import { buildAbilityTable, buildReport } from '../server/analysis/compare.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const pit = JSON.parse(readFileSync(path.join(ROOT, 'fixtures', 'comparison-10658-plus0.json'), 'utf8'));
@@ -59,44 +59,27 @@ test('parseDamageTable keeps hitCount as hits', () => {
   assert.equal(parsed.abilities[0].hits, 42);
 });
 
-test('pickSimilarIndex picks the closest-duration run at the same level', () => {
-  const cohort = [
-    { detail: { fight: { keystoneTime: 1400000, keystoneLevel: 21 } } }, // 23:20 speedrun
-    { detail: { fight: { keystoneTime: 1580000, keystoneLevel: 21 } } }, // 26:20 — closest to mine
-    { detail: { fight: { keystoneTime: 1600000, keystoneLevel: 21 } } },
-  ];
-  assert.equal(pickSimilarIndex(cohort, 1586000, 21), 1);
-});
-
-test('pickSimilarIndex prefers same level over closer duration', () => {
-  const cohort = [
-    { detail: { fight: { keystoneTime: 1585000, keystoneLevel: 22 } } }, // closer time but wrong level
-    { detail: { fight: { keystoneTime: 1500000, keystoneLevel: 21 } } }, // farther time, right level
-  ];
-  assert.equal(pickSimilarIndex(cohort, 1586000, 21), 1);
-});
-
-test('pickSimilarIndex is safe on empty/unknown input', () => {
-  assert.equal(pickSimilarIndex([], 1000, 21), 0);
-  assert.equal(pickSimilarIndex([{ detail: {} }], null, 21), 0);
-});
-
-test('buildReport exposes similarPlayers (parse-search group) from the bundle', () => {
+// There is one opponent now, chosen server-side (closest route to mine, or whoever
+// you pick from the dropdown). pickSimilarIndex — which scored a 5-7 player cohort
+// to find the most-similar run — is gone with the cohort itself.
+test('the picker offers top players and similar parses, without duplicating between them', () => {
   const report = buildReport(pit);
-  const sp = report.headline.similarPlayers;
-  assert.ok(Array.isArray(sp) && sp.length > 0, 'expected similar-parse candidates');
-  const cohortNames = new Set(report.headline.cohortPlayers.map((p) => p.name));
-  for (const p of sp) {
-    assert.ok(typeof p.name === 'string' && p.name.length > 0);
-    assert.ok(typeof p.matchPct === 'number' && p.matchPct >= 0 && p.matchPct <= 100);
-    // similar list must not duplicate the base cohort
-    assert.ok(!cohortNames.has(p.name), `${p.name} should not be in both groups`);
+  const { top, similar, selected } = report.compare;
+  assert.ok(top.length > 0);
+  assert.ok(selected);
+
+  const topNames = new Set(top.map((p) => p.name));
+  for (const p of similar) {
+    assert.ok(!topNames.has(p.name), `${p.name} must not be in both groups`);
+    assert.ok(p.matchPct >= 0 && p.matchPct <= 100);
   }
-  // sorted by route match, descending
-  for (let i = 1; i < sp.length; i++) assert.ok(sp[i - 1].matchPct >= sp[i].matchPct);
+  // similar parses are ranked by how close their route is to mine
+  for (let i = 1; i < similar.length; i++) assert.ok(similar[i - 1].matchPct >= similar[i].matchPct);
 });
 
-test('buildDamageDoneTable joins damage + casts, sorted by my damage', () => {
+// One table, casts AND damage, 1:1 — replacing a "casts vs cohort median" table and
+// a separate "damage done" table that listed the same abilities twice.
+test('buildAbilityTable joins casts + damage against the one opponent', () => {
   const mineDetail = {
     fight: { keystoneTime: 60000 },
     player: { name: 'Me' },
@@ -112,12 +95,17 @@ test('buildDamageDoneTable joins damage + casts, sorted by my damage', () => {
     damage: { totalDamage: 2500, abilities: [{ name: 'Big', total: 2500, hits: 12 }] },
     casts: { abilities: [{ name: 'Big', casts: 6 }] },
   };
-  const t = buildDamageDoneTable(mineDetail, otherDetail);
+  const t = buildAbilityTable(mineDetail, otherDetail, 'Them');
   assert.equal(t.otherLabel, 'Them');
-  assert.equal(t.rows[0].name, 'Big'); // sorted by my damage
-  assert.equal(t.rows[0].myCasts, 4);
-  assert.equal(t.rows[0].myDps, Math.round(2000 / 60)); // 60000ms = 60s, rounded
-  assert.equal(t.rows[0].theirHits, 12);
-  assert.equal(t.rows[1].name, 'Small');
-  assert.equal(t.rows[1].theirAmount, 0); // they never used it
+
+  const big = t.rows.find((r) => r.name === 'Big');
+  assert.equal(big.myCasts, 4);
+  assert.equal(big.theirCasts, 6);
+  assert.equal(big.castDiff, -2, 'they pressed it twice more than me');
+  assert.equal(big.myDps, Math.round(2000 / 60));
+  assert.equal(big.theirAmount, 2500);
+
+  const small = t.rows.find((r) => r.name === 'Small');
+  assert.equal(small.theirAmount, 0, 'they never used it');
+  assert.equal(small.theirCasts, 0);
 });
