@@ -37,8 +37,11 @@ parameterized.
 
 1. **Node 20.6+** (uses built-in fetch, node:test and ESM; developed on 22).
 2. Create a (free) Warcraft Logs API client at
-   <https://www.warcraftlogs.com/api/clients/> — any name, no redirect URL,
-   "Public client" unchecked. Copy the client ID and secret.
+   <https://www.warcraftlogs.com/api/clients/> — any name, "Public client"
+   unchecked, and set the **redirect URL** to
+   `http://localhost:3000/api/auth/callback`. That URL is where Warcraft Logs
+   sends people back to after they sign in, so it has to be listed here.
+   Copy the client ID and secret.
 3. In the project root:
 
    ```
@@ -46,6 +49,8 @@ parameterized.
    # edit .env:
    #   WCL_CLIENT_ID=your-client-id
    #   WCL_CLIENT_SECRET=your-client-secret
+   #   WCL_REDIRECT_URI=http://localhost:3000/api/auth/callback
+   #   SESSION_SECRET=any-long-random-string
    ```
 
 4. Install and run:
@@ -55,9 +60,27 @@ parameterized.
    npm start
    ```
 
-   Open <http://localhost:3000>. On first run `characters.json` is seeded with
-   two example characters; use **＋ Add character** to track your own, and
-   **Remove** to drop the examples.
+   Open <http://localhost:3000> and **sign in with Warcraft Logs**. Then hit
+   **Import my characters** — every character you've claimed on your WCL profile
+   lands on the roster, server slug spelled correctly, with the specs you have
+   actually logged pre-selected. **Add character by hand** is still there for
+   anything you haven't claimed.
+
+### Sign-in, and what it does and doesn't touch
+
+Logging in uses the OAuth **authorization-code** flow and asks for one scope,
+`view-user-profile`: enough to learn who you are and which characters are yours.
+It does not ask for private-report access, and it never sees your password. The
+access token stays on the server, in `data/sessions.json` — the browser only ever
+holds an opaque, signed session id.
+
+The analysis itself still runs on the **app** token (client credentials) against
+the public API, exactly as before, so its responses stay shared and cacheable.
+The only thing the user token is used for is reading your character list.
+
+Rosters are per WCL account: `characters.json` is keyed by user id. An existing
+pre-login `characters.json` (a flat array) is adopted by the first account that
+signs in.
 
 The first report for a dungeon pulls ~6 reports from the WCL API and takes up
 to a minute; every response is cached on disk in `cache/` (keyed by

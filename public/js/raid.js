@@ -5,10 +5,11 @@
 // rankings only ever contain KILLS — a wipe appears in no ranking anywhere, and
 // wipes are the whole point on progress. The per-pull consistency table and the
 // death-timing read are raid-only; everything below them is the shared report.
-import { $, esc, fmtK, fmtPct, fmtSec, fmtTime, pctClass } from './util.js';
-import { state, charQuery } from './state.js';
+import { $, esc, fmtK, fmtPct, fmtSec, fmtTime, pctClass, pctColor, boardRow, EMPTY } from './util.js';
+import { state, charQuery, showLoading, hideLoading, skeleton } from './state.js';
 import { renderReport } from './report.js';
 import { dpsChartSvg, wireDpsBrush, setCastWindow, castOrderSlot, castOrderColumn } from './chart.js';
+import { sigilUrl } from './icons.js';
 
 let raidState = { code: null, difficulty: '5', bosses: [] };
 // every boss of the live tier, harvested from the overview — the "learn a boss"
@@ -33,7 +34,7 @@ export function renderRaidCard() {
     <div id="raid-zones" class="card"><p class="muted">Loading your raid parses…</p></div>
 
     <details class="card" id="raid-log-card">
-      <summary><b>Analyse a specific log</b> — for wipes / progression pulls</summary>
+      <summary><b>Analyse a specific log</b> <span class="muted">for wipes / progression pulls</span></summary>
       <p><small>Your kills are already above, ranked. Paste a report only when you want a pull that
         <b>isn't</b> a kill: a wipe appears in no ranking anywhere, so the log is the only place to see it.</small></p>
       <form id="raid-form" class="raid-form">
@@ -52,7 +53,7 @@ export function renderRaidCard() {
     </details>
 
     <details class="card" id="raid-learn-card">
-      <summary><b>Learn a boss</b> — how the top 10 of your spec play it</summary>
+      <summary><b>Learn a boss</b> <span class="muted">how the top 10 of your spec play it</span></summary>
       <p><small>The rotation of a top-ranked <b>${esc(state.activeSpec || '')} ${esc(
         state.activeChar.classLabel || state.activeChar.className || ''
       )}</b> kill of a boss. The top 10 go in a dropdown; only the one you pick is fetched.
@@ -91,7 +92,8 @@ export function renderRaidCard() {
  */
 async function loadRaidZones(refresh = false) {
   const el = $('#raid-zones');
-  if (refresh && el) el.innerHTML = `<p class="muted">Re-fetching your raid parses from Warcraft Logs (bypassing the cache)…</p>`;
+  showLoading(refresh ? 'Refreshing your raid parses, bypassing the cache…' : 'Loading your raid parses…');
+  if (el) el.innerHTML = skeleton(5);
   try {
     const params = charQuery();
     if (refresh) params.set('refresh', '1');
@@ -99,7 +101,9 @@ async function loadRaidZones(refresh = false) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
     renderRaidZones(data.zones ?? []);
+    hideLoading();
   } catch (err) {
+    hideLoading();
     if (el) el.innerHTML = `<span class="error">Could not load raid parses: ${esc(err.message)}</span>`;
   }
 }
@@ -113,34 +117,57 @@ function renderRaidZones(zones) {
   }
 
   const zoneBlock = (z) => {
+    // Boss order is pull order — that's the shape of a raid tier, so unlike the
+    // M+ list this one is NOT re-ranked. A boss you haven't killed still holds
+    // its place in the instance, dimmed.
     const rows = z.bosses
-      .map((b) => {
+      .map((b, i) => {
         const killed = b.kills > 0;
-        return `<tr class="${killed ? 'clickable' : 'unanalysed'}" ${killed ? `data-encounter="${b.encounterID}"` : ''}>
-          <td>${esc(b.name)}</td>
-          <td class="num">${b.kills || '—'}</td>
-          <td class="num ${pctClass(b.bestPercent)}">${b.bestPercent != null ? fmtPct(b.bestPercent) + '%' : '—'}</td>
-          <td class="num">${b.bestDps ? fmtK(b.bestDps) : '—'}</td>
-          <td>${killed ? '<button class="mini" data-analyze="' + b.encounterID + '">analyze</button>' : '<small class="muted">no kill</small>'}</td>
-        </tr>`;
+        return boardRow({
+          rank: i + 1,
+          color: pctColor(b.bestPercent),
+          iconUrl: sigilUrl('raid'),
+          title: b.name,
+          subtitle: killed ? `${b.kills} kill${b.kills === 1 ? '' : 's'}` : 'no kill',
+          pct: b.bestPercent,
+          value: killed ? `<span class="${pctClass(b.bestPercent)}">${fmtPct(b.bestPercent)}%</span>` : EMPTY,
+          meta: killed && b.bestDps ? `<span class="stat"><i>dps</i> ${fmtK(b.bestDps)}</span>` : '',
+          // no button for a boss with no kill — the row already says so, and a
+          // second "no kill" in the action column is just the same word twice
+          action: killed ? `<button class="mini" data-analyze="${b.encounterID}">analyze</button>` : '',
+          dim: !killed,
+          attrs: killed ? `data-encounter="${b.encounterID}"` : '',
+          clickable: killed,
+        });
       })
       .join('');
+
+    const done = z.bossCount ? Math.round((z.killedCount / z.bossCount) * 100) : 0;
     return `
-      <h3>${esc(z.zoneName)}
-        <small>${z.patch ? `<span class="patch-tag">${esc(z.patch)}</span> ` : ''}— ${z.killedCount}/${z.bossCount} killed${
-          z.bestAverage != null ? ` · best avg <b class="${pctClass(z.bestAverage)}">${fmtPct(z.bestAverage)}%</b>` : ''
-        }</small>
-      </h3>
-      <table>
-        <thead><tr><th>Boss</th><th>Kills</th><th>Best %</th><th>Best DPS</th><th></th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>`;
+      <div class="zone">
+        <div class="zone-head">
+          <h3>${esc(z.zoneName)} ${z.patch ? `<span class="patch-tag">${esc(z.patch)}</span>` : ''}</h3>
+          <div class="progress" title="${z.killedCount} of ${z.bossCount} bosses killed">
+            <div class="progress-fill" style="width: ${done}%"></div>
+          </div>
+          <span class="zone-stats">
+            <b>${z.killedCount}/${z.bossCount}</b> <small class="muted">killed</small>
+            ${
+              z.bestAverage != null
+                ? `<b class="${pctClass(z.bestAverage)}">${fmtPct(z.bestAverage)}%</b> <small class="muted">best avg</small>`
+                : ''
+            }
+          </span>
+        </div>
+        <div class="board parse">${rows}</div>
+      </div>`;
   };
 
   el.innerHTML = `
-    <h2>${esc(state.activeChar.name)} <small>— Raids</small>
+    <div class="board-head">
+      <span class="headline"><small class="muted">Raid parses</small></span>
       <button id="refresh-raids" class="mini" title="Re-fetch your raid parses from Warcraft Logs, bypassing the local cache">↻ Refresh</button>
-    </h2>
+    </div>
     ${zones.map(zoneBlock).join('')}
     <p class="table-note"><small>Click a boss to analyse your best ranked kill on it — no log needed.
       Parses are cached, so after a raid night hit <b>↻ Refresh</b> to pull your new kills.
@@ -177,9 +204,10 @@ async function loadBossRotations(player = '', refresh = false) {
   const encounterID = Number($('#learn-boss').value);
   if (!root || !encounterID) return;
   const difficulty = $('#learn-diff').value;
-  root.innerHTML = `<p class="muted">${
-    refresh ? 'Re-fetching' : 'Reading'
-  } ${player ? esc(player) + "'s" : "the #1 parse's"} casts (one log — ~5s, cached after)…</p>`;
+  showLoading(
+    `${refresh ? 'Re-fetching' : 'Reading'} ${player ? esc(player) + "'s" : "the #1 parse's"} casts. <small>One log; ~5s, cached after.</small>`
+  );
+  root.innerHTML = skeleton(4);
   try {
     const params = charQuery();
     // the character is irrelevant here; only their class+spec is used
@@ -194,7 +222,9 @@ async function loadBossRotations(player = '', refresh = false) {
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
     learn = { data };
     renderBossRotations();
+    hideLoading();
   } catch (err) {
+    hideLoading();
     root.innerHTML = `<span class="error">${esc(err.message)}</span>`;
   }
 }
@@ -242,11 +272,13 @@ function renderBossRotations() {
 async function loadRaidBoss(encounterID, compareTo = '', refresh = false) {
   const root = $('#raid-result');
   if (!root) return;
-  root.innerHTML = `<p class="muted">${
+  showLoading(
     refresh
-      ? 'Re-fetching this boss from Warcraft Logs (bypassing the cache — slower)…'
-      : 'Analysing your best kill on this boss (pulls damage events — ~15s first time, cached after)…'
-  }</p>`;
+      ? 'Re-fetching this boss, bypassing the cache…'
+      : 'Analysing your best kill on this boss. <small>Pulls damage events; ~15s the first time, cached after.</small>'
+  );
+  root.innerHTML = skeleton(6);
+  root.scrollIntoView({ block: 'start', behavior: 'smooth' });
   try {
     const params = charQuery();
     params.set('encounter', encounterID);
@@ -257,7 +289,9 @@ async function loadRaidBoss(encounterID, compareTo = '', refresh = false) {
     const view = await res.json();
     if (!res.ok) throw new Error(view.error || `HTTP ${res.status}`);
     renderRaidPull(view, root, { encounterID, difficulty: raidState.difficulty, fromRankings: true });
+    hideLoading();
   } catch (err) {
+    hideLoading();
     root.innerHTML = `<span class="error">${esc(err.message)}</span>`;
   }
 }
@@ -294,7 +328,7 @@ function renderRaidBosses(bosses) {
   }
   const rows = show
     .map((b) => {
-      const prog = b.kills > 0 ? `<span class="p-orange">killed</span>` : b.bestPctRemaining != null ? `best ${b.bestPctRemaining}% left` : '—';
+      const prog = b.kills > 0 ? `<span class="p-orange">killed</span>` : b.bestPctRemaining != null ? `best ${b.bestPctRemaining}% left` : EMPTY;
       return `<button type="button" class="mini raid-boss" data-encounter="${b.encounterID}" data-diff="${b.difficulty}">
         ${esc(b.name)} <small>&middot; ${esc(b.difficultyName || '')} &middot; ${b.pulls} pull${b.pulls === 1 ? '' : 's'} &middot; ${prog}</small></button>`;
     })
@@ -306,11 +340,12 @@ function renderRaidBosses(bosses) {
 }
 
 async function loadRaidProgression(encounterID, difficulty, refresh = false) {
-  $('#raid-result').innerHTML = `<p class="muted">${
+  showLoading(
     refresh
-      ? 'Re-fetching every pull from Warcraft Logs (bypassing the cache — slower)…'
-      : 'Analysing every pull (fetches your casts per attempt &amp; the kill benchmark — up to ~20s the first time, cached after)…'
-  }</p>`;
+      ? 'Re-fetching every pull, bypassing the cache…'
+      : 'Analysing every pull. <small>Fetches your casts per attempt and the kill benchmark; up to ~20s the first time, cached after.</small>'
+  );
+  $('#raid-result').innerHTML = skeleton(5);
   try {
     const params = charQuery();
     if (refresh) params.set('refresh', '1');
@@ -321,7 +356,9 @@ async function loadRaidProgression(encounterID, difficulty, refresh = false) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
     renderRaidProgression(data);
+    hideLoading();
   } catch (err) {
+    hideLoading();
     $('#raid-result').innerHTML = `<span class="error">${esc(err.message)}</span>`;
   }
 }
@@ -341,7 +378,7 @@ function renderRaidProgression(data) {
   const pulls = p.rows
     .map((r) => {
       const cls = [!r.analysed && 'unanalysed', r.burstWeighted && 'burst', r.kill && 'rot-big'].filter(Boolean).join(' ');
-      const num = (v, fmt) => (r.analysed && v != null ? fmt(v) : '<span class="muted">—</span>');
+      const num = (v, fmt) => (r.analysed && v != null ? fmt(v) : '<span class="muted">·</span>');
       // a burst-weighted pull still shows its real DPS, but marked — so it can
       // never be mistaken for a bar the full-length pulls failed to clear
       const dps = r.burstWeighted
@@ -353,7 +390,7 @@ function renderRaidProgression(data) {
         <td class="num">${fmtTime((r.durationSec ?? 0) * 1000)}</td>
         <td class="num">${dps}</td>
         <td class="num">${num(r.cpm, (v) => v.toFixed(1))}</td>
-        <td>${r.analysed ? deathCell(r) : '<span class="muted">—</span>'}</td>
+        <td>${r.analysed ? deathCell(r) : '<span class="muted">·</span>'}</td>
         <td class="num">${num(r.idlePct, (v) => v.toFixed(0) + '%')}</td>
       </tr>`;
     })
@@ -372,7 +409,7 @@ function renderRaidProgression(data) {
       <span>Mean active DPS <b>${fmtK(c.meanActiveDps)}</b></span>
       <span>Best <b>${fmtK(c.bestActiveDps)}</b></span>
       <span>Worst <b>${fmtK(c.worstActiveDps)}</b></span>
-      <span>Swing <b>${c.swingPct != null ? c.swingPct + '%' : '—'}</b></span>
+      <span>Swing <b>${c.swingPct != null ? c.swingPct + '%' : EMPTY}</b></span>
       <span>Early deaths <b>${dt.earlyDeaths ?? 0}/${dt.scoredWipes ?? 0} wipes</b></span>
     </div>
     ${benchLine}
@@ -380,7 +417,7 @@ function renderRaidProgression(data) {
     <p class="table-note"><small><b>Click any pull below</b> to analyse that specific pull — DPS over time, boss health, rotation timeline, cast order, and its rotation vs the top parser.
       ${
         sampled
-          ? `The summary above is computed from the <b>${c.analysedPulls} longest</b> of ${c.pulls} pulls (each pull costs API calls); rows showing <span class="muted">—</span> have no summary stats yet, but you can still click them and they'll be analysed in full.`
+          ? `The summary above is computed from the <b>${c.analysedPulls} longest</b> of ${c.pulls} pulls (each pull costs API calls); rows showing <span class="muted">·</span> have no summary stats yet, but you can still click them and they'll be analysed in full.`
           : `All ${c.pulls} pulls are included in the summary above.`
       }</small></p>
     <p><button id="raid-best-pull" class="mini accent">★ Analyse best pull${best ? ` (#${best.fightID} — ${fmtK(best.activeDps)})` : ''}</button></p>
@@ -496,7 +533,10 @@ function deathCell(r) {
 async function loadRaidPullChart(fightID, encounterID, difficulty, compareTo = '', refresh = false) {
   const root = $('#raid-pull-chart');
   if (!root) return;
-  root.innerHTML = `<p class="muted">${refresh ? 'Re-fetching' : 'Loading'} pull #${fightID} — damage events for both runs (~15s first time, cached after)…</p>`;
+  showLoading(
+    `${refresh ? 'Re-fetching' : 'Loading'} pull #${fightID}. <small>Damage events for both runs; ~15s the first time, cached after.</small>`
+  );
+  root.innerHTML = skeleton(4);
   const cur0 = $('#raid-current');
   if (cur0) cur0.innerHTML = `<p class="raid-current-line muted">Analysing pull #${fightID}…</p>`;
   try {
@@ -514,7 +554,9 @@ async function loadRaidPullChart(fightID, encounterID, difficulty, compareTo = '
     if (!cur) return; // the user switched pulls while this was loading
     renderRaidPull(view, cur, { encounterID, difficulty });
     renderCurrentPull(view); // re-anchor the night's verdict to this pull
+    hideLoading();
   } catch (err) {
+    hideLoading();
     const cur = $('#raid-pull-chart');
     if (cur) cur.innerHTML = `<span class="error">Pull analysis failed: ${esc(err.message)}</span>`;
   }

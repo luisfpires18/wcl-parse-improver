@@ -14,15 +14,17 @@
 //   raid.js       log -> boss -> pull -> report
 import { $ } from './js/util.js';
 import { state } from './js/state.js';
-import { refreshCharacters, renderCharBar, renderCharacterList, initAddCharacter, visibleCharacters } from './js/characters.js';
+import { refreshCharacters, renderCharBar, renderCharacterList, analysableCharacters } from './js/characters.js';
 import { loadOverview } from './js/mplus.js';
 import { renderRaidCard } from './js/raid.js';
+import { installAuthFetch, fetchMe, renderSignIn, renderUserBar } from './js/auth.js';
 
 const VIEWS = ['characters', 'mplus', 'raid'];
 let currentView = 'mplus';
 
 function show(view) {
   currentView = view;
+  $('#nav').hidden = false;
   for (const v of VIEWS) $(`#view-${v}`).hidden = v !== view;
   document.querySelectorAll('.nav-link').forEach((b) => b.classList.toggle('active', b.dataset.view === view));
   // the character bar only makes sense where we're analysing something
@@ -33,11 +35,13 @@ function show(view) {
 /** Re-render whatever view is open, for the currently active character. */
 function render() {
   if (currentView === 'characters') {
+    // an error left over from the M+ or Raid view is not about this one
+    $('#status').innerHTML = '';
     renderCharacterList(onCharacterChange);
     return;
   }
   if (!state.activeChar) {
-    $('#status').innerHTML = '<span class="muted">Add a character on the Characters tab to get started.</span>';
+    $('#status').innerHTML = '<span class="muted">Import your characters on the Characters tab to get started.</span>';
     return;
   }
   $('#status').innerHTML = '';
@@ -56,10 +60,25 @@ $('#nav').addEventListener('click', (e) => {
   if (btn) show(btn.dataset.view);
 });
 
+/** Drop everything and show the sign-in screen. Also the 401 handler. */
+function signedOut(message) {
+  state.characters = [];
+  state.activeChar = null;
+  renderSignIn(typeof message === 'string' ? message : null);
+}
+
 async function boot() {
-  initAddCharacter(onCharacterChange);
+  installAuthFetch(() => signedOut('Your session expired. Sign in again.'));
+
+  const user = await fetchMe();
+  if (!user) {
+    renderSignIn();
+    return; // nothing else mounts until there is a session
+  }
+
+  renderUserBar(user, () => signedOut());
   await refreshCharacters();
-  show(visibleCharacters().length ? 'mplus' : 'characters');
+  show(analysableCharacters().length ? 'mplus' : 'characters');
 }
 
 boot();

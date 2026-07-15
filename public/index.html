@@ -9,35 +9,28 @@
 </head>
 <body>
   <main id="app">
-    <header>
-      <h1>WCL Parse Improver</h1>
-      <nav id="nav">
+    <header id="topbar">
+      <h1><span class="brand-mark">⚔</span> WCL Parse Improver</h1>
+      <nav id="nav" hidden>
         <button type="button" class="nav-link" data-view="characters">Characters</button>
         <button type="button" class="nav-link" data-view="mplus">M+ Parses</button>
         <button type="button" class="nav-link" data-view="raid">Raid Parses</button>
       </nav>
+      <!-- who is signed in -->
+      <div id="user-bar"></div>
     </header>
+
+    <!-- shown until there is a session; nothing else mounts before then -->
+    <div id="signin"></div>
 
     <!-- who we're analysing; shown on the two analysis views -->
     <div id="char-bar"></div>
+    <!-- a loading banner that always shows at the top, whatever is being fetched -->
+    <div id="loading" hidden></div>
     <div id="status"></div>
 
     <section id="view-characters" hidden>
       <div id="char-list"></div>
-      <div class="card">
-        <h2>Add character</h2>
-        <p><small>The class is detected from Warcraft Logs; pick which of its specs to analyse.
-          Only DPS specs can be analysed &mdash; the whole report is damage-based.</small></p>
-        <form id="detect-form">
-          <input id="a-name" placeholder="Character" required />
-          <input id="a-server" placeholder="Server slug (e.g. grim-batol)" required />
-          <input id="a-region" placeholder="Region" value="EU" size="4" required />
-          <input id="a-zone" placeholder="Zone ID" value="47" size="6" required />
-          <button type="submit">Detect class</button>
-        </form>
-        <div id="detect-status"></div>
-        <div id="detect-result"></div>
-      </div>
     </section>
 
     <section id="view-mplus" hidden>

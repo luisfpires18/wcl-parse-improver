@@ -1,7 +1,14 @@
 import express from 'express';
 import path from 'node:path';
 import { loadEnv, PROJECT_ROOT } from './env.js';
-import { fetchOverview, fetchDamageSeries, fetchGameClasses, detectCharacter } from './wcl/api.js';
+import {
+  fetchOverview,
+  fetchDamageSeries,
+  fetchGameClasses,
+  fetchCurrentUser,
+  fetchClaimedCharacters,
+} from './wcl/api.js';
+import { authorizeUrl, exchangeCode } from './wcl/auth.js';
 import { buildComparison, DEFAULT_LEVEL } from './wcl/comparison.js';
 import {
   buildRaidReport,
@@ -12,18 +19,113 @@ import {
 } from './wcl/raid.js';
 import { fetchRaidOverview } from './wcl/raidZones.js';
 import { buildReport } from './analysis/compare.js';
-import { loadCharacters, upsertCharacter, removeCharacter, setCharacterHidden } from './characters.js';
+import {
+  loadCharacters,
+  upsertCharacters,
+  removeCharacter,
+  setCharacterHidden,
+  adoptLegacy,
+} from './characters.js';
+import {
+  loadSessions,
+  requireSession,
+  issueState,
+  consumeState,
+  createSession,
+  destroySession,
+  getSession,
+} from './session.js';
 
 loadEnv();
 
+// Fail here rather than at the first click: an app that boots fine and then
+// cannot sign anyone in is a worse bug than one that refuses to start.
+const missing = ['WCL_CLIENT_ID', 'WCL_CLIENT_SECRET', 'WCL_REDIRECT_URI', 'SESSION_SECRET'].filter(
+  (k) => !process.env[k]
+);
+if (missing.length) {
+  console.error(
+    `Missing required environment ${missing.join(', ')} — see .env.example.\n` +
+      'WCL_REDIRECT_URI must also be listed as a redirect URL on your API client at\n' +
+      'https://www.warcraftlogs.com/api/clients/.'
+  );
+  process.exit(1);
+}
+
+loadSessions();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// The zone the add-character form defaults to; the roster import uses the same
+// one, so an imported character and a typed one are directly comparable.
+const DEFAULT_ZONE = 47;
 
 app.use(express.json());
 app.use(express.static(path.join(PROJECT_ROOT, 'public')));
 // shared/ holds code imported by BOTH the server and the browser (the
 // rotation-match maths). Serving it means there is exactly one copy.
 app.use('/shared', express.static(path.join(PROJECT_ROOT, 'shared')));
+
+// --- sign in with Warcraft Logs -------------------------------------------
+//
+// The app token (client credentials) still does all the analysis work. This flow
+// exists to answer one question the app token cannot: who are you, and which
+// characters have you claimed?
+
+app.get('/api/auth/login', (req, res) => {
+  try {
+    res.redirect(authorizeUrl(issueState(res)));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/auth/callback', async (req, res) => {
+  try {
+    // Check `state` before spending the code: an unsolicited callback is someone
+    // else's login being pushed onto this browser, not ours to complete.
+    if (!consumeState(req, res, String(req.query.state || ''))) {
+      return res.status(400).json({ error: 'Login expired or was not started here. Try again.' });
+    }
+    if (req.query.error) {
+      return res.status(400).json({ error: `Warcraft Logs declined the login: ${req.query.error}` });
+    }
+    const code = String(req.query.code || '');
+    if (!code) return res.status(400).json({ error: 'No authorization code came back' });
+
+    const { token, expiresAt } = await exchangeCode(code);
+    const user = await fetchCurrentUser(token);
+    createSession(res, {
+      userId: user.id,
+      name: user.name,
+      avatar: user.avatar,
+      accessToken: token,
+      tokenExpiresAt: expiresAt,
+    });
+    // A characters.json from before logins existed belongs to whoever was running
+    // the app — which is whoever just signed in for the first time.
+    adoptLegacy(user.id);
+    res.redirect('/');
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  destroySession(req, res);
+  res.json({ ok: true });
+});
+
+// The client's "am I signed in?" probe. 401 here is normal, not an error.
+app.get('/api/auth/me', (req, res) => {
+  const session = getSession(req);
+  if (!session) return res.status(401).json({ error: 'Not signed in' });
+  res.json({ id: session.userId, name: session.name, avatar: session.avatar });
+});
+
+// Everything else under /api is per-user and needs a session.
+app.use('/api', requireSession);
 
 // No defaults: these used to fall back to the author's own character, so a request
 // with missing params silently analysed someone else's toon.
@@ -260,43 +362,66 @@ app.get('/api/raid/pull', async (req, res) => {
 });
 
 // --- tracked characters ---------------------------------------------------
-
-// Detect a character's class and spec list for the "add character" form.
-// Bad name/server surfaces as a 404 rather than a 500 — it's user input.
-app.get('/api/character', async (req, res) => {
-  try {
-    const detected = await detectCharacter({
-      ...charParams(req.query),
-      refresh: wantsRefresh(req.query),
-    });
-    res.json(detected);
-  } catch (err) {
-    const notFound = /not found/i.test(err.message);
-    res.status(notFound ? 404 : 500).json({ error: err.message });
-  }
-});
+//
+// There is no add-by-hand endpoint. The roster comes from the signed-in user's
+// Warcraft Logs profile, which knows the server slug and which specs have logs —
+// the two things a human typing into a form reliably gets wrong.
 
 app.get('/api/characters', (req, res) => {
   try {
-    res.json(loadCharacters());
+    res.json(loadCharacters(req.session.userId));
   } catch (err) {
     res.status(err.status ?? 500).json({ error: err.message });
   }
 });
 
-app.post('/api/characters', async (req, res) => {
+// Characters with no logged DPS spec (a healer-only alt) land in `skipped` with
+// a reason rather than sinking the import.
+app.post('/api/characters/import', async (req, res) => {
   try {
+    const zoneID = Number(req.body?.zone) || DEFAULT_ZONE;
+    const { characters, skipped } = await fetchClaimedCharacters({
+      userToken: req.session.accessToken,
+      zoneID,
+    });
+    if (!characters.length) {
+      return res.status(404).json({
+        error:
+          'No characters are claimed on your Warcraft Logs profile. Claim them at warcraftlogs.com ' +
+          'and import again.',
+        skipped,
+      });
+    }
+
     const classes = await fetchGameClasses();
-    res.json(upsertCharacter(req.body, classes));
+    // Every role — tanks and healers belong on the roster with their score, even
+    // though the damage-based report can't analyse them. What we do drop is a
+    // spec with no logged runs: importing all 3-4 specs of every character would
+    // bury the picker in specs that were never played.
+    const wanted = characters.map((c) => ({ ...c, specs: c.specs.filter((s) => s.hasLogs) }));
+    const played = wanted.filter((c) => c.specs.length);
+    for (const c of wanted) {
+      if (!c.specs.length) {
+        skipped.push({ name: c.name, server: c.server, reason: 'no logged runs in this zone' });
+      }
+    }
+
+    const stored = upsertCharacters(req.session.userId, played, classes, undefined, skipped);
+    res.json({ imported: stored.length, skipped, characters: loadCharacters(req.session.userId) });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    // A dead or revoked user token reads as a 401 from WCL — the session is no
+    // longer good for anything, so say so and let the client bounce to sign-in.
+    const status = /HTTP 401/.test(err.message) ? 401 : 500;
+    res.status(status).json({
+      error: status === 401 ? 'Your Warcraft Logs sign-in expired. Sign in again.' : err.message,
+    });
   }
 });
 
 // Hide a character from the analysis views without forgetting it.
 app.patch('/api/characters/:id', (req, res) => {
   try {
-    res.json(setCharacterHidden(req.params.id, Boolean(req.body?.hidden)));
+    res.json(setCharacterHidden(req.session.userId, req.params.id, Boolean(req.body?.hidden)));
   } catch (err) {
     res.status(404).json({ error: err.message });
   }
@@ -304,7 +429,7 @@ app.patch('/api/characters/:id', (req, res) => {
 
 app.delete('/api/characters/:id', (req, res) => {
   try {
-    res.json(removeCharacter(req.params.id));
+    res.json(removeCharacter(req.session.userId, req.params.id));
   } catch (err) {
     res.status(404).json({ error: err.message });
   }

@@ -6,7 +6,8 @@ import {
   CHARACTER_RANKINGS,
   ZONE_BRACKETS,
   GAME_CLASSES,
-  CHARACTER_CLASS,
+  CURRENT_USER,
+  CURRENT_USER_CHARACTERS,
   REPORT_FIGHTS_ACTORS,
   REPORT_BOSS_FIGHTS,
   RAID_CHARACTER_RANKINGS,
@@ -18,6 +19,7 @@ import {
   REPORT_RESOURCE_EVENTS,
   REPORT_BUFF_SOURCE_EVENTS,
   REPORT_DAMAGE_EVENTS,
+  REPORT_COMBATANT_INFO,
 } from './queries.js';
 import { roleOf } from './specs.js';
 import { buildOverview } from '../parse/zoneRankings.js';
@@ -177,44 +179,120 @@ export async function fetchGameClasses({ refresh = false } = {}) {
 }
 
 /**
- * Detect a character's class and which of its specs have logged runs.
+ * The best M+ score per spec, from zoneRankings.allStars.
+ *
+ * allStars can carry the SAME spec more than once — one entry per partition (a
+ * mid-season rebalance splits the season's rankings in two). Left alone that
+ * shows up as "Enhancement, Enhancement" on the roster. We keep the highest
+ * score per spec, which is also the number the player would quote.
+ */
+function bestScorePerSpec(zoneRankings) {
+  const best = new Map();
+  for (const a of zoneRankings?.allStars ?? []) {
+    const points = a?.points ?? 0;
+    if (!a?.spec) continue;
+    if (!best.has(a.spec) || points > best.get(a.spec)) best.set(a.spec, points);
+  }
+  return best;
+}
+
+/**
+ * Turn a raw Character (classID + zoneRankings) into the shape the roster renders.
  *
  * `specs[].slug` is what every downstream API call must use as `specName`;
  * `specs[].name` is display-only. `hasLogs` comes from zoneRankings.allStars,
- * which reports specs in slug form.
+ * which reports specs in slug form — and, since we ask with `role: Any`, covers
+ * tank and healer specs too, not only damage ones.
  */
-export async function detectCharacter({ name, serverSlug, serverRegion, zoneID, refresh = false }) {
-  const data = await gql(
-    CHARACTER_CLASS,
-    { name, serverSlug, serverRegion, zoneID },
-    { noCache: refresh }
-  );
-  const character = data?.characterData?.character;
-  if (!character) {
-    throw new Error(`Character not found: ${name} / ${serverSlug} / ${serverRegion}. Check spelling and server slug.`);
-  }
-  const classes = await fetchGameClasses({ refresh });
-  const klass = classes.get(character.classID);
-  if (!klass) {
-    dumpDebug('unknown-classID', { classID: character.classID, name, serverSlug });
-    throw new Error(`Unknown class ID ${character.classID} for ${name}`);
-  }
+function describeCharacter(character, klass) {
+  const scores = bestScorePerSpec(character.zoneRankings);
 
-  const allStars = character.zoneRankings?.allStars ?? [];
-  const played = new Map(allStars.map((a) => [a.spec, a.points ?? 0]));
+  const specs = klass.specs.map((s) => ({
+    name: s.name,
+    slug: s.slug,
+    role: roleOf(klass.slug, s.slug),
+    hasLogs: scores.has(s.slug),
+    points: scores.get(s.slug) ?? null,
+  }));
+
+  // What the player means by "my rating": the best spec's score, not the sum of
+  // every spec they have ever pressed a button in.
+  const played = specs.filter((s) => s.hasLogs);
+  const mplusRating = played.length ? Math.max(...played.map((s) => s.points ?? 0)) : null;
 
   return {
-    name: character.name ?? name,
+    name: character.name,
     classID: character.classID,
     className: klass.slug, // what the API wants
     classLabel: klass.name, // what the user reads
-    specs: klass.specs.map((s) => ({
-      name: s.name,
-      slug: s.slug,
-      role: roleOf(klass.slug, s.slug),
-      hasLogs: played.has(s.slug),
-      points: played.get(s.slug) ?? null,
-    })),
+    specs,
+    mplusRating,
+  };
+}
+
+/**
+ * Who owns this token. The /user endpoint is the only one that answers
+ * currentUser — on the public endpoint it comes back null, which is why a
+ * missing user here means the token is wrong, not that the account is empty.
+ */
+export async function fetchCurrentUser(userToken) {
+  const data = await gql(CURRENT_USER, {}, { userToken });
+  const user = data?.userData?.currentUser;
+  if (!user?.id) {
+    dumpDebug('current-user-unexpected', { data });
+    throw new Error('Warcraft Logs did not say who signed in — the token may be invalid.');
+  }
+  return { id: String(user.id), name: user.name ?? 'Unknown', avatar: user.avatar ?? null };
+}
+
+/**
+ * Every character the signed-in user has claimed on their WCL profile, already
+ * in the detected shape — this is the manual add form, answered from the source.
+ * A character whose class we can't resolve is skipped rather than fatal: one odd
+ * entry should not sink the whole import.
+ */
+export async function fetchClaimedCharacters({ userToken, zoneID }) {
+  const data = await gql(CURRENT_USER_CHARACTERS, { zoneID }, { userToken });
+  const user = data?.userData?.currentUser;
+  if (!user?.id) {
+    dumpDebug('current-user-unexpected', { data });
+    throw new Error('Warcraft Logs did not say who signed in — the token may be invalid.');
+  }
+
+  const classes = await fetchGameClasses();
+  const characters = [];
+  const skipped = [];
+
+  for (const c of user.characters ?? []) {
+    const server = c?.server?.slug;
+    const region = c?.server?.region?.slug;
+    const klass = classes.get(c?.classID);
+    if (!klass) {
+      skipped.push({ name: c?.name ?? '?', server, reason: `unknown class ID ${c?.classID}` });
+      continue;
+    }
+    if (!server || !region) {
+      skipped.push({ name: c.name, reason: 'no server on the WCL profile' });
+      continue;
+    }
+    // Item level is only in the Blizzard passthrough. `average_item_level`
+    // counts what's in the bags for empty slots; `equipped_item_level` is what
+    // the character is actually wearing, which is the honest number.
+    const profile = c?.gameData?.global ?? {};
+    characters.push({
+      ...describeCharacter(c, klass),
+      server,
+      region: region.toUpperCase(),
+      level: c.level ?? profile.level ?? null,
+      itemLevel: profile.equipped_item_level ?? profile.average_item_level ?? null,
+      zone: zoneID,
+    });
+  }
+
+  return {
+    user: { id: String(user.id), name: user.name ?? 'Unknown', avatar: user.avatar ?? null },
+    characters,
+    skipped,
   };
 }
 
@@ -392,7 +470,7 @@ export async function fetchRaidBenchmark({ encounterID, className, specName, dif
     pick = found;
   }
 
-  const detail = await fetchRunDetail({ code: pick.report.code, fightID: pick.report.fightID, playerName: pick.name });
+  const detail = await fetchRunDetail({ code: pick.report.code, fightID: pick.report.fightID, playerName: pick.name, includeGear: true });
   return { name: pick.name, difficultyName: difficultyName(difficulty), dps: pick.dps, detail, entries };
 }
 
@@ -406,7 +484,7 @@ export async function fetchRaidBenchmark({ encounterID, className, specName, dif
  * property of the ability itself (can a DK ever self-cast it), not of one
  * specific run, so fetching it once is enough.
  */
-export async function fetchRunDetail({ code, fightID, playerName, server = null, className = null, includeBuffSources = false, lite = false, castsOnly = false }) {
+export async function fetchRunDetail({ code, fightID, playerName, server = null, className = null, includeBuffSources = false, includeGear = false, lite = false, castsOnly = false }) {
   const rd = await gql(REPORT_FIGHTS_ACTORS, { code, fightIDs: [fightID] });
   const report = rd?.reportData?.report;
   const fight = report?.fights?.[0];
@@ -458,6 +536,14 @@ export async function fetchRunDetail({ code, fightID, playerName, server = null,
     buffSources = classifyBuffSources(buffSourcePages, actor.id, abilityNameByGameID);
   }
 
+  // Gear (with enchants + gems) for the gear check. One event query; only for the
+  // full report path (mine + the compared player), never the lite per-pull scan.
+  let gear = null;
+  if (includeGear && !lite) {
+    const ci = await gql(REPORT_COMBATANT_INFO, { code, fightIDs: [fightID] });
+    gear = parseGear(ci?.reportData?.report?.events?.data ?? [], actor.id);
+  }
+
   return {
     code,
     fightID,
@@ -467,6 +553,9 @@ export async function fetchRunDetail({ code, fightID, playerName, server = null,
       keystoneLevel: fight.keystoneLevel ?? null,
       keystoneTime: fight.keystoneTime ?? null,
       name: fight.name ?? null,
+      // A completed M+ has no `kill` flag but always reads as a kill; a raid pull
+      // does. Deaths only make sense as a gap on a kill (on a wipe everyone dies).
+      kill: fight.kill ?? (fight.keystoneTime > 0),
     },
     player: { id: actor.id, name: actor.name, class: actor.subType, server: actor.server },
     casts: parseCastsTable(rdTable(castsT)),
@@ -476,11 +565,32 @@ export async function fetchRunDetail({ code, fightID, playerName, server = null,
     castEvents: parseCastEvents(castPages),
     resourceEvents: parseResourceEvents(resourcePages),
     buffSources,
+    gear,
   };
 }
 
 function rdTable(resp) {
   return resp?.reportData?.report?.table;
+}
+
+// The CombatantInfo snapshot for one player, as a compact per-slot gear list.
+// Cosmetic slots (shirt 3, tabard 17) carry no enchant or gem and are dropped.
+const COSMETIC_SLOTS = new Set([3, 17]);
+function parseGear(events, sourceID) {
+  const info = events.find((e) => e?.sourceID === sourceID && Array.isArray(e.gear));
+  if (!info) return null;
+  const items = [];
+  info.gear.forEach((it, slot) => {
+    if (!it?.id || COSMETIC_SLOTS.has(slot)) return;
+    items.push({
+      slot,
+      id: it.id,
+      itemLevel: it.itemLevel ?? null,
+      enchant: it.permanentEnchant ?? 0,
+      gems: (it.gems ?? []).length,
+    });
+  });
+  return items;
 }
 
 /**

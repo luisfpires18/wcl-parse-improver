@@ -11,6 +11,14 @@ export const state = {
   activeChar: null,
   activeSpec: null, // always a spec SLUG, never the display name
   currentOverview: null,
+  // Which zone the roster import asks about: it decides which specs count as
+  // "logged", and is stored on each character as the zone its rankings come from.
+  zone: 47,
+  // Which role ranks the roster board: All | DPS | Tank | Healer.
+  roleFilter: 'All',
+  // How the M+ dungeon board is ordered: weakest | best. Weakest first by
+  // default — the worst parse is the one worth opening.
+  mplusSort: 'weakest',
 };
 
 /** The character/spec query params every endpoint expects. */
@@ -30,3 +38,27 @@ export function charQuery() {
 export function setStatus(html) {
   $('#status').innerHTML = html;
 }
+
+/**
+ * The one loading indicator, always at the top of the page — a spinner plus a
+ * message — so a slow fetch never leaves the user staring at a blank spot lower
+ * down wondering if anything is happening. `html` may contain markup.
+ */
+export function showLoading(html) {
+  const el = $('#loading');
+  if (!el) return;
+  el.hidden = false;
+  el.className = 'loading-banner';
+  el.innerHTML = `<span class="spinner" aria-hidden="true"></span><span class="loading-msg">${html}</span>`;
+}
+
+export function hideLoading() {
+  const el = $('#loading');
+  if (!el) return;
+  el.hidden = true;
+  el.innerHTML = '';
+}
+
+/** A shimmering placeholder to drop where content is about to appear. */
+export const skeleton = (lines = 3) =>
+  `<div class="skeleton-card">${'<div class="skeleton-line"></div>'.repeat(lines)}</div>`;

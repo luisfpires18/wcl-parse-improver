@@ -9,6 +9,9 @@
     "test": "node --test",
     "overview": "node scripts/fetch-overview.js"
   },
+  "engines": {
+    "node": ">=20.6"
+  },
   "dependencies": {
     "express": "^5.1.0"
   }

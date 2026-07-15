@@ -25,7 +25,11 @@ import { isPotion } from './potions.js';
 const CONSUMABLE_KINDS = [
   { key: 'flask', label: 'Flask', re: /flask|phial/i },
   { key: 'food', label: 'Food', re: /well fed/i },
-  { key: 'rune', label: 'Augment rune', re: /rune of|augment rune|void-touched|draconic augment/i },
+  // Only the AUGMENT RUNE consumable, never "Rune of …" in general. The old
+  // `rune of` alternative matched "Rune of Lingering" — an Omnion Folio trinket
+  // borrowed-power aura, not the augment rune — and reported it as your rune.
+  // The augment rune is "Void-Touched" (current) / "…Augment Rune" (older).
+  { key: 'rune', label: 'Augment rune', re: /augment rune|void-touched/i },
 ];
 
 // Potions are the one consumable you use REPEATEDLY, so uptime % is the wrong

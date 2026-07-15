@@ -3,8 +3,8 @@
 // The report itself is rendered by report.js — the same renderer the raid view
 // uses. This file only fetches the right thing and wires the two controls that are
 // M+-specific: the key-level buttons and the opponent picker.
-import { $, esc, fmtK, fmtPct, fmtTime, pctClass } from './util.js';
-import { state, charQuery, setStatus } from './state.js';
+import { $, esc, fmtK, fmtPct, fmtTime, pctClass, pctColor, boardRow } from './util.js';
+import { state, charQuery, setStatus, showLoading, hideLoading, skeleton } from './state.js';
 import { renderReport } from './report.js';
 import { dpsChartSvg, wireDpsBrush, setCastWindow, castOrderSlot } from './chart.js';
 
@@ -12,8 +12,8 @@ const DEFAULT_LEVEL = 20;
 const LEVEL_CHOICES = [18, 19, 20, 21, 22, 23, 24, 25];
 
 export async function loadOverview(refresh = false) {
-  setStatus(refresh ? 'Refreshing from Warcraft Logs (bypassing cache)…' : 'Loading overview…');
-  $('#overview').innerHTML = '';
+  showLoading(refresh ? 'Refreshing your dungeons, bypassing the cache…' : 'Loading your dungeons…');
+  $('#overview').innerHTML = skeleton(5);
   $('#report').innerHTML = '';
   try {
     const params = charQuery();
@@ -23,38 +23,72 @@ export async function loadOverview(refresh = false) {
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
     state.currentOverview = data;
     renderOverview(data);
-    setStatus('');
+    hideLoading();
   } catch (err) {
+    hideLoading();
+    $('#overview').innerHTML = '';
     setStatus(`<span class="error">Error: ${esc(err.message)}</span>`);
   }
 }
 
 function renderOverview({ character, overall, dungeons }) {
-  const rows = dungeons
-    .map(
-      (d) => `<tr data-encounter="${d.encounterID}" class="clickable">
-        <td>${esc(d.name)}</td>
-        <td class="num">${d.keyLevel ?? '—'}</td>
-        <td class="num">${fmtTime(d.durationMs)}</td>
-        <td class="num ${pctClass(d.bestPercent)}">${fmtPct(d.bestPercent)}</td>
-        <td class="num">${fmtK(d.bestDps)}</td>
-        <td><button class="mini" data-analyze="${d.encounterID}">analyze</button></td>
-      </tr>`
-    )
+  // Weakest first by default: this app exists to close gaps, and the dungeon
+  // with the worst parse is the one worth opening. A dungeon with no logged run
+  // has nothing to improve, so it sinks to the bottom either way.
+  const order = state.mplusSort ?? 'weakest';
+  const ranked = [...dungeons].sort((a, b) => {
+    const av = a.bestPercent;
+    const bv = b.bestPercent;
+    if (typeof av !== 'number') return 1;
+    if (typeof bv !== 'number') return -1;
+    return order === 'weakest' ? av - bv : bv - av;
+  });
+
+  const rows = ranked
+    .map((d, i) => {
+      const run = typeof d.bestPercent === 'number';
+      return boardRow({
+        rank: i + 1,
+        color: pctColor(d.bestPercent),
+        title: d.name,
+        subtitle: run ? `+${d.keyLevel ?? '?'} · ${fmtTime(d.durationMs)}` : 'no logged run',
+        pct: d.bestPercent,
+        value: `<span class="${pctClass(d.bestPercent)}">${fmtPct(d.bestPercent)}</span>`,
+        meta: run ? `<span class="stat"><i>dps</i> ${fmtK(d.bestDps)}</span>` : '',
+        action: `<button class="mini" data-analyze="${d.encounterID}">analyze</button>`,
+        dim: !run,
+        attrs: `data-encounter="${d.encounterID}"`,
+        clickable: true,
+      });
+    })
     .join('');
+
+  const pill = (key, label) =>
+    `<button class="pill ${order === key ? 'on' : ''}" data-sort="${key}">${label}</button>`;
 
   $('#overview').innerHTML = `
     <div class="card">
-      <h2>${esc(character)} <small>— Mythic+</small>
+      <div class="board-head">
+        <span class="headline">
+          <b class="${pctClass(overall.bestPerformanceAverage)}">${fmtPct(overall.bestPerformanceAverage)}</b>
+          <small class="muted">best avg · Mythic+</small>
+        </span>
+        <div class="pills">${pill('weakest', 'Weakest first')}${pill('best', 'Best first')}</div>
+        <button id="worst" class="mini accent">analyze my worst parse</button>
         <button id="refresh-overview" class="mini" title="Re-fetch from Warcraft Logs, bypassing the local cache">↻ Refresh</button>
-      </h2>
-      <p>Best avg: <b class="${pctClass(overall.bestPerformanceAverage)}">${fmtPct(overall.bestPerformanceAverage)}</b>
-         <button id="worst" class="mini accent">analyze my worst parse</button></p>
-      <table>
-        <thead><tr><th>Dungeon</th><th>Level</th><th>Time</th><th>Best %</th><th>Best DPS</th><th></th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
+      </div>
+
+      <div class="board parse">${rows}</div>
+      <p class="table-note"><small>The bar <b>is</b> the percentile, so it reads the same in every dungeon. Click a row
+        to analyse your best run there against the top runs of your spec at that key level.</small></p>
     </div>`;
+
+  $('#overview .pills').addEventListener('click', (e) => {
+    const key = e.target.closest('[data-sort]')?.dataset.sort;
+    if (!key) return;
+    state.mplusSort = key;
+    renderOverview({ character, overall, dungeons });
+  });
 
   // Default level for a dungeon = the highest key the character actually logged
   // there (that's the run that gates invites), not a fixed global.
@@ -63,8 +97,10 @@ function renderOverview({ character, overall, dungeons }) {
     return typeof d?.keyLevel === 'number' ? d.keyLevel : DEFAULT_LEVEL;
   };
 
-  $('#overview tbody').addEventListener('click', (e) => {
-    const id = e.target.closest('[data-analyze]')?.dataset.analyze ?? e.target.closest('tr[data-encounter]')?.dataset.encounter;
+  $('#overview .board').addEventListener('click', (e) => {
+    const id =
+      e.target.closest('[data-analyze]')?.dataset.analyze ??
+      e.target.closest('[data-encounter]')?.dataset.encounter;
     if (id) loadReport(Number(id), defaultLevelFor(Number(id)));
   });
   $('#worst').addEventListener('click', () => {
@@ -80,13 +116,14 @@ function renderOverview({ character, overall, dungeons }) {
  */
 async function loadReport(encounterID, level, compareTo = '', refresh = false) {
   const dungeon = state.currentOverview?.dungeons.find((d) => d.encounterID === encounterID);
-  setStatus(
+  showLoading(
     refresh
-      ? `Re-fetching <b>${esc(dungeon?.name ?? encounterID)}</b> at +${level} from Warcraft Logs (bypassing the cache — slower)…`
-      : `Building report for <b>${esc(dungeon?.name ?? encounterID)}</b> at +${level}… ` +
-          `<small>first fetch pulls your run and one opponent from WCL; cached afterwards</small>`
+      ? `Re-fetching <b>${esc(dungeon?.name ?? encounterID)}</b> at +${level}, bypassing the cache…`
+      : `Building report for <b>${esc(dungeon?.name ?? encounterID)}</b> at +${level}. ` +
+          `<small>First fetch pulls your run and one opponent; cached afterwards.</small>`
   );
-  $('#report').innerHTML = '';
+  $('#report').innerHTML = skeleton(6);
+  $('#report').scrollIntoView({ block: 'start', behavior: 'smooth' });
   try {
     const params = charQuery();
     params.set('encounter', encounterID);
@@ -107,7 +144,7 @@ async function loadReport(encounterID, level, compareTo = '', refresh = false) {
     $('#report').innerHTML = `
       <div class="card">
         <h2>${esc(h.title)} ${esc(h.subtitle ?? '')}
-          ${h.myBestPercent != null ? `— <span class="${pctClass(h.myBestPercent)}">${h.myBestPercent}%</span> parse` : ''}
+          ${h.myBestPercent != null ? `<span class="${pctClass(h.myBestPercent)}">${h.myBestPercent}%</span> <small>parse</small>` : ''}
           <button id="refresh-report" class="mini" title="Re-fetch this report from Warcraft Logs, bypassing the local cache">↻ Refresh</button>
         </h2>
         ${renderReport(view)}
@@ -119,8 +156,7 @@ async function loadReport(encounterID, level, compareTo = '', refresh = false) {
     $('#compare-to').addEventListener('change', (e) => loadReport(encounterID, level, e.target.value));
     $('#refresh-report').addEventListener('click', () => loadReport(encounterID, level, compareTo, true));
 
-    setStatus('');
-    $('#report').scrollIntoView({ behavior: 'smooth' });
+    hideLoading();
 
     // Lazy: the report is on screen; now fetch the heavy damage-event series and
     // inject the chart. Fire-and-forget so it never blocks the render.
@@ -128,6 +164,8 @@ async function loadReport(encounterID, level, compareTo = '', refresh = false) {
     // you'd get a re-fetched report with a stale chart under it.
     loadDpsChart(encounterID, level, compareTo, view.castOrder, refresh);
   } catch (err) {
+    hideLoading();
+    $('#report').innerHTML = '';
     setStatus(`<span class="error">Report failed: ${esc(err.message)}</span>`);
   }
 }

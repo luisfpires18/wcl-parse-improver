@@ -17,6 +17,7 @@ import { buildRaidParse } from '../analysis/raidParse.js';
 import { rotationComposition, castOrder } from '../analysis/spikes.js';
 import { buildAbilityTable, buildGaps } from '../analysis/compare.js';
 import { buildConsumables } from '../analysis/consumables.js';
+import { buildGearCheck } from '../analysis/gear.js';
 import { compareResource } from '../analysis/resources.js';
 import { buildTimeline } from '../analysis/timeline.js';
 import { truncateDetail, truncateSeries, truncatePoints } from '../analysis/truncate.js';
@@ -72,6 +73,7 @@ export async function buildRaidPull({
     server: serverSlug,
     className,
     includeBuffSources: true,
+    includeGear: true,
   });
   const mineSeries = await fetchDamageSeries({ code, fightID, playerName: name, server: serverSlug, className });
   const myHealth = await fetchBossHealth({ code, fightID, refresh });
@@ -184,6 +186,9 @@ export async function buildRaidPull({
     timeline,
     rotationMatch: { spellMixPct: rotation.similarityPct, castOrderPct: rotation.sequencePct },
     consumables: buildConsumables(mineDetail, otherDetail, bench.name, buffSources),
+    // gear check compares the UNtruncated benchmark gear (a pull-start snapshot,
+    // so truncation doesn't apply) — use bench.detail, not the clipped otherDetail
+    gear: buildGearCheck(mineDetail.gear, bench.detail.gear, bench.name),
     parse,
     gaps: buildGaps(mineDetail, otherDetail, buffSources),
     resources: compareResource(mineDetail.resourceEvents ?? [], otherDetail.resourceEvents ?? []),

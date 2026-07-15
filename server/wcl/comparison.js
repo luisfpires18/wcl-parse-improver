@@ -60,6 +60,7 @@ export async function buildComparison({
     server: serverSlug, // disambiguate if the log has two same-named toons
     className,
     includeBuffSources: true,
+    includeGear: true,
   });
 
   // One cheap, cached call. Everything in the dropdown comes from here; no run
@@ -118,6 +119,7 @@ export async function buildComparison({
     code: selected.report.code,
     fightID: selected.report.fightID,
     playerName: selected.name,
+    includeGear: true,
   });
 
   // My own (rankPercent, dps) pairs at exactly this key level — percentile is

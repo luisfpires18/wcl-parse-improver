@@ -2,7 +2,7 @@
 //
 // Both analysis paths converge on one view model and one renderer, so a section
 // exists in exactly one place instead of being reimplemented per view.
-import { esc, fmtK, fmtPct, pctClass } from './util.js';
+import { esc, fmtK, fmtPct, pctClass, EMPTY } from './util.js';
 import { renderTimelineSection } from './chart.js';
 
 // The eight sections, in the order they appear. Each is a pure function of the
@@ -10,14 +10,75 @@ import { renderTimelineSection } from './chart.js';
 export function renderReport(view) {
   return [
     renderCompare(view),        // 1 — opponent picker + DPS chart mount
-    // 2 — cast order lives inside the chart block (the brush writes into it)
+    renderTopSpells(view.abilities), // 2 — where each of you gets your damage
+    // cast order lives inside the chart block (the brush writes into it)
     renderRotation(view),       // 3 — rotation timeline
     renderConsumables(view.consumables), // 4
+    renderGear(view.gear),      // 4b — enchant/gem check
     renderParse(view.parse),    // 5
     renderGaps(view.gaps),      // 6
     renderResources(view.resources), // 7
     renderAbilities(view.abilities), // 8
   ].join('');
+}
+
+/**
+ * Top damage sources, you vs them — the shape of where each of you gets your
+ * damage, as ranked bars, plus a one-line read of what leads for each. Built from
+ * the same per-ability data section 8 tables out, so it costs nothing extra.
+ */
+function renderTopSpells(a) {
+  if (!a?.rows?.length) return '';
+  const t = a.totals || {};
+
+  const rank = (key, totalKey) => {
+    const list = a.rows.filter((r) => r[key] > 0).sort((x, y) => y[key] - x[key]).slice(0, 6);
+    return { list, max: list[0]?.[key] || 1, sum: t[totalKey] || list.reduce((s, r) => s + r[key], 0) || 1 };
+  };
+  const mine = rank('myAmount', 'myDamage');
+  const theirs = rank('theirAmount', 'theirDamage');
+  if (!mine.list.length && !theirs.list.length) return '';
+
+  const share = (v, sum) => Math.round((100 * v) / sum);
+  const column = (d, key, cls) =>
+    `<ol class="spell-bars">${d.list
+      .map(
+        (r) => `<li class="spell-bar">
+          <span class="spell-name" title="${esc(r.name)}">${esc(r.name)}</span>
+          <span class="spell-track"><span class="spell-fill ${cls}" style="width: ${Math.max(4, Math.round((100 * r[key]) / d.max))}%"></span></span>
+          <span class="spell-pct">${share(r[key], d.sum)}%</span>
+        </li>`
+      )
+      .join('')}</ol>`;
+
+  // The read: what each of you leans on, and — when they differ — how much you
+  // get from their signature spell, which is usually the actionable bit.
+  const myTop = mine.list[0];
+  const theirTop = theirs.list[0];
+  let summary = '';
+  if (myTop && theirTop) {
+    const mp = share(myTop.myAmount, mine.sum);
+    const tp = share(theirTop.theirAmount, theirs.sum);
+    if (myTop.name === theirTop.name) {
+      summary = `You both lead with <b>${esc(myTop.name)}</b> — you ${mp}% of your damage, ${esc(a.otherLabel)} ${tp}% of theirs.`;
+    } else {
+      const mineOnTheirs = a.rows.find((r) => r.name === theirTop.name);
+      const myShare = mineOnTheirs ? share(mineOnTheirs.myAmount, mine.sum) : 0;
+      summary =
+        `Your top spell is <b>${esc(myTop.name)}</b> (${mp}% of your damage), while ${esc(a.otherLabel)}'s is ` +
+        `<b>${esc(theirTop.name)}</b> (${tp}%). You get ${myShare}% from ${esc(theirTop.name)}.`;
+    }
+  }
+
+  return `
+    <section class="card-section">
+      <h3>Top damage sources <small>you vs ${esc(a.otherLabel)}</small></h3>
+      ${summary ? `<p class="section-note">${summary}</p>` : ''}
+      <div class="spell-cols">
+        <div class="spell-col"><h4>You</h4>${column(mine, 'myAmount', 'me')}</div>
+        <div class="spell-col"><h4>${esc(a.otherLabel)}</h4>${column(theirs, 'theirAmount', 'them')}</div>
+      </div>
+    </section>`;
 }
 
 /**
@@ -54,7 +115,7 @@ function renderCompare(view) {
 
   return `
     <section class="card-section">
-      <h3>You vs <span id="vs-name">${esc(h.otherLabel ?? '—')}</span></h3>
+      <h3>You vs <span id="vs-name">${esc(h.otherLabel ?? EMPTY)}</span></h3>
       <p class="vs-line">
         <b>${fmtK(h.myDps)}</b> you &nbsp;vs&nbsp; <b>${fmtK(h.theirDps)}</b> them &nbsp;${gap}
       </p>
@@ -147,7 +208,7 @@ function renderGaps(gaps) {
 
   return `
     <section class="card-section">
-      <h3>Biggest gaps <small>— what stands out</small></h3>
+      <h3>Biggest gaps <small>what stands out</small></h3>
       <ol class="gaps">${items}</ol>
       <p class="table-note"><small><b>Priority</b> is a band, not a score: ★★★ High, ★★ Medium, ★ Low. It comes from a rough estimate
         of how much DPS each gap costs, and is only good enough to say which to fix first.</small></p>
@@ -164,7 +225,7 @@ function renderGaps(gaps) {
  */
 function renderAbilities(a) {
   if (!a?.rows?.length) return '';
-  const fmtM = (v) => (v ? (v / 1e6).toFixed(1) + 'm' : '—');
+  const fmtM = (v) => (v ? (v / 1e6).toFixed(1) + 'm' : EMPTY);
 
   const flag = (r) => {
     const max = Math.max(r.myCasts, r.theirCasts);
@@ -183,8 +244,8 @@ function renderAbilities(a) {
       const f = flag(r);
       return `<tr class="${f ? f.cls : ''}"${f ? ` title="${esc(f.why)}"` : ''}>
         <td>${esc(r.name)}${f ? ` <span class="disc-dot">●</span>` : ''}</td>
-        <td class="num">${r.myCasts || '—'}</td>
-        <td class="num">${r.theirCasts || '—'}</td>
+        <td class="num">${r.myCasts || EMPTY}</td>
+        <td class="num">${r.theirCasts || EMPTY}</td>
         <td class="num">${r.castDiff > 0 ? '+' : ''}${r.castDiff || ''}</td>
         <td class="num sep">${fmtM(r.myAmount)}</td>
         <td class="num">${fmtM(r.theirAmount)}</td>
@@ -195,7 +256,7 @@ function renderAbilities(a) {
   const t = a.totals;
   return `
     <section class="card-section">
-      <h3>Per-ability <small>— you vs ${esc(a.otherLabel)}</small></h3>
+      <h3>Per-ability <small>you vs ${esc(a.otherLabel)}</small></h3>
       <table class="dmg-table">
         <thead>
           <tr><th rowspan="2">Ability</th><th colspan="3" class="grp">Casts</th><th colspan="2" class="grp sep">Damage</th></tr>
@@ -237,7 +298,7 @@ export function renderConsumables(c) {
   // Potions are pressed repeatedly, so the question is "how many, out of how many
   // the fight allowed" — not what % of it you spent under one.
   const pot = (p) => {
-    if (!p || p.max == null) return '<span class="muted">—</span>';
+    if (!p || p.max == null) return '<span class="muted">·</span>';
     const short = p.missed > 0;
     return `<b class="${short ? 'p-orange' : 'p-green'}">${p.used}</b> <span class="muted">of ${p.max} possible</span>` +
       (p.names.length ? ` <small class="muted">(${p.names.map(esc).join(', ')})</small>` : '');
@@ -263,7 +324,7 @@ export function renderConsumables(c) {
 
   return `
     <section class="card-section">
-      <h3>Consumables &amp; party buffs <small>— you vs ${esc(c.otherLabel)}</small></h3>
+      <h3>Consumables &amp; party buffs <small>you vs ${esc(c.otherLabel)}</small></h3>
       <table class="rot-table">
         <thead><tr><th>Consumable</th><th>You</th><th>${esc(c.otherLabel)}</th></tr></thead>
         <tbody>${rows}${potionRow}</tbody>
@@ -274,7 +335,7 @@ export function renderConsumables(c) {
       ${c.notes?.length ? c.notes.map((n) => `<p class="section-note">${esc(n)}</p>`).join('') : ''}
       ${
         partyRows
-          ? `<h4>Party buffs <small>— applied to you by someone else</small></h4>
+          ? `<h4>Party buffs <small>applied to you by someone else</small></h4>
              <table class="rot-table">
                <thead><tr><th>Buff</th><th>You</th><th>${esc(c.otherLabel)}</th></tr></thead>
                <tbody>${partyRows}</tbody>
@@ -293,6 +354,47 @@ export function renderConsumables(c) {
 }
 
 /**
+ * Section 4b — Gear check: enchants and gems, you vs the benchmark.
+ *
+ * Only flags a slot where THEY enchanted/gemmed it and you didn't — which both
+ * derives the enchantable set from live data (no hardcoded slot list) and answers
+ * the only question that matters: "am I missing something a top player has?".
+ * Enchants and embellishment procs no longer clutter the biggest-gaps section;
+ * this is where a real gear hole surfaces instead.
+ */
+export function renderGear(g) {
+  if (!g?.rows?.length) return '';
+  const yes = '<span class="p-green">✓</span>';
+  const no = '<span class="p-orange">✗</span>';
+
+  const rows = g.rows
+    .map((r) => {
+      const flagged = r.missingEnchant || r.missingGem;
+      return `<tr class="${flagged ? 'rot-big' : ''}">
+        <td>${esc(r.label)}</td>
+        <td>${r.myEnchant ? yes : r.theirEnchant ? no : '<span class="muted">—</span>'}</td>
+        <td>${r.myGems || '<span class="muted">·</span>'}${
+          r.missingGem ? ` <small class="p-orange">(they: ${r.theirGems})</small>` : ''
+        }</td>
+      </tr>`;
+    })
+    .join('');
+
+  return `
+    <section class="card-section">
+      <h3>Gear check <small>enchants &amp; gems vs ${esc(g.otherLabel)}</small></h3>
+      <table class="rot-table gear-check">
+        <thead><tr><th>Slot</th><th>Enchant</th><th>Gems</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${g.notes.map((n) => `<p class="section-note ${g.clean ? '' : 'warn'}">${esc(n)}</p>`).join('')}
+      <p class="table-note"><small>A slot is only flagged when <b>${esc(g.otherLabel)}</b> enchanted or gemmed it and you didn't —
+        so this tracks whatever is enchantable this patch, with no fixed slot list. Embellishments aren't audited
+        (no reliable signal in the log).</small></p>
+    </section>`;
+}
+
+/**
  * Section 7 — resource management.
  *
  * Generic across classes: the server reads the spec's primary resource off the
@@ -304,7 +406,7 @@ export function renderConsumables(c) {
  */
 export function renderResources(res) {
   if (!res) return '';
-  const cell = (v, suffix = '') => (v == null ? '<span class="muted">—</span>' : `${v}${suffix}`);
+  const cell = (v, suffix = '') => (v == null ? '<span class="muted">·</span>' : `${v}${suffix}`);
   const them = res.them;
 
   // A power type we don't recognise by NAME is still fully usable — every number

@@ -57,17 +57,53 @@ query GameClasses {
   }
 }`;
 
-// Class detection for the "add character" flow. One round trip gives both the
-// class (classID indexes gameData.classes) and, via zoneRankings.allStars, the
-// specs this character actually has logged runs with in the zone. A character
-// or server that doesn't exist comes back as `character: null`, not an error.
-export const CHARACTER_CLASS = `
-query CharacterClass($name: String!, $serverSlug: String!, $serverRegion: String!, $zoneID: Int!) {
-  characterData {
-    character(name: $name, serverSlug: $serverSlug, serverRegion: $serverRegion) {
+// Who is signed in. Only answers on the /user endpoint, with a user token —
+// on the public endpoint currentUser is always null.
+export const CURRENT_USER = `
+query CurrentUser {
+  userData {
+    currentUser {
+      id
       name
-      classID
-      zoneRankings(zoneID: $zoneID, metric: dps, role: DPS)
+      avatar
+    }
+  }
+}`;
+
+// The signed-in user's claimed characters — the whole point of logging in, and
+// the only way characters get onto the roster. The server slug comes back
+// correctly spelled (the one field a human typing a form reliably gets wrong),
+// and zoneRankings.allStars says which specs actually have logged runs.
+// One round trip for the entire roster.
+//
+// `role: Any` (not DPS) is what makes tanks and healers show up at all — with
+// role: DPS, allStars only carries the character's damage specs. `playerscore`
+// is the M+ score per spec: allStars[].points is the number people mean by "my
+// rating" (the best spec's, not the sum).
+//
+// `gameData` is a Blizzard profile passthrough and the only source of item
+// level. It is also enormous — asking for it takes the roster from ~75 KB to
+// ~5.8 MB and 0.6s to 2.6s. That's affordable exactly because import is a
+// button, not a page load. Don't move this query anywhere hot.
+export const CURRENT_USER_CHARACTERS = `
+query CurrentUserCharacters($zoneID: Int!) {
+  userData {
+    currentUser {
+      id
+      name
+      avatar
+      characters {
+        id
+        name
+        level
+        classID
+        server {
+          slug
+          region { slug }
+        }
+        gameData
+        zoneRankings(zoneID: $zoneID, metric: playerscore, role: Any)
+      }
     }
   }
 }`;
@@ -170,6 +206,18 @@ query ReportTable($code: String!, $fightIDs: [Int!], $dataType: TableDataType!, 
   reportData {
     report(code: $code) {
       table(fightIDs: $fightIDs, dataType: $dataType, sourceID: $sourceID)
+    }
+  }
+}`;
+
+// Gear (with enchants + gems) at pull start, for every player. CombatantInfo is a
+// per-player snapshot event; we pick the one matching the actor's sourceID. This
+// is the only source of gear — the tables carry none. The gear check reads it.
+export const REPORT_COMBATANT_INFO = `
+query ReportCombatantInfo($code: String!, $fightIDs: [Int!]) {
+  reportData {
+    report(code: $code) {
+      events(fightIDs: $fightIDs, dataType: CombatantInfo, limit: 100) { data }
     }
   }
 }`;

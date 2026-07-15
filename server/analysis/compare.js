@@ -14,6 +14,7 @@ import { buildTimeline } from './timeline.js';
 import { buildParsePlan, describeParsePlan } from './parseTiers.js';
 import { compareResource } from './resources.js';
 import { buildConsumables } from './consumables.js';
+import { buildGearCheck } from './gear.js';
 import { rotationComposition, castOrder } from './spikes.js';
 
 // Ability cast-count diffs below this share of damage are noise — skip.
@@ -45,7 +46,7 @@ export function buildReport(bundle) {
   const theirDps = bundle.other.meta.dps ?? null;
   const dpsGapPct = myDps != null && theirDps ? (100 * (theirDps - myDps)) / theirDps : null;
 
-  const gaps = gapsFrom(mine, them, buffSources);
+  const gaps = gapsFrom(mine, them, buffSources, mineDetail.fight?.kill !== false);
   for (const g of gaps) {
     g.advice = adviceFor(g);
     g.priority = priorityOf(g.severity);
@@ -96,6 +97,8 @@ export function buildReport(bundle) {
     rotationMatch: { spellMixPct: rotation.similarityPct, castOrderPct: rotation.sequencePct },
     // 4
     consumables: buildConsumables(mineDetail, otherDetail, otherName, buffSources, statPriorityNote),
+    // 4b — gear check: your enchants/gems vs theirs (null when no gear snapshot)
+    gear: buildGearCheck(mineDetail.gear, otherDetail.gear, otherName),
     // 5
     parse,
     // 6
@@ -114,7 +117,8 @@ export function buildReport(bundle) {
  * call it directly — a raid pull previously had no "biggest gaps" section at all.
  */
 export function buildGaps(mineDetail, otherDetail, buffSources = {}) {
-  const gaps = gapsFrom(computeRunMetrics(mineDetail), computeRunMetrics(otherDetail), buffSources);
+  const isKill = mineDetail.fight?.kill !== false;
+  const gaps = gapsFrom(computeRunMetrics(mineDetail), computeRunMetrics(otherDetail), buffSources, isKill);
   for (const g of gaps) {
     g.advice = adviceFor(g);
     g.priority = priorityOf(g.severity);
@@ -122,10 +126,12 @@ export function buildGaps(mineDetail, otherDetail, buffSources = {}) {
   return gaps;
 }
 
-function gapsFrom(mine, them, buffSources) {
+function gapsFrom(mine, them, buffSources, isKill = true) {
   const gaps = [];
 
-  if (mine.deaths.length > them.deaths.length) {
+  // Deaths are only a gap on a KILL. On a wipe everyone dies (that's what a wipe
+  // is), so comparing death counts is meaningless and would flag every wipe.
+  if (isKill && mine.deaths.length > them.deaths.length) {
     const extra = mine.deaths.length - them.deaths.length;
     gaps.push(gap('deaths', 'Deaths', mine.deaths.length, them.deaths.length, 'deaths', extra * 4));
   }
@@ -232,6 +238,13 @@ function uptimeDiffs(mine, them, buffSources) {
     // applied by a groupmate, never by me => their comp, not my rotation
     const src = buffSources[name];
     if (src && src.foreign > 0 && src.self === 0) continue;
+
+    // Only buffs you actually PRESS are a rotation-management gap. A buff with no
+    // matching cast on either side is a proc — a weapon enchant (Might of the
+    // Void), an embellishment (Arcanoweave Insight), a trinket — whose uptime is
+    // driven by gear and RNG, not by you. Those belong in the Gear check, not
+    // here. This is generic: no name list, so it survives new gear each patch.
+    if (!mine.abilities.has(name) && !them.abilities.has(name)) continue;
 
     const mineAura = mine.auras.get(name);
     if (!mineAura) continue; // never had it at all — a talent difference, not a habit

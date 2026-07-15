@@ -66,17 +66,60 @@ runs.
 damage event stream (tens of thousands of events), so the report renders first
 and the chart arrives after.
 
-## Tracked characters
+## Signing in
 
-Which characters exist is data, not code — `characters.json` in the project
-root, managed through four more endpoints:
+Two OAuth flows against Warcraft Logs, doing two different jobs
+([`server/wcl/auth.js`](../server/wcl/auth.js)):
+
+| Flow | Token | Endpoint | Used for |
+| --- | --- | --- | --- |
+| client credentials | app-wide | `/api/v2/client` | all analysis — shared, so responses are cacheable |
+| authorization code | per user | `/api/v2/user` | `userData.currentUser` — who signed in, and their claimed characters |
+
+The user token is asked for exactly one scope, `view-user-profile`, and is used
+for exactly one thing: reading the character list. Analysis never touches it, so
+the disk cache stays shared and correct.
+
+**The cache is why `gql({ userToken })` never caches.** The cache key is
+`sha256(query + variables)` with nothing identifying the caller, so caching a
+`currentUser` response would serve one user's profile to the next person who
+asked the same question. Per-user queries skip the cache in both directions.
+
+Sessions ([`server/session.js`](../server/session.js)) are hand-rolled on
+`node:crypto` — no `express-session`, in keeping with the one-dependency rule.
+The cookie holds an opaque session id plus an HMAC of it; the WCL access token
+stays server-side in `data/sessions.json` and never reaches the browser. Every
+`/api` route except `/api/auth/*` is behind `requireSession`.
 
 | Endpoint | Purpose |
 | --- | --- |
+| `GET /api/auth/login` | Redirect to Warcraft Logs, with a signed `state` cookie |
+| `GET /api/auth/callback` | Verify `state`, trade the code for a token, start a session |
+| `GET /api/auth/me` | The client's "am I signed in?" probe |
+| `POST /api/auth/logout` | Drop the session |
+
+## Tracked characters
+
+Which characters exist is data, not code — `characters.json` in the project
+root, keyed by Warcraft Logs user id (`{ version: 2, users: { "<id>": [...] } }`),
+managed through these endpoints:
+
+| Endpoint | Purpose |
+| --- | --- |
+| `POST /api/characters/import` | Every character claimed on the WCL profile, in one round trip |
 | `GET /api/character?name&server&region&zone` | Detect a character's class and spec list (the add form's preview) |
-| `GET /api/characters` | The saved list |
+| `GET /api/characters` | The saved list, for this user |
 | `POST /api/characters` | Add or update one (validated) |
+| `PATCH /api/characters/:id` | Hide/show one |
 | `DELETE /api/characters/:id` | Stop tracking one |
+
+Import is the add form with Warcraft Logs filling it in: `currentUser.characters`
+carries `name`, `server { slug, region { slug } }` and `classID` already spelled
+correctly, which is the point — a hand-typed server slug is the one field users
+reliably get wrong. Both paths converge on `describeCharacter()`, so an imported
+character and a typed one are the same shape. Only specs with logged runs are
+imported; a character with none (a healer-only alt) is skipped with a reason
+rather than failing the import.
 
 `detectCharacter()` needs a single WCL round trip: `Character.classID` gives the
 class (looked up in the cached `gameData.classes`), and `zoneRankings.allStars`
@@ -89,6 +132,12 @@ re-checks the class exists, that every spec belongs to it, and that every spec
 is DPS — because a bogus `specName` does **not** error against Warcraft Logs, it
 silently returns zero rankings (see [wcl-api.md](wcl-api.md#the-spec-slug-vs-display-name-trap)).
 Specs are stored as `{ name, slug }`; only the slug is ever sent to the API.
+An imported character goes through it too: it reached us via the browser, so it
+is no more trusted than a typed one.
+
+A pre-login `characters.json` (a flat array, no user attached) is parked under a
+`legacy` key and adopted by the first account to sign in — it belonged to whoever
+was running the app, which is who is about to log in.
 
 ## Frontend
 
